@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="eng">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width", initial-case="1.0">
+    <style>
+        /*Basic Layout*/
+        * {margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif;}
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vw;
+            background: white;
+            display: flex;
+        }
+
+        /* SIDEBAR (Member 3: Icons + Filter Buttons) */
+        .sidebar {
+            width: 200px; 
+            border-right: 2px solid black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            gap: 25px;
+            background-color: white;
+        }
+
+        .icon { font-size: 30px; cursor: pointer; color: #333; }
+        
+        .add-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            border: 1px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+
+        /* 4. MAIN CONTENT AREA - Fills the rest of the screen */
+        .main {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-bar {
+            width: 300px;
+            padding: 12px 20px;
+            border: 2px solid black;
+            border-radius: 30px;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+
+        /* MAP AREA - Fills the remaining space in the main content */
+        #map-area {
+            flex: 1; 
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fafafa;
+            position: relative;
+        }
+
+        /* Distance Tool (Bottom Right) */
+        .distance-tool {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border: 2px solid black;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .distance-tool button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="icon">☰</div>
+            <div class="icon">💬</div>
+            <div class="icon">🏠</div>
+            <div class="add-btn">+</div>
+            
+            <div style="margin-top: auto;" class="icon">👤</div>
+        </div>
+
+        <div class="main">
+            <input type="text" class="search-bar" placeholder="Search bar">
+            
+            <div id="map-area">
+                <h2 id="status-text">Map View</h2>
+                
+                <div class="distance-tool">
+                    <strong>Distance Tool</strong><br>
+                    <small>Point A to Point B</small><br>
+                    <button onclick="calculateDist()">Calculate</button>
+                    <p id="dist-result" style="margin-top:5px; font-weight:bold;">--- meters</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterMap(cat) {
+            const status = document.getElementById('status-text');
+            status.innerText = (cat === 'All') ? "Full Campus View" : "Viewing: " + cat;
+        }
+
+        function calculateDist() {
+            let num = Math.floor(Math.random() * 800) + 10; 
+            document.getElementById('dist-result').innerText = num + " meters";
+        }
+    </script>
+</head>
+</html>
