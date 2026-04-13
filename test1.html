@@ -50,8 +50,7 @@
             border-radius: 30px; font-size: 16px; background: white;
         }
 
-        /* STEP 2: THE MAP DIV */
-        /* This MUST have a width and height to show up */
+        
         #map {
             width: 100%;
             height: 100%;
@@ -93,7 +92,7 @@
     </div>
 
     <script>
-        // STEP 3: INITIALIZE THE MAP
+        
         // Coordinates for MMU Cyberjaya: [2.9276, 101.6418]
         var map = L.map('map').setView([2.9276, 101.6418], 17);
 
@@ -107,7 +106,7 @@
             .bindPopup('Welcome to MMU Cyberjaya!')
             .openPopup();
 
-        // Distance logic (simplified for Foundation)
+        
         function calculateDist() {
             let num = Math.floor(Math.random() * 500) + 50; 
             document.getElementById('dist-result').innerText = num + " meters";
