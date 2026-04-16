@@ -1,3 +1,4 @@
+/* Simple reset to make sure the app fits the screen perfectly */
 * { 
     margin: 0; 
     padding: 0; 
@@ -11,7 +12,7 @@ body, html {
     overflow: hidden; 
 }
 
-/* PRIMARY SIDEBAR */
+/* Primary Sidebar Design  */
 .sidebar {
     position: fixed; 
     top: 0; 
@@ -28,11 +29,11 @@ body, html {
     z-index: 3000; 
 }
 
-/* SECONDARY SIDEBAR (Pop-out) */
+/* Hidden Sub-Sidebar  */
 .sub-sidebar {
     position: fixed; 
     top: 0; 
-    left: -300px; 
+    left: -300px; /* Starts hidden off-screen */
     width: 250px; 
     height: 100%;
     background-color: white;
@@ -43,28 +44,30 @@ body, html {
     padding: 40px 20px;
     gap: 20px;
     z-index: 2500; 
-    transition: 0.4s ease; 
+    transition: 0.4s ease; /* Smooth sliding movement */
     border-left: 1px solid #eee;
 }
 
+/* Move the sub-sidebar to this position when activated */
 .sub-sidebar.active {
     left: 140px; 
 }
 
-/* BUTTON STYLES (Invisible Borders) */
+/* Floating button design with no borders */
 .nav-btn {
     width: 100px; 
     height: 100px; 
-    border: none; 
+    border: none; /* Removes the black lines */
     background: white;
     cursor: pointer; 
     border-radius: 12px; 
     display: flex;
     justify-content: center; 
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Makes buttons look like they float */
 }
 
+/* Category buttons for the sub-menu  */
 .category-btn {
     width: 100%;
     height: 80px;
@@ -87,7 +90,7 @@ body, html {
     object-fit: contain; 
 }
 
-/* MAP & INTERFACE */
+/* Search bar positioning  */
 .search-container { 
     position: absolute; 
     top: 20px; 
