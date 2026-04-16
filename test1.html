@@ -124,24 +124,23 @@
     </div>
 
     <script>
-        // SIDEBAR TOGGLE LOGIC
         function toggleSidebar() {
-            var sidebar = document.getElementById("mySidebar");
-            // This adds or removes the "active" class
-            sidebar.classList.toggle("active");
+            document.getElementById("mySidebar").classList.toggle("active");
         }
 
-        // INITIALIZE MAP
-        var map = L.map('map').setView([2.9276, 101.6418], 17);
+        // NEW: INITIALIZE MAP WITH ROTATION AND HIGHER ZOOM
+        var map = L.map('map', {
+            zoomControl: false,
+            rotate: true,          // Enables the rotation feature
+            touchRotate: true,     // Allows rotating with two fingers on mobile
+            bearing: 90,           // SET ROTATION HERE (e.g., 45 degrees)
+        }).setView([2.9276, 101.6418], 18); // SET ZOOM HERE (Changed 17 to 19 for more zoom)
+
+        // Load the tiles (Map images)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
+            maxZoom: 20,           // Allows you to zoom in even further
+            attribution: '&copy; OpenStreetMap'
         }).addTo(map);
-
-        // FILTER AND DISTANCE LOGIC
-        function filterMap(cat) {
-            alert("Filtering map for: " + cat);
-            toggleSidebar(); // Close sidebar after selecting a filter
-        }
 
         function calculateDist() {
             let num = Math.floor(Math.random() * 500) + 50; 
