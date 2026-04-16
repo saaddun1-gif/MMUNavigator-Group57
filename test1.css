@@ -22,6 +22,45 @@ body, html { height: 100%; width: 100%; overflow: hidden; }
 .sidebar.active {
     left: 0;
 }
+/* --- SUB-SIDEBAR STYLE --- */
+.sub-sidebar {
+    position: fixed; 
+    top: 0; 
+    left: -300px; /* Starts hidden behind the main sidebar */
+    width: 250px; 
+    height: 100%;
+    background-color: white;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 20px;
+    z-index: 2500; /* Stays below the main sidebar but above the map */
+    transition: 0.4s ease; /* Makes it slide smoothly */
+    border-left: 1px solid #eee;
+}
+
+/* This class is added by JavaScript to make it pop out */
+.sub-sidebar.active {
+    left: 140px; /* Moves it out to the edge of the main sidebar */
+}
+
+.category-btn {
+    width: 100%;
+    height: 80px;
+    border: 2px solid black; 
+    background: white;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.category-btn:hover { 
+    background: #f0f0f0; 
+}
 
 /* 2. OVERLAY BUTTONS */
 .menu-toggle-btn {

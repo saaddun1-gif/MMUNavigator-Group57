@@ -29,6 +29,13 @@
         </div>
     </div>
 
+<div class="sub-sidebar" id="homeSidebar">
+    <h1 style="margin-bottom: 20px;">Delete</h1> 
+    <button class="category-btn">Facility</button>
+    <button class="category-btn">Faculty</button>
+    <button class="category-btn">Hall</button>
+</div>
+
     <div class="search-container">
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
@@ -45,6 +52,11 @@
         function toggleSidebar() {
             document.getElementById("mySidebar").classList.toggle("active");
         }
+        // THE SUB-SIDEBAR SCRIPT
+        function toggleHomeMenu() {
+          var homeMenu = document.getElementById("homeSidebar");
+         homeMenu.classList.toggle("active");
+         }
 
         var map = L.map('map', {
             zoomControl: false,
