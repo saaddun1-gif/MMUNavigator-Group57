@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Interface</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+
+        <nav class="sidebar">
+            <div class="icon hamburger-icon" title="Menu"></div>
+            <div class="icon message-icon" title="Messages"></div>
+            <div class="icon home-icon" title="Home"></div>
+            <div class="plus-icon" title="Add New">+</div>
+            
+            <div class="avatar" title="User Profile">
+                👤 
+            </div>
+        </nav>
+
+        <main class="panel">
+            <h1>Delete</h1>
+
+            <div class="selection-box faculty-input">
+                <span class="box-text">Faculty</span>
+            </div>
+
+            <button class="selection-box">
+                <span class="box-text">Chosen faculty</span>
+                <span class="trash-icon">🗑️</span>
+            </button>
+
+            <button class="selection-box">
+                <span class="box-text">Chosen level</span>
+                <span class="trash-icon">🗑️</span>
+            </button>
+
+            <p class="input-label">List of classes</p>
+
+            <button class="selection-box">
+                <span class="box-text">Chosen Class</span>
+                <span class="trash-icon">🗑️</span>
+            </button>
+
+            <p class="prompt-text">Please select to delete</p>
+        </main>
+
+        <section class="map-area">
+            <div class="search-container">Search bar</div>
+            <div class="map-placeholder">Map</div>
+        </section>
+
+    </div>
+
+</body>
+</html>
