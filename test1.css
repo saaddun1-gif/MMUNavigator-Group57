@@ -67,7 +67,7 @@ body, html { height: 100%; width: 100%; overflow: hidden; }
 
 /* This class is added by JavaScript to make it pop out */
 .sub-sidebar.active {
-    left: 140px; /* Moves it out to the edge of the main sidebar */
+    left: 200px; /* Moves it out to the edge of the main sidebar */
 }
 
 .category-btn {
