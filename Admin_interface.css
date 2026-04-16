@@ -1,0 +1,122 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    border: 2px solid #000;
+    box-sizing: border-box;
+}
+
+.sidebar {
+    width: 80px;
+    background-color: #f9f9f9;
+    border-right: 2px solid #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+}
+
+.icon { font-size: 28px; margin-bottom: 25px; cursor: pointer; color: #555; }
+.icon:hover { color: #000; }
+
+.menu-icon::before { content: "☰"; }
+.message-icon::before { content: "💬"; }
+.home-icon::before { content: "🏠"; }
+
+.plus-icon {
+    width: 40px; height: 40px;
+    background-color: #e0e0e0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: bold;
+    color: #444; margin-bottom: 25px;
+}
+
+.avatar {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    border: 2px solid #000;
+    background-color: #ddd;
+    margin-top: auto;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.panel {
+    flex: 1;
+    border-right: 3px solid purple;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.panel h1 { font-size: 24px; margin-bottom: 20px; font-weight: normal; }
+
+.input-label { font-size: 14px; color: #666; margin-top: 15px; margin-bottom: 5px; }
+
+.selection-box {
+    width: 80%;
+    max-width: 300px;
+    padding: 10px;
+    border: 2px solid #000;
+    border-radius: 8px;
+    background-color: #fff;
+    margin-bottom: 10px;
+    cursor: pointer;
+    text-align: left;
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.faculty-input {
+    margin-bottom: 20px;
+    border-radius: 20px;
+    text-align: center;
+    display: block;
+}
+
+.box-text { color: #888; flex: 1; }
+
+.trash-icon { font-size: 18px; margin-left: 10px; opacity: 0.6; }
+.selection-box:hover .trash-icon { opacity: 1; color: #d9534f; }
+
+.prompt-text { margin-top: auto; color: #555; font-size: 16px; margin-bottom: 30px;}
+
+.map-area {
+    flex: 2;
+    position: relative;
+    padding: 20px;
+    background-color: #f0f0f0;
+}
+
+.search-container {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 40%;
+    max-width: 300px;
+    border: 2px solid #000;
+    border-radius: 20px;
+    background-color: #fff;
+    padding: 5px 15px;
+    color: #888;
+}
+
+.map-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: bold;
+    color: #ccc;
+}
