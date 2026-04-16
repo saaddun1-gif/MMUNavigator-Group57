@@ -56,8 +56,17 @@
     <script>
         // Function to open/close the main sidebar
         function toggleSidebar() {
-            document.getElementById("mySidebar").classList.toggle("active");
-        }
+     var mainSidebar = document.getElementById("mySidebar");
+     var subSidebar = document.getElementById("homeSidebar");
+
+     // Toggle the main sidebar like normal
+     mainSidebar.classList.toggle("active");
+
+     // NEW: If the main sidebar is NOT active, hide the sub-sidebar too!
+     if (!mainSidebar.classList.contains("active")) {
+         subSidebar.classList.remove("active");
+      }
+     }
 
         // Function to open/close the Home sub-menu
         function toggleHomeMenu() {
