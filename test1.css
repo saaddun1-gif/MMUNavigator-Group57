@@ -1,114 +1,80 @@
-/* Simple reset to make sure the app fits the screen perfectly */
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
-    font-family: 'Arial', sans-serif; 
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+body, html { height: 100%; width: 100%; overflow: hidden; }
 
-body, html { 
-    height: 100%; 
-    width: 100%; 
-    overflow: hidden; 
-}
-
-/* Primary Sidebar Design  */
+/* 1. THE SIDEBAR */
 .sidebar {
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 140px; 
-    height: 100%;
-    background-color: white; 
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1); 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center;
-    padding: 20px 0; 
-    gap: 15px; 
-    z-index: 3000; 
-}
-
-/* Hidden Sub-Sidebar  */
-.sub-sidebar {
-    position: fixed; 
-    top: 0; 
-    left: -300px; /* Starts hidden off-screen */
-    width: 250px; 
+    position: fixed;
+    top: 0;
+    left: -210px;
+    width: 200px; 
     height: 100%;
     background-color: white;
-    box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+    border-right: 2px solid black;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px;
-    gap: 20px;
-    z-index: 2500; 
-    transition: 0.4s ease; /* Smooth sliding movement */
-    border-left: 1px solid #eee;
+    padding: 20px 0;
+    gap: 15px;
+    z-index: 2000;
+    transition: 0.4s;
 }
 
-/* Move the sub-sidebar to this position when activated */
-.sub-sidebar.active {
-    left: 140px; 
+.sidebar.active {
+    left: 0;
 }
 
-/* Floating button design with no borders */
-.nav-btn {
-    width: 100px; 
-    height: 100px; 
-    border: none; /* Removes the black lines */
-    background: white;
-    cursor: pointer; 
-    border-radius: 12px; 
-    display: flex;
-    justify-content: center; 
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Makes buttons look like they float */
-}
-
-/* Category buttons for the sub-menu  */
-.category-btn {
-    width: 100%;
-    height: 80px;
-    border: 2px solid black; 
-    background: white;
-    font-size: 18px;
-    font-weight: bold;
+/* 2. OVERLAY BUTTONS */
+.menu-toggle-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1500;
+    width: 100px;
+    height: 100px;
+    background: none;
+    border: none;
     border-radius: 12px;
     cursor: pointer;
-    transition: 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.category-btn:hover { 
-    background: #f0f0f0; 
-}
-
-.icon-img { 
-    width: 60%; 
-    height: 60%; 
-    object-fit: contain; 
-}
-
-/* Search bar positioning  */
-.search-container { 
-    position: absolute; 
-    top: 20px; 
-    left: 160px; 
-    z-index: 1000; 
+.search-container {
+    position: absolute;
+    top: 20px;
+    left: 140px;
+    z-index: 1000;
 }
 
 .search-bar {
-    width: 300px; 
-    padding: 12px 25px; 
-    border: none; 
-    border-radius: 30px; 
-    background: white; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 300px; padding: 12px 25px; border: 2px solid black;
+    border-radius: 30px; font-size: 16px; background: white;
 }
 
-#map { 
-    width: 100%; 
-    height: 100%; 
-    z-index: 1; 
+/* 3. BUTTON STYLES */
+.nav-btn {
+    width: 100px; height: 100px; border: 2px solid black;
+    background-color: white; display: flex; justify-content: center;
+    align-items: center; cursor: pointer; border-radius: 12px;
+}
+
+.icon-img { width: 60%; height: 60%; object-fit: contain; }
+
+.filter-section {
+    display: flex; flex-direction: column; gap: 8px; align-items: center;
+}
+
+.filter-btn {
+    width: 100px; padding: 8px 0; font-size: 11px; font-weight: bold;
+    cursor: pointer; border: 1px solid black; background: white; border-radius: 5px;
+}
+
+/* 4. MAP AREA */
+#map { width: 100%; height: 100%; z-index: 1; }
+
+.distance-tool {
+    position: absolute; bottom: 20px; right: 20px;
+    background: white; border: 2px solid black;
+    padding: 15px; border-radius: 8px; z-index: 1000;
 }
