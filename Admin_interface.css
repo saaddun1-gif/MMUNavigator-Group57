@@ -1,122 +1,146 @@
-body, html {
+/* --- BASIC SETUP --- */
+body {
     margin: 0;
     padding: 0;
-    height: 100%;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
+    font-family: "Arial", sans-serif; /* Standard font */
 }
 
+/* Make the whole app take up the screen */
 .app-container {
     display: flex;
-    width: 100vw;
     height: 100vh;
-    border: 2px solid #000;
-    box-sizing: border-box;
+    border: 3px solid black; /* Thick borders look more 'beginner' */
 }
 
+/* --- SIDEBAR (Left side) --- */
 .sidebar {
-    width: 80px;
-    background-color: #f9f9f9;
-    border-right: 2px solid #000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-}
-
-.icon { font-size: 28px; margin-bottom: 25px; cursor: pointer; color: #555; }
-.icon:hover { color: #000; }
-
-.menu-icon::before { content: "☰"; }
-.message-icon::before { content: "💬"; }
-.home-icon::before { content: "🏠"; }
-
-.plus-icon {
-    width: 40px; height: 40px;
-    background-color: #e0e0e0;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; font-weight: bold;
-    color: #444; margin-bottom: 25px;
-}
-
-.avatar {
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    border: 2px solid #000;
-    background-color: #ddd;
-    margin-top: auto;
-    display: flex; align-items: center; justify-content: center;
-}
-
-.panel {
-    flex: 1;
-    border-right: 3px solid purple;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    width: 90px;
+    background-color: white;
+    border-right: 2px solid black;
     text-align: center;
+    padding-top: 20px;
 }
 
-.panel h1 { font-size: 24px; margin-bottom: 20px; font-weight: normal; }
-
-.input-label { font-size: 14px; color: #666; margin-top: 15px; margin-bottom: 5px; }
-
-.selection-box {
-    width: 80%;
-    max-width: 300px;
-    padding: 10px;
-    border: 2px solid #000;
-    border-radius: 8px;
-    background-color: #fff;
-    margin-bottom: 10px;
+.icon {
+    font-size: 30px;
+    margin-bottom: 30px;
     cursor: pointer;
-    text-align: left;
-    display: flex; justify-content: space-between; align-items: center;
 }
 
-.faculty-input {
-    margin-bottom: 20px;
-    border-radius: 20px;
-    text-align: center;
-    display: block;
+/* The circle for the plus button */
+.plus-btn {
+    width: 50px;
+    height: 50px;
+    background-color: lightgray;
+    border-radius: 50px; /* Makes it round */
+    margin: 0 auto 30px auto;
+    line-height: 50px; /* Centers the plus sign */
+    font-size: 25px;
 }
 
-.box-text { color: #888; flex: 1; }
+.avatar-circle {
+    border: 2px solid black;
+    border-radius: 100px;
+    width: 60px;
+    height: 60px;
+    margin: 150px auto 0 auto; /* Manual pushing it down */
+    font-size: 40px;
+}
 
-.trash-icon { font-size: 18px; margin-left: 10px; opacity: 0.6; }
-.selection-box:hover .trash-icon { opacity: 1; color: #d9534f; }
+/* --- MIDDLE SECTION --- */
+.main-content {
+    flex-grow: 1; /* Fills the rest of the space */
+}
 
-.prompt-text { margin-top: auto; color: #555; font-size: 16px; margin-bottom: 30px;}
-
-.map-area {
-    flex: 2;
-    position: relative;
+.top-nav {
     padding: 20px;
-    background-color: #f0f0f0;
 }
 
-.search-container {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    width: 40%;
-    max-width: 300px;
-    border: 2px solid #000;
-    border-radius: 20px;
-    background-color: #fff;
-    padding: 5px 15px;
-    color: #888;
+/* The oval search bar */
+.search-oval {
+    border: 2px solid black;
+    border-radius: 50px;
+    width: 300px;
+    padding: 10px;
+    text-align: center;
+    color: gray;
 }
 
-.map-placeholder {
+.content-body {
+    display: flex;
+    height: 90%; /* Approximate height */
+}
+
+/* THE ADMIN BOXES */
+.admin-panel {
+    width: 400px; /* Manual width */
+    border-right: 4px solid purple; /* The purple line from your drawing */
+    padding: 20px;
+    text-align: center;
+}
+
+.input-pill {
+    border: 2px solid black;
+    border-radius: 40px;
+    padding: 10px;
+    margin-bottom: 30px;
+}
+
+.delete-box {
+    border: 2px solid black;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    background-color: white;
+}
+
+.trash-icon {
+    float: right; /* Old school way to move icons to the right */
+    cursor: pointer;
+}
+
+/* --- MAP AREA --- */
+.map-wrapper {
+    flex-grow: 1;
+    background-color: #eeeeee;
+}
+
+#map-area {
     width: 100%;
     height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 48px;
-    font-weight: bold;
-    color: #ccc;
+}
+
+/* --- MOBILE BOTTOM NAV --- */
+.mobile-nav {
+    display: none; /* Hide it on computer screens */
+}
+
+/* --- MOBILE VIEW (Phone view) --- */
+@media screen and (max-width: 700px) {
+    .sidebar {
+        display: none; /* Hide sidebar on phone */
+    }
+    .map-wrapper {
+        display: none; /* Hide map on phone like your drawing */
+    }
+    .admin-panel {
+        width: 100%; /* Take full screen */
+        border-right: none;
+    }
+    .mobile-nav {
+        display: block; /* Show the bottom bar */
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        height: 70px;
+        background-color: white;
+        border-top: 2px solid black;
+    }
+    .nav-item {
+        display: inline-block;
+        width: 30%;
+        text-align: center;
+        font-size: 30px;
+        padding-top: 15px;
+    }
 }
