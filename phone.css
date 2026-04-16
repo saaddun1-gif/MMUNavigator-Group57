@@ -1,73 +1,85 @@
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: sans-serif; 
+}
 body, html { height: 100%; width: 100%; overflow: hidden; }
 
-/* 1. MAIN SIDEBAR (Wider for fingers) */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: -85px; /* Hidden */
-    width: 80px; 
-    height: 100%;
-    background: white;
-    border-right: 1px solid #ddd;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px 0;
-    gap: 10px;
-    z-index: 3000;
-    transition: 0.3s;
-}
+/* Map covers the whole background */
+#map { height: 100vh; width: 100vw; z-index: 1; }
 
-.sidebar.active { left: 0; }
-
-/* 2. SUB-SIDEBAR (Full height, covers half screen) */
-.sub-sidebar {
-    position: fixed;
-    top: 0;
-    left: -250px; /* Hidden */
-    width: 200px;
-    height: 100%;
-    background: #fdfdfd;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    padding: 30px 15px;
-    gap: 15px;
-    z-index: 2500;
-    transition: 0.3s;
-}
-
-.sub-sidebar.active { left: 80px; }
-
-/* 3. BUTTONS (Big for mobile) */
-.nav-btn {
-    width: 60px; height: 60px; border: none;
-    background: white; border-radius: 10px;
-    display: flex; justify-content: center; align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.category-btn {
-    width: 100%; height: 60px; border: 1px solid #000;
-    background: white; font-weight: bold; border-radius: 8px;
-}
-
-.icon-img { width: 50%; height: 50%; }
-
-/* 4. OVERLAY UI */
-.menu-toggle-btn {
-    position: absolute; top: 15px; left: 15px; z-index: 1000;
-    width: 50px; height: 50px; background: white; border: 1px solid black;
-    border-radius: 8px; display: flex; justify-content: center; align-items: center;
-}
-
+/* Top Search Bar Style */
 .search-container {
-    position: absolute; top: 15px; left: 75px; right: 15px; z-index: 900;
+    position: fixed;
+    top: 20px;
+    left: 10%;
+    width: 80%;
+    z-index: 1000;
 }
 
 .search-bar {
-    width: 100%; padding: 12px; border-radius: 20px; border: 1px solid black;
+    width: 100%;
+    padding: 15px;
+    border-radius: 30px;
+    border: 2px solid black;
+    text-align: center;
+    font-size: 16px;
 }
 
-#map { width: 100%; height: 100%; z-index: 1; }
+/* Bottom Navigation Bar Style */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80px;
+    background: white;
+    border-top: 3px solid black;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 2000;
+}
+
+.nav-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+}
+
+.nav-icon img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Category Menu that pops up from the bottom */
+.category-popup {
+    position: fixed;
+    bottom: -400px; /* Hidden below screen */
+    left: 0;
+    width: 100%;
+    background: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    z-index: 1500;
+    transition: 0.4s ease; /* Smooth sliding up */
+    border-top: 1px solid #ddd;
+}
+
+.category-popup.active {
+    bottom: 80px; /* Moves above the bottom bar */
+}
+
+.menu-item {
+    width: 200px;
+    padding: 15px;
+    border: 2px solid black;
+    border-radius: 15px;
+    background: white;
+    font-weight: bold;
+    font-size: 18px;
+    cursor: pointer;
+}
