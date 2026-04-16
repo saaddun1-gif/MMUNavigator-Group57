@@ -1,138 +1,85 @@
 <!DOCTYPE html>
-<html lang="eng">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width", initial-case="1.0">
-    <style>
-        /*Basic Layout*/
-        * {margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif;}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Navigator - Smart Sidebar</title>
+    
+    <link rel="stylesheet" href="test.css">
 
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        .container {
-            width: 100vw;
-            height: 100vw;
-            background: white;
-            display: flex;
-        }
-
-        /* SIDEBAR (Member 3: Icons + Filter Buttons) */
-        .sidebar {
-            width: 200px; 
-            border-right: 2px solid black;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-            gap: 25px;
-            background-color: white;
-        }
-
-        .icon { font-size: 30px; cursor: pointer; color: #333; }
-        
-        .add-btn {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: #f0f0f0;
-            border: 1px solid black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-
-        /* 4. MAIN CONTENT AREA - Fills the rest of the screen */
-        .main {
-            flex: 1;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .search-bar {
-            width: 300px;
-            padding: 12px 20px;
-            border: 2px solid black;
-            border-radius: 30px;
-            margin-bottom: 25px;
-            font-size: 16px;
-        }
-
-        /* MAP AREA - Fills the remaining space in the main content */
-        #map-area {
-            flex: 1; 
-            border: 2px solid #ccc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #fafafa;
-            position: relative;
-        }
-
-        /* Distance Tool (Bottom Right) */
-        .distance-tool {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            border: 2px solid black;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .distance-tool button {
-            margin-top: 5px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
-    <div class="container">
-        <div class="sidebar">
-            <div class="icon">☰</div>
-            <div class="icon">💬</div>
-            <div class="icon">🏠</div>
-            <div class="add-btn">+</div>
-            
-            <div style="margin-top: auto;" class="icon">👤</div>
-        </div>
+    <button class="menu-toggle-btn" onclick="toggleSidebar()">
+        <img src="menu.png" class="icon-img">
+    </button>
 
-        <div class="main">
-            <input type="text" class="search-bar" placeholder="Search bar">
-            
-            <div id="map-area">
-                <h2 id="status-text">Map View</h2>
-                
-                <div class="distance-tool">
-                    <strong>Distance Tool</strong><br>
-                    <small>Point A to Point B</small><br>
-                    <button onclick="calculateDist()">Calculate</button>
-                    <p id="dist-result" style="margin-top:5px; font-weight:bold;">--- meters</p>
-                </div>
-            </div>
+    <div class="sidebar" id="mySidebar">
+        <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
+            <img src="menu.png" class="icon-img">
+        </button>
+
+        <button class="nav-btn"><img src="chatbox.png" class="icon-img"></button>
+        
+        <button class="nav-btn" onclick="toggleHomeMenu()">
+            <img src="home.png" class="icon-img">
+        </button>
+
+        <div style="margin-top: auto;">
+            <button class="nav-btn" style="border-radius: 50%;">
+                <img src="https://via.placeholder.com/100?text=Admin" style="width:100%; height:100%; border-radius:50%;">
+            </button>
         </div>
     </div>
+
+    <div class="sub-sidebar" id="homeSidebar">
+        <h1 style="margin-bottom: 20px;">Categories</h1> 
+        <button class="category-btn">Facility</button>
+        <button class="category-btn">Faculty</button>
+        <button class="category-btn">Hall</button>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="search-bar" placeholder="Search MMU locations...">
+    </div>
+    
+    <div id="map"></div>
+    
+    <div class="distance-tool">
+        <strong>Distance Tool</strong><br>
+        <button onclick="calculateDist()" style="margin-top:5px; cursor:pointer;">Calculate</button>
+        <p id="dist-result" style="margin-top:5px; font-weight:bold;">--- meters</p>
+    </div>
+
     <script>
-        function filterMap(cat) {
-            const status = document.getElementById('status-text');
-            status.innerText = (cat === 'All') ? "Full Campus View" : "Viewing: " + cat;
+        // Function to open/close the main sidebar
+        function toggleSidebar() {
+            document.getElementById("mySidebar").classList.toggle("active");
         }
 
+        // Function to open/close the Home sub-menu
+        function toggleHomeMenu() {
+            var homeMenu = document.getElementById("homeSidebar");
+            homeMenu.classList.toggle("active");
+        }
+
+        // Initialize Map focusing on MMU
+        var map = L.map('map', {
+            zoomControl: false,
+        }).setView([2.9276, 101.6418], 18);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 20,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        // Distance Tool Logic
         function calculateDist() {
-            let num = Math.floor(Math.random() * 800) + 10; 
+            let num = Math.floor(Math.random() * 500) + 50; 
             document.getElementById('dist-result').innerText = num + " meters";
         }
     </script>
-</head>
+</body>
 </html>
