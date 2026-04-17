@@ -28,7 +28,8 @@ h1 {
 }
 
 .button {
-    display: flex;
+    display: block;
+    margin: 0 auto;
     padding: 13px 16px;
     border-radius: 8px;
     background: #504747;
