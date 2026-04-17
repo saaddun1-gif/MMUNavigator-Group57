@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus Navigator - Smart Sidebar</title>
+    <title>MMU Navigator</title>
     
     <link rel="stylesheet" href="test.css">
 
@@ -49,12 +49,6 @@
     </div>
     
     <div id="map"></div>
-    
-    <div class="distance-tool">
-        <strong>Distance Tool</strong><br>
-        <button onclick="calculateDist()" style="margin-top:5px; cursor:pointer;">Calculate</button>
-        <p id="dist-result" style="margin-top:5px; font-weight:bold;">--- meters</p>
-    </div>
 
     <script>
         // Function to open/close the main sidebar
@@ -86,12 +80,6 @@
             maxZoom: 20,
             attribution: '&copy; OpenStreetMap'
         }).addTo(map);
-
-        // Distance Tool Logic
-        function calculateDist() {
-            let num = Math.floor(Math.random() * 500) + 50; 
-            document.getElementById('dist-result').innerText = num + " meters";
-        }
     </script>
 </body>
 </html>

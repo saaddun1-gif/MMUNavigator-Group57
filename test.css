@@ -155,14 +155,3 @@ body, html {
     background-color: #f0f0f0;
     transform: scale(1.05); /* Makes it pop slightly when you hover */
 }
-
-.distance-tool {
-    position: absolute; 
-    bottom: 20px; 
-    right: 20px;
-    background: white; 
-    border: 2px solid black;
-    padding: 15px; 
-    border-radius: 8px; 
-    z-index: 1000;
-}
