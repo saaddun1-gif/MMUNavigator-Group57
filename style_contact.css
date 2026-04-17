@@ -1,0 +1,35 @@
+body {
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #e2dfdf;
+  color: #222020;
+  flex-direction: column;
+}
+
+
+.h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+.feedback [type="submit"] {
+  display : block;
+  margin: 0 auto;
+  padding: 13px 16px;
+  border-radius: 8px;
+  background: #333;
+  color: white;
+  cursor: pointer;
+}
+
+.feedback {
+  padding: 32px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  border: 5px solid #222020;
+}
