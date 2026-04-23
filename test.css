@@ -1,61 +1,204 @@
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
-body, html { height: 100%; width: 100%; overflow: hidden; }
-
-/* SIDEBARS */
-.sidebar {
-    position: fixed; top: 0; left: -210px; width: 200px; height: 100%;
-    background-color: white; border-right: 2px solid black;
-    display: flex; flex-direction: column; align-items: center;
-    padding: 20px 0; gap: 15px; z-index: 3000; transition: 0.4s;
+/* 1. GENERAL RESET */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Arial', sans-serif; 
 }
-.sidebar.active { left: 0; }
 
+body, html { 
+    height: 100%; 
+    width: 100%; 
+    overflow: hidden; 
+}
+
+/* 2. THE MAIN SIDEBAR (Thin Bar) */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -210px; /* Hidden off-screen */
+    width: 200px; 
+    height: 100%;
+    background-color: white;
+    border-right: 2px solid black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 15px;
+    z-index: 3000; /* Stays on very top */
+    transition: 0.4s;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+/* 3. THE SUB-SIDEBAR (Categories & Drawer) */
 .sub-sidebar {
-    position: fixed; top: 0; left: -300px; width: 250px; height: 100%;
-    background-color: white; box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-    display: flex; flex-direction: column; align-items: center;
-    padding: 40px 20px; gap: 20px; z-index: 2000; transition: 0.4s ease;
+    position: fixed; 
+    top: 0; 
+    left: -300px; /* Hidden behind main sidebar */
+    width: 300px; 
+    height: 100%;
+    background-color: white;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 20px;
+    z-index: 2000; /* Stays behind main sidebar but above map */
+    transition: 0.4s ease;
     border-right: 1px solid #ddd;
 }
-.sub-sidebar.active { left: 200px; }
 
-/* UI BUTTONS */
+/* Pops out exactly where the main sidebar ends */
+.sub-sidebar.active {
+    left: 200px; 
+}
+
+/* 4. BUTTONS & UI (The Bold Style) */
 .nav-btn, .control-btn, .menu-toggle-btn {
-    width: 100px; height: 100px; border: 2px solid black;
-    background-color: white; display: flex; justify-content: center;
-    align-items: center; cursor: pointer; border-radius: 12px;
+    width: 100px; 
+    height: 100px; 
+    border: 2px solid black;
+    background-color: white; 
+    display: flex; 
+    justify-content: center;
+    align-items: center; 
+    cursor: pointer; 
+    border-radius: 12px;
 }
-
-.menu-toggle-btn { position: absolute; top: 20px; left: 20px; z-index: 1500; }
-
-.top-right-container {
-    position: absolute; top: 20px; right: 20px;
-    z-index: 1500; display: flex; flex-direction: column; gap: 15px;
-}
-
-/* GPS Active State */
-.active-gps { background-color: #3498db !important; }
-.active-gps img { filter: invert(1); }
 
 .category-btn {
-    width: 100%; height: 80px; border: 2px solid black;
-    background: white; font-size: 18px; font-weight: bold;
-    border-radius: 12px; cursor: pointer;
+    width: 100%;
+    height: 80px;
+    border: 2px solid black; 
+    background: white;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-bottom: 10px;
 }
 
-/* SEARCH & TOOLS */
-.search-container { position: absolute; top: 20px; left: 140px; z-index: 1000; }
+.category-btn:hover { 
+    background: #f0f0f0; 
+}
+
+.menu-toggle-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1500;
+}
+
+/* 5. TOP RIGHT CONTROLS (Guide & GPS) */
+.top-right-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1500;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* GPS Active State - Blue color when tracking */
+.active-gps {
+    background-color: #3498db !important;
+}
+
+.active-gps img {
+    filter: invert(1);
+}
+
+/* 6. SUB-CATEGORY GRID (The Square Boxes) */
+.category-grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns like your wireframe */
+    gap: 15px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.sub-item-square {
+    aspect-ratio: 1 / 1; /* Makes it a perfect square */
+    border: 2px solid black;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    padding: 5px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.sub-item-square:hover {
+    background: #f0f0f0;
+}
+
+.back-link {
+    margin-top: auto;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 10px;
+}
+
+/* 7. SEARCH BAR */
+.search-container {
+    position: absolute;
+    top: 20px;
+    left: 140px;
+    z-index: 1000;
+}
+
 .search-bar {
-    width: 300px; padding: 12px 25px; border: 2px solid black;
-    border-radius: 30px; font-size: 16px; background: white;
+    width: 300px; 
+    padding: 12px 25px; 
+    border: 2px solid black;
+    border-radius: 30px; 
+    font-size: 16px; 
+    background: white;
 }
 
-.icon-img { width: 60%; height: 60%; object-fit: contain; }
+/* 8. ICONS & IMAGES */
+.icon-img { 
+    width: 60%; 
+    height: 60%; 
+    object-fit: contain; 
+}
 
-#map { width: 100%; height: 100%; z-index: 1; }
+.profile-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* 9. MAP & TOOLS */
+#map { 
+    width: 100%; 
+    height: 100%; 
+    z-index: 1; 
+}
 
 .distance-tool {
-    position: absolute; bottom: 20px; right: 20px;
-    background: white; border: 2px solid black;
-    padding: 15px; border-radius: 8px; z-index: 1000;
+    position: absolute; 
+    bottom: 20px; 
+    right: 20px;
+    background: white; 
+    border: 2px solid black;
+    padding: 15px; 
+    border-radius: 8px; 
+    z-index: 1000;
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMU Navigator - Live View</title>
+    <title>Campus Navigator - Smart Sidebar</title>
     
     <link rel="stylesheet" href="test.css">
 
@@ -29,20 +29,35 @@
         <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
             <img src="menu.png" class="icon-img">
         </button>
+
         <button class="nav-btn"><img src="chatbox.png" class="icon-img"></button>
-        <button class="nav-btn" onclick="toggleHomeMenu()"><img src="home.png" class="icon-img"></button>
+        
+        <button class="nav-btn" onclick="toggleHomeMenu()">
+            <img src="home.png" class="icon-img">
+        </button>
+
         <div style="margin-top: auto;">
             <button class="nav-btn" style="border-radius: 50%;">
-                <img src="https://via.placeholder.com/100?text=User" style="width:100%; height:100%; border-radius:50%;">
+                <img src="https://via.placeholder.com/100?text=Admin" style="width:100%; height:100%; border-radius:50%;">
             </button>
         </div>
     </div>
 
     <div class="sub-sidebar" id="homeSidebar">
-        <h1 style="margin-bottom: 20px;">Categories</h1> 
-        <button class="category-btn">Facility</button>
-        <button class="category-btn">Faculty</button>
-        <button class="category-btn">Hall</button>
+        <h1 id="subHeaderTitle" style="margin-bottom: 20px;">Categories</h1> 
+        
+        <div id="mainCategoryButtons">
+            <button class="category-btn" onclick="showSubCategory('Facility')">Facility</button>
+            <button class="category-btn" onclick="showSubCategory('Faculty')">Faculty</button>
+            <button class="category-btn" onclick="showSubCategory('Hall')">Hall</button>
+        </div>
+
+        <div id="subCategoryGrid" class="category-grid-container" style="display: none;">
+            </div>
+
+        <button id="backBtn" class="back-link" onclick="goBackToCategories()" style="display: none;">
+            ← Back to Categories
+        </button>
     </div>
 
     <div class="search-container">
@@ -58,7 +73,13 @@
     </div>
 
     <script>
-        /* --- SIDEBAR LOGIC --- */
+        // Data for MMU locations
+        const campusData = {
+            'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
+            'Faculty': ['FCI', 'FOE', 'FCM', 'FAC'],
+            'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH']
+        };
+
         function toggleSidebar() {
             var mainSidebar = document.getElementById("mySidebar");
             var subSidebar = document.getElementById("homeSidebar");
@@ -69,37 +90,51 @@
         }
 
         function toggleHomeMenu() {
-            document.getElementById("homeSidebar").classList.toggle("active");
+            var homeMenu = document.getElementById("homeSidebar");
+            homeMenu.classList.toggle("active");
         }
 
-        /* --- MAP SETUP --- */
+        // NEW: Function to show the squares
+        function showSubCategory(category) {
+            document.getElementById('mainCategoryButtons').style.display = 'none';
+            document.getElementById('subCategoryGrid').style.display = 'grid';
+            document.getElementById('backBtn').style.display = 'block';
+            document.getElementById('subHeaderTitle').innerText = category;
+
+            const grid = document.getElementById('subCategoryGrid');
+            grid.innerHTML = ''; // Clear old squares
+
+            campusData[category].forEach(item => {
+                const square = document.createElement('div');
+                square.className = 'sub-item-square';
+                square.innerText = item;
+                grid.appendChild(square);
+            });
+        }
+
+        function goBackToCategories() {
+            document.getElementById('mainCategoryButtons').style.display = 'block';
+            document.getElementById('subCategoryGrid').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('subHeaderTitle').innerText = "Categories";
+        }
+
         var map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 20,
-            attribution: '&copy; OpenStreetMap'
+            maxZoom: 20, attribution: '&copy; OpenStreetMap'
         }).addTo(map);
 
-        /* --- WAZE-STYLE GPS LOGIC --- */
-        var userMarker;
-        var isFollowing = false; // Starts off, turns on when button clicked
-
-        // Navigation Arrow Icon
+        // WAZE GPS LOGIC
+        var userMarker, isFollowing = false;
         var navIcon = L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/506/506185.png', 
-            iconSize: [40, 40],
-            iconAnchor: [20, 20]
+            iconSize: [40, 40], iconAnchor: [20, 20]
         });
 
         function locateUser() {
-            isFollowing = true; 
+            isFollowing = true;
             document.getElementById('gpsBtn').classList.add('active-gps');
-            
-            map.locate({
-                setView: true, 
-                maxZoom: 18, 
-                watch: true, 
-                enableHighAccuracy: true 
-            });
+            map.locate({setView: true, maxZoom: 18, watch: true, enableHighAccuracy: true});
         }
 
         map.on('locationfound', function(e) {
@@ -108,20 +143,14 @@
             } else {
                 userMarker.setLatLng(e.latlng);
             }
-
-            // Smoothly move the camera to follow the user
-            if (isFollowing) {
-                map.panTo(e.latlng, { animate: true, duration: 1.0 });
-            }
+            if (isFollowing) map.panTo(e.latlng, { animate: true, duration: 1.0 });
         });
 
-        // If user manually drags the map, stop the auto-following
-        map.on('dragstart', function() {
+        map.on('dragstart', () => {
             isFollowing = false;
             document.getElementById('gpsBtn').classList.remove('active-gps');
         });
 
-        /* --- DISTANCE LOGIC --- */
         function calculateDist() {
             let num = Math.floor(Math.random() * 500) + 50; 
             document.getElementById('dist-result').innerText = num + " meters";
