@@ -16,7 +16,7 @@ body, html {
 .sidebar {
     position: fixed;
     top: 0;
-    left: -210px; /* Hidden off-screen */
+    left: -210px;
     width: 200px; 
     height: 100%;
     background-color: white;
@@ -26,7 +26,7 @@ body, html {
     align-items: center;
     padding: 20px 0;
     gap: 15px;
-    z-index: 3000; /* Stays on very top */
+    z-index: 3000;
     transition: 0.4s;
 }
 
@@ -38,7 +38,7 @@ body, html {
 .sub-sidebar {
     position: fixed; 
     top: 0; 
-    left: -300px; /* Hidden behind main sidebar */
+    left: -300px; 
     width: 300px; 
     height: 100%;
     background-color: white;
@@ -48,12 +48,11 @@ body, html {
     align-items: center;
     padding: 40px 20px;
     gap: 20px;
-    z-index: 2000; /* Stays behind main sidebar but above map */
+    z-index: 2000;
     transition: 0.4s ease;
     border-right: 1px solid #ddd;
 }
 
-/* Pops out exactly where the main sidebar ends */
 .sub-sidebar.active {
     left: 200px; 
 }
@@ -71,17 +70,21 @@ body, html {
     border-radius: 12px;
 }
 
+/* UPDATED CATEGORY BOX SIZE */
 .category-btn {
     width: 100%;
-    height: 80px;
+    height: 120px; /* Large rectangle matching your picture */
     border: 2px solid black; 
     background: white;
-    font-size: 18px;
+    font-size: 22px;
     font-weight: bold;
-    border-radius: 12px;
+    border-radius: 15px;
     cursor: pointer;
     transition: 0.2s;
     margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .category-btn:hover { 
@@ -95,7 +98,52 @@ body, html {
     z-index: 1500;
 }
 
-/* 5. TOP RIGHT CONTROLS (Guide & GPS) */
+/* 5. ADDED LEVEL & CLASS BOXES */
+.chosen-box {
+    width: 100%;
+    padding: 25px;
+    border: 2px solid black;
+    border-radius: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.level-btn, .chosen-level-box {
+    width: 100%;
+    height: 60px;
+    border: 2px solid black;
+    border-radius: 30px;
+    background: white;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.class-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+}
+
+.class-item-btn {
+    height: 70px;
+    border: 2px solid black;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 6. TOP RIGHT CONTROLS (Guide & GPS) */
 .top-right-container {
     position: absolute;
     top: 20px;
@@ -106,7 +154,6 @@ body, html {
     gap: 15px;
 }
 
-/* GPS Active State - Blue color when tracking */
 .active-gps {
     background-color: #3498db !important;
 }
@@ -115,17 +162,17 @@ body, html {
     filter: invert(1);
 }
 
-/* 6. SUB-CATEGORY GRID (The Square Boxes) */
+/* 7. SUB-CATEGORY GRID (The Square Boxes) */
 .category-grid-container {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Two columns like your wireframe */
+    grid-template-columns: 1fr 1fr;
     gap: 15px;
     width: 100%;
     margin-top: 10px;
 }
 
 .sub-item-square {
-    aspect-ratio: 1 / 1; /* Makes it a perfect square */
+    aspect-ratio: 1 / 1; 
     border: 2px solid black;
     background: white;
     border-radius: 12px;
@@ -140,10 +187,6 @@ body, html {
     transition: 0.2s;
 }
 
-.sub-item-square:hover {
-    background: #f0f0f0;
-}
-
 .back-link {
     margin-top: auto;
     background: none;
@@ -154,7 +197,7 @@ body, html {
     padding: 10px;
 }
 
-/* 7. SEARCH BAR */
+/* 8. SEARCH BAR */
 .search-container {
     position: absolute;
     top: 20px;
@@ -171,7 +214,7 @@ body, html {
     background: white;
 }
 
-/* 8. ICONS & IMAGES */
+/* 9. ICONS & IMAGES */
 .icon-img { 
     width: 60%; 
     height: 60%; 
@@ -185,7 +228,7 @@ body, html {
     object-fit: cover;
 }
 
-/* 9. MAP & TOOLS */
+/* 10. MAP & TOOLS */
 #map { 
     width: 100%; 
     height: 100%; 
