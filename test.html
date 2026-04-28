@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMU Navigator - Cyberjaya</title>
+    <title>MMU Navigator - Final Public Version</title>
     
     <link rel="stylesheet" href="test.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -15,16 +15,21 @@
         <img src="menu.png" class="icon-img">
     </button>
 
+    <div class="top-right-container">
+        <a href="guide.html" class="control-btn">
+            <img src="question.png" class="icon-img">
+        </a>
+        <button id="gpsBtn" class="control-btn" onclick="locateUser()">
+            <img src="gps.png" class="icon-img">
+        </button>
+    </div>
+
     <div class="sidebar" id="mySidebar">
         <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
             <img src="menu.png" class="icon-img">
         </button>
-        <button class="nav-btn" onclick="openChatMenu()">
-            <img src="chatbox.png" class="icon-img">
-        </button>
-        <button class="nav-btn" onclick="openHomeMenu()">
-            <img src="home.png" class="icon-img">
-        </button>
+        <button class="nav-btn" onclick="openChatMenu()"><img src="chatbox.png" class="icon-img"></button>
+        <button class="nav-btn" onclick="openHomeMenu()"><img src="home.png" class="icon-img"></button>
         
         <div style="margin-top: auto;">
             <button class="nav-btn" style="border-radius: 50%; overflow: hidden;">
@@ -42,7 +47,7 @@
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
-            <div class="bot-msg">Hello! I am your MMU Guide. How can I help you today?</div>
+            <div class="bot-msg">Hello! How can I help you navigate MMU today?</div>
         </div>
         <div class="chat-input-wrapper">
             <input type="text" class="chat-input-field" placeholder="Ask me anything...">
@@ -56,11 +61,21 @@
     <div id="map"></div>
 
     <script>
-        // Campus Data
+        /* --- DATA STRUCTURES --- */
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
-            'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
-            'Faculty': ['FCI', 'FOE', 'FCM', 'FAC']
+            'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall']
+        };
+
+        const facultyList = ['FCI', 'FOE', 'FCM', 'FAC'];
+
+        const facultyDetails = {
+            'FCI': {
+                'Level 1': ['Lab 1.1', 'Classroom A', 'Lobby', 'Admin'],
+                'Level 2': ['Tutorial 2.1', 'Lab 2.2', 'Seminar 2', 'Meeting Room'],
+                'Level 3': ['Server Room', 'Classroom C', 'Dean Office', 'Research Lab'],
+                'Level 4': ['Final Year Project Lab', 'Staff Room', 'Storage', 'Roof Access']
+            }
         };
 
         function initApp() {
@@ -68,15 +83,12 @@
             loadMainCategories();
         }
 
-        // --- Sidebar Controls ---
+        /* --- SIDEBAR LOGIC --- */
         function toggleSidebar() {
             const sidebar = document.getElementById("mySidebar");
             const homeSidebar = document.getElementById("homeSidebar");
             const chatSidebar = document.getElementById("chatSidebar");
-            
             sidebar.classList.toggle("active");
-            
-            // If main bar closes, hide everything else
             if (!sidebar.classList.contains("active")) {
                 homeSidebar.classList.remove("active");
                 chatSidebar.classList.remove("active");
@@ -96,46 +108,110 @@
             document.getElementById("chatSidebar").classList.add("active");
         }
 
-        // --- Content Loading ---
+        /* --- CATEGORY & FACULTY LOGIC --- */
         function loadMainCategories() {
             const body = document.getElementById('categoryBody');
             const title = document.getElementById('subHeaderTitle');
             const backBtn = document.getElementById('backBtn');
-            
             title.innerText = "Categories";
             backBtn.style.display = 'none';
-            body.innerHTML = '';
-
-            ['Facility', 'Faculty', 'Hall'].forEach(cat => {
-                body.innerHTML += `<button class="category-btn-wide" onclick="showSubCategory('${cat}')">${cat}</button>`;
-            });
+            body.innerHTML = `
+                <button class="category-btn-wide" onclick="showSubCategory('Facility')">Facility</button>
+                <button class="category-btn-wide" onclick="showSubCategory('Faculty')">Faculty</button>
+                <button class="category-btn-wide" onclick="showSubCategory('Hall')">Hall</button>
+            `;
         }
 
         function showSubCategory(category) {
             const body = document.getElementById('categoryBody');
             const title = document.getElementById('subHeaderTitle');
             const backBtn = document.getElementById('backBtn');
-            
             title.innerText = category;
             backBtn.style.display = 'block';
+            backBtn.onclick = loadMainCategories;
             body.innerHTML = '';
 
-            const listContainer = document.createElement('div');
-            // Facilities = 2 columns. Others = 1 wide column.
-            listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+            if (category === 'Faculty') {
+                facultyList.forEach(fac => {
+                    body.innerHTML += `<button class="category-btn-wide" onclick="selectFaculty('${fac}')">${fac}</button>`;
+                });
+            } else {
+                const grid = document.createElement('div');
+                // Facility uses 2-column grid, Hall uses 1-column wide list
+                grid.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+                
+                campusData[category].forEach(item => {
+                    const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
+                    grid.innerHTML += `<div class="${btnClass}">${item}</div>`;
+                });
+                body.appendChild(grid);
+            }
+        }
 
-            campusData[category].forEach((item) => {
-                const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
-                listContainer.innerHTML += `<div class="${btnClass}">${item}</div>`;
+        function selectFaculty(facultyName) {
+            const body = document.getElementById('categoryBody');
+            const backBtn = document.getElementById('backBtn');
+            body.innerHTML = `
+                <div class="chosen-box">${facultyName}</div>
+                <button class="level-btn" onclick="selectLevel('${facultyName}', 'Level 1')">level 1</button>
+                <button class="level-btn" onclick="selectLevel('${facultyName}', 'Level 2')">level 2</button>
+                <button class="level-btn" onclick="selectLevel('${facultyName}', 'Level 3')">level 3</button>
+                <button class="level-btn" onclick="selectLevel('${facultyName}', 'Level 4')">level 4</button>
+            `;
+            backBtn.onclick = () => showSubCategory('Faculty');
+        }
+
+        function selectLevel(facultyName, levelName) {
+            const body = document.getElementById('categoryBody');
+            const backBtn = document.getElementById('backBtn');
+            body.innerHTML = `
+                <div class="chosen-box">${facultyName}</div>
+                <div class="chosen-level-box">${levelName}</div>
+                <p style="margin: 15px 0; font-weight: bold; text-align:center;">List of classes</p>
+                <div class="class-grid" id="classGrid"></div>
+            `;
+            const grid = document.getElementById('classGrid');
+            const classes = (facultyDetails[facultyName] && facultyDetails[facultyName][levelName]) 
+                            ? facultyDetails[facultyName][levelName] 
+                            : ['Room 1', 'Room 2', 'Room 3', 'Room 4'];
+
+            classes.forEach(cls => {
+                grid.innerHTML += `<div class="class-item-btn">${cls}</div>`;
             });
-
-            body.appendChild(listContainer);
+            backBtn.onclick = () => selectFaculty(facultyName);
         }
 
+        /* --- MAP & GPS --- */
+        var map, userMarker, isFollowing = false;
         function initMap() {
-            var map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(map);
         }
+
+        function locateUser() {
+            isFollowing = true;
+            document.getElementById('gpsBtn').classList.add('active-gps');
+            map.locate({setView: true, maxZoom: 18, watch: true, enableHighAccuracy: true});
+        }
+
+        function onLocationFound(e) {
+            if (!userMarker) {
+                userMarker = L.marker(e.latlng).addTo(map);
+            } else {
+                userMarker.setLatLng(e.latlng);
+            }
+            if (isFollowing) map.panTo(e.latlng);
+        }
+        
+        // Leaflet events
+        initApp(); // Fallback trigger
+        window.addEventListener('load', () => {
+            map.on('locationfound', onLocationFound);
+            map.on('dragstart', () => {
+                isFollowing = false;
+                document.getElementById('gpsBtn').classList.remove('active-gps');
+            });
+        });
     </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
-/* 1. RESET & BASE */
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+/* 1. RESET */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
 body, html { height: 100%; width: 100%; overflow: hidden; }
 
 /* 2. SIDEBARS */
@@ -19,23 +19,22 @@ body, html { height: 100%; width: 100%; overflow: hidden; }
 }
 #homeSidebar.active, #chatSidebar.active { left: 200px; }
 
-/* 3. BUTTONS (100x100 Nav) */
-.nav-btn, .menu-toggle-btn {
+/* 3. BUTTONS (Bold 100x100 Nav) */
+.nav-btn, .control-btn, .menu-toggle-btn {
     width: 100px; height: 100px; border: 2px solid black; background: white;
     display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 12px;
 }
 .menu-toggle-btn { position: absolute; top: 20px; left: 20px; z-index: 1500; }
-.admin-active { background-color: #2ecc71 !important; }
 
-/* 4. LARGE RECTANGULAR BUTTONS */
+/* 4. RECTANGULAR CATEGORY BUTTONS (120px tall) */
 .category-btn-wide {
-    width: 100%; height: 100px; border: 2px solid black; background: white;
-    margin-bottom: 15px; border-radius: 15px; font-weight: bold; font-size: 20px; 
+    width: 100%; height: 120px; border: 2px solid black; background: white;
+    margin-bottom: 15px; border-radius: 15px; font-weight: bold; font-size: 22px; 
     cursor: pointer; display: flex; justify-content: center; align-items: center;
     text-align: center; padding: 10px;
 }
 
-/* 5. FACILITY GRID (2 Columns) */
+/* 5. FACILITY GRID (2 Side-by-Side) */
 .grid-container-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
 .facility-grid-btn {
     aspect-ratio: 1/0.8; width: 100%; border: 2px solid black; background: white;
@@ -43,21 +42,27 @@ body, html { height: 100%; width: 100%; overflow: hidden; }
     display: flex; justify-content: center; align-items: center; text-align: center;
 }
 
-/* 6. AI CHATBOX STYLE */
+/* 6. FACILITY LEVELS & CLASSES */
+.chosen-box { width: 100%; padding: 25px; border: 2px solid black; border-radius: 15px; text-align: center; font-weight: bold; font-size: 24px; margin-bottom: 15px; }
+.level-btn, .chosen-level-box { width: 100%; height: 60px; border: 2px solid black; border-radius: 30px; background: white; font-weight: bold; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; cursor: pointer; }
+.class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.class-item-btn { height: 70px; border: 2px solid black; background: white; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-align: center; font-weight: bold; }
+
+/* 7. CHATBOX */
 .chat-messages-container { flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 80px; }
 .bot-msg { align-self: flex-start; background: #f0f0f0; padding: 12px; border-radius: 15px 15px 15px 0px; border: 1px solid black; font-size: 14px; max-width: 85%; }
 .chat-input-wrapper { position: absolute; bottom: 20px; left: 20px; right: 20px; }
 .chat-input-field { width: 100%; padding: 15px 20px; border: 2px solid black; border-radius: 30px; font-size: 16px; }
 
-/* 7. SEARCH & MAP */
+/* 8. TOP RIGHT & GPS */
+.top-right-container { position: absolute; top: 20px; right: 20px; z-index: 1500; display: flex; flex-direction: column; gap: 15px; }
+.active-gps { background-color: #3498db !important; }
+.active-gps img { filter: invert(1); }
+
+/* 9. SEARCH & MAP */
 .search-container { position: absolute; top: 20px; left: 140px; z-index: 1000; }
-.search-bar { width: 300px; padding: 12px 20px; border: 2px solid black; border-radius: 25px; }
+.search-bar { width: 300px; padding: 12px 25px; border: 2px solid black; border-radius: 30px; font-size: 16px; }
 #map { width: 100%; height: 100%; z-index: 1; }
 .icon-img { width: 60%; height: 60%; object-fit: contain; }
 .profile-img { width: 100%; height: 100%; object-fit: cover; }
 .back-link { margin-top: 20px; font-weight: bold; cursor: pointer; background: none; border: none; text-decoration: underline; }
-
-/* 8. ADMIN DELETE TOOLS */
-.item-container { position: relative; width: 100%; }
-.add-item-wide-btn { width: 100%; height: 80px; border: 2px dashed black; border-radius: 15px; background: #f9f9f9; font-size: 40px; cursor: pointer; margin-top: 15px; }
-.delete-badge { position: absolute; top: -5px; right: -5px; background: red; color: white; border: 2px solid black; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-weight: bold; z-index: 10; font-size: 16px; }
