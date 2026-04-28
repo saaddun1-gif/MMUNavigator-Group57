@@ -1,157 +1,68 @@
-/* General Reset */
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
-    font-family: 'Arial', sans-serif; 
-}
+/* 1. RESET */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+body, html { height: 100%; width: 100%; overflow: hidden; }
 
-body, html { 
-    height: 100%; 
-    width: 100%; 
-    overflow: hidden; 
-}
-
-/* 1. THE MAIN SIDEBAR */
+/* 2. SIDEBARS */
 .sidebar {
-    position: fixed;
-    top: 0;
-    left: -210px; /* Hidden off-screen */
-    width: 200px; 
-    height: 100%;
-    background-color: white;
-    border-right: 2px solid black;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-    gap: 15px;
-    z-index: 3000; /* Stays on very top */
-    transition: 0.4s;
+    position: fixed; top: 0; left: -210px; width: 200px; height: 100%;
+    background: white; border-right: 2px solid black;
+    display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 15px;
+    z-index: 3000; transition: 0.4s;
 }
+.sidebar.active { left: 0; }
 
-.sidebar.active {
-    left: 0;
-}
-
-/* 2. THE SUB-SIDEBAR (Home Menu) */
 .sub-sidebar {
-    position: fixed; 
-    top: 0; 
-    left: -300px; /* Hidden behind main sidebar */
-    width: 250px; 
-    height: 100%;
-    background-color: white;
-    box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px;
-    gap: 20px;
-    z-index: 2000; /* Stays behind main sidebar but above map */
-    transition: 0.4s ease;
-    border-right: 1px solid #ddd;
+    position: fixed; top: 0; left: -310px; width: 300px; height: 100%;
+    background: white; border-right: 2px solid black;
+    display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+    z-index: 2000; transition: 0.4s; overflow-y: auto;
+}
+#homeSidebar.active, #chatSidebar.active { left: 200px; }
+
+/* 3. BUTTONS (Bold 100x100 Nav) */
+.nav-btn, .control-btn, .menu-toggle-btn {
+    width: 100px; height: 100px; border: 2px solid black; background: white;
+    display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 12px;
+}
+.menu-toggle-btn { position: absolute; top: 20px; left: 20px; z-index: 1500; }
+
+/* 4. RECTANGULAR CATEGORY BUTTONS (120px tall) */
+.category-btn-wide {
+    width: 100%; height: 120px; border: 2px solid black; background: white;
+    margin-bottom: 15px; border-radius: 15px; font-weight: bold; font-size: 22px; 
+    cursor: pointer; display: flex; justify-content: center; align-items: center;
+    text-align: center; padding: 10px;
 }
 
-/* Pops out exactly where the main sidebar ends (200px) */
-.sub-sidebar.active {
-    left: 200px; 
+/* 5. FACILITY GRID (2 Side-by-Side) */
+.grid-container-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.facility-grid-btn {
+    aspect-ratio: 1/0.8; width: 100%; border: 2px solid black; background: white;
+    border-radius: 12px; font-weight: bold; font-size: 16px;
+    display: flex; justify-content: center; align-items: center; text-align: center;
 }
 
-/* 3. BUTTONS & UI */
-.nav-btn {
-    width: 100px; 
-    height: 100px; 
-    border: 2px solid black;
-    background-color: white; 
-    display: flex; 
-    justify-content: center;
-    align-items: center; 
-    cursor: pointer; 
-    border-radius: 12px;
-}
+/* 6. FACILITY LEVELS & CLASSES */
+.chosen-box { width: 100%; padding: 25px; border: 2px solid black; border-radius: 15px; text-align: center; font-weight: bold; font-size: 24px; margin-bottom: 15px; }
+.level-btn, .chosen-level-box { width: 100%; height: 60px; border: 2px solid black; border-radius: 30px; background: white; font-weight: bold; display: flex; justify-content: center; align-items: center; margin-bottom: 10px; cursor: pointer; }
+.class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.class-item-btn { height: 70px; border: 2px solid black; background: white; border-radius: 12px; display: flex; justify-content: center; align-items: center; text-align: center; font-weight: bold; }
 
-.category-btn {
-    width: 100%;
-    height: 80px;
-    border: 2px solid black; 
-    background: white;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.2s;
-}
+/* 7. CHATBOX */
+.chat-messages-container { flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 80px; }
+.bot-msg { align-self: flex-start; background: #f0f0f0; padding: 12px; border-radius: 15px 15px 15px 0px; border: 1px solid black; font-size: 14px; max-width: 85%; }
+.chat-input-wrapper { position: absolute; bottom: 20px; left: 20px; right: 20px; }
+.chat-input-field { width: 100%; padding: 15px 20px; border: 2px solid black; border-radius: 30px; font-size: 16px; }
 
-.category-btn:hover { 
-    background: #f0f0f0; 
-}
+/* 8. TOP RIGHT & GPS */
+.top-right-container { position: absolute; top: 20px; right: 20px; z-index: 1500; display: flex; flex-direction: column; gap: 15px; }
+.active-gps { background-color: #3498db !important; }
+.active-gps img { filter: invert(1); }
 
-.menu-toggle-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 1500;
-    width: 100px;
-    height: 100px;
-    background: white;
-    border: 2px solid black;
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.search-container {
-    position: absolute;
-    top: 20px;
-    left: 140px;
-    z-index: 1000;
-}
-
-.search-bar {
-    width: 300px; 
-    padding: 12px 25px; 
-    border: 2px solid black;
-    border-radius: 30px; 
-    font-size: 16px; 
-    background: white;
-}
-
-.icon-img { 
-    width: 60%; 
-    height: 60%; 
-    object-fit: contain; 
-}
-
-/* 4. MAP & TOOLS */
-#map { 
-    width: 100%; 
-    height: 100%; 
-    z-index: 1; 
-}
-
-/* --- GUIDE BUTTON STYLE --- */
-.guide-btn {
-    position: absolute;
-    top: 20px; 
-    right: 20px; /* Moves it to the top-right corner */
-    z-index: 1500; /* Keeps it above the map */
-    width: 60px; 
-    height: 60px;
-    background: white;
-    border: none;
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    transition: 0.3s;
-}
-
-.guide-btn:hover {
-    background-color: #f0f0f0;
-    transform: scale(1.05); /* Makes it pop slightly when you hover */
-}
+/* 9. SEARCH & MAP */
+.search-container { position: absolute; top: 20px; left: 140px; z-index: 1000; }
+.search-bar { width: 300px; padding: 12px 25px; border: 2px solid black; border-radius: 30px; font-size: 16px; }
+#map { width: 100%; height: 100%; z-index: 1; }
+.icon-img { width: 60%; height: 60%; object-fit: contain; }
+.profile-img { width: 100%; height: 100%; object-fit: cover; }
+.back-link { margin-top: 20px; font-weight: bold; cursor: pointer; background: none; border: none; text-decoration: underline; }
