@@ -1,0 +1,39 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+h1 {
+    font-size: 36px;
+     margin-bottom: 10px;
+}
+
+.about {
+    padding: 32px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    font-weight: 600;
+    border: 5px solid #222020;
+}
+.about li {
+    font-size: 24px;
+    margin: auto;
+    line-height: 1;
+    text-align: left;
+}
+
+.button {
+    display: block;
+    margin: 0 auto;
+    padding: 13px 16px;
+    border-radius: 8px;
+    background: #504747;
+    color: white;
+    cursor: pointer;
+    width: 3%;
+}
