@@ -1,247 +1,63 @@
-/* 1. GENERAL RESET */
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
-    font-family: 'Arial', sans-serif; 
-}
+/* 1. RESET & BASE */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body, html { height: 100%; width: 100%; overflow: hidden; }
 
-body, html { 
-    height: 100%; 
-    width: 100%; 
-    overflow: hidden; 
-}
-
-/* 2. THE MAIN SIDEBAR (Thin Bar) */
+/* 2. SIDEBARS */
 .sidebar {
-    position: fixed;
-    top: 0;
-    left: -210px;
-    width: 200px; 
-    height: 100%;
-    background-color: white;
-    border-right: 2px solid black;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-    gap: 15px;
-    z-index: 3000;
-    transition: 0.4s;
+    position: fixed; top: 0; left: -210px; width: 200px; height: 100%;
+    background: white; border-right: 2px solid black;
+    display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 15px;
+    z-index: 3000; transition: 0.4s;
 }
+.sidebar.active { left: 0; }
 
-.sidebar.active {
-    left: 0;
-}
-
-/* 3. THE SUB-SIDEBAR (Categories & Drawer) */
 .sub-sidebar {
-    position: fixed; 
-    top: 0; 
-    left: -300px; 
-    width: 300px; 
-    height: 100%;
-    background-color: white;
-    box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px;
-    gap: 20px;
-    z-index: 2000;
-    transition: 0.4s ease;
-    border-right: 1px solid #ddd;
+    position: fixed; top: 0; left: -310px; width: 300px; height: 100%;
+    background: white; border-right: 2px solid black;
+    display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+    z-index: 2000; transition: 0.4s; overflow-y: auto;
+}
+#homeSidebar.active, #chatSidebar.active { left: 200px; }
+
+/* 3. BUTTONS (100x100 Nav) */
+.nav-btn, .menu-toggle-btn {
+    width: 100px; height: 100px; border: 2px solid black; background: white;
+    display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 12px;
+}
+.menu-toggle-btn { position: absolute; top: 20px; left: 20px; z-index: 1500; }
+.admin-active { background-color: #2ecc71 !important; }
+
+/* 4. LARGE RECTANGULAR BUTTONS */
+.category-btn-wide {
+    width: 100%; height: 100px; border: 2px solid black; background: white;
+    margin-bottom: 15px; border-radius: 15px; font-weight: bold; font-size: 20px; 
+    cursor: pointer; display: flex; justify-content: center; align-items: center;
+    text-align: center; padding: 10px;
 }
 
-.sub-sidebar.active {
-    left: 200px; 
+/* 5. FACILITY GRID (2 Columns) */
+.grid-container-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+.facility-grid-btn {
+    aspect-ratio: 1/0.8; width: 100%; border: 2px solid black; background: white;
+    border-radius: 12px; font-weight: bold; font-size: 16px;
+    display: flex; justify-content: center; align-items: center; text-align: center;
 }
 
-/* 4. BUTTONS & UI (The Bold Style) */
-.nav-btn, .control-btn, .menu-toggle-btn {
-    width: 100px; 
-    height: 100px; 
-    border: 2px solid black;
-    background-color: white; 
-    display: flex; 
-    justify-content: center;
-    align-items: center; 
-    cursor: pointer; 
-    border-radius: 12px;
-}
+/* 6. AI CHATBOX STYLE */
+.chat-messages-container { flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 80px; }
+.bot-msg { align-self: flex-start; background: #f0f0f0; padding: 12px; border-radius: 15px 15px 15px 0px; border: 1px solid black; font-size: 14px; max-width: 85%; }
+.chat-input-wrapper { position: absolute; bottom: 20px; left: 20px; right: 20px; }
+.chat-input-field { width: 100%; padding: 15px 20px; border: 2px solid black; border-radius: 30px; font-size: 16px; }
 
-/* UPDATED CATEGORY BOX SIZE */
-.category-btn {
-    width: 100%;
-    height: 120px; /* Large rectangle matching your picture */
-    border: 2px solid black; 
-    background: white;
-    font-size: 22px;
-    font-weight: bold;
-    border-radius: 15px;
-    cursor: pointer;
-    transition: 0.2s;
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+/* 7. SEARCH & MAP */
+.search-container { position: absolute; top: 20px; left: 140px; z-index: 1000; }
+.search-bar { width: 300px; padding: 12px 20px; border: 2px solid black; border-radius: 25px; }
+#map { width: 100%; height: 100%; z-index: 1; }
+.icon-img { width: 60%; height: 60%; object-fit: contain; }
+.profile-img { width: 100%; height: 100%; object-fit: cover; }
+.back-link { margin-top: 20px; font-weight: bold; cursor: pointer; background: none; border: none; text-decoration: underline; }
 
-.category-btn:hover { 
-    background: #f0f0f0; 
-}
-
-.menu-toggle-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 1500;
-}
-
-/* 5. ADDED LEVEL & CLASS BOXES */
-.chosen-box {
-    width: 100%;
-    padding: 25px;
-    border: 2px solid black;
-    border-radius: 15px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 24px;
-    margin-bottom: 15px;
-}
-
-.level-btn, .chosen-level-box {
-    width: 100%;
-    height: 60px;
-    border: 2px solid black;
-    border-radius: 30px;
-    background: white;
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.class-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    width: 100%;
-}
-
-.class-item-btn {
-    height: 70px;
-    border: 2px solid black;
-    background: white;
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* 6. TOP RIGHT CONTROLS (Guide & GPS) */
-.top-right-container {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 1500;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.active-gps {
-    background-color: #3498db !important;
-}
-
-.active-gps img {
-    filter: invert(1);
-}
-
-/* 7. SUB-CATEGORY GRID (The Square Boxes) */
-.category-grid-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    width: 100%;
-    margin-top: 10px;
-}
-
-.sub-item-square {
-    aspect-ratio: 1 / 1; 
-    border: 2px solid black;
-    background: white;
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    font-weight: bold;
-    font-size: 14px;
-    padding: 5px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.back-link {
-    margin-top: auto;
-    background: none;
-    border: none;
-    text-decoration: underline;
-    cursor: pointer;
-    font-weight: bold;
-    padding: 10px;
-}
-
-/* 8. SEARCH BAR */
-.search-container {
-    position: absolute;
-    top: 20px;
-    left: 140px;
-    z-index: 1000;
-}
-
-.search-bar {
-    width: 300px; 
-    padding: 12px 25px; 
-    border: 2px solid black;
-    border-radius: 30px; 
-    font-size: 16px; 
-    background: white;
-}
-
-/* 9. ICONS & IMAGES */
-.icon-img { 
-    width: 60%; 
-    height: 60%; 
-    object-fit: contain; 
-}
-
-.profile-img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-/* 10. MAP & TOOLS */
-#map { 
-    width: 100%; 
-    height: 100%; 
-    z-index: 1; 
-}
-
-.distance-tool {
-    position: absolute; 
-    bottom: 20px; 
-    right: 20px;
-    background: white; 
-    border: 2px solid black;
-    padding: 15px; 
-    border-radius: 8px; 
-    z-index: 1000;
-}
+/* 8. ADMIN DELETE TOOLS */
+.item-container { position: relative; width: 100%; }
+.add-item-wide-btn { width: 100%; height: 80px; border: 2px dashed black; border-radius: 15px; background: #f9f9f9; font-size: 40px; cursor: pointer; margin-top: 15px; }
+.delete-badge { position: absolute; top: -5px; right: -5px; background: red; color: white; border: 2px solid black; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-weight: bold; z-index: 10; font-size: 16px; }
