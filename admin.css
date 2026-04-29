@@ -1,8 +1,8 @@
-/* 1. RESET (Matches Public) */
+/* 1. RESET (Same as Public) */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
 body, html { height: 100%; width: 100%; overflow: hidden; }
 
-/* 2. SIDEBARS (Matches Public) */
+/* 2. SIDEBARS (Same as Public) */
 .sidebar {
     position: fixed; top: 0; left: -210px; width: 200px; height: 100%;
     background: white; border-right: 2px solid black;
@@ -26,15 +26,13 @@ body, html { height: 100%; width: 100%; overflow: hidden; }
 }
 .menu-toggle-btn { position: absolute; top: 20px; left: 20px; z-index: 1500; }
 
-/* 4. RECTANGULAR CATEGORY BUTTONS (120px tall) */
+/* 4. HOME ELEMENTS */
 .category-btn-wide {
-    width: 100%; height: 120px; border: 2px solid black; background: white;
-    margin-bottom: 15px; border-radius: 15px; font-weight: bold; font-size: 22px; 
+    width: 100%; height: 100px; border: 2px solid black; background: white;
+    margin-bottom: 15px; border-radius: 15px; font-weight: bold; font-size: 20px; 
     cursor: pointer; display: flex; justify-content: center; align-items: center;
     text-align: center; padding: 10px;
 }
-
-/* 5. FACILITY GRID */
 .grid-container-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
 .facility-grid-btn {
     aspect-ratio: 1/0.8; width: 100%; border: 2px solid black; background: white;
@@ -42,33 +40,39 @@ body, html { height: 100%; width: 100%; overflow: hidden; }
     display: flex; justify-content: center; align-items: center; text-align: center;
 }
 
-/* 6. CHATBOX UI */
-.chat-messages-container { flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 80px; }
-.bot-msg { align-self: flex-start; background: #f0f0f0; padding: 12px; border-radius: 15px 15px 15px 0px; border: 1px solid black; font-size: 14px; max-width: 85%; }
-.chat-input-wrapper { position: absolute; bottom: 20px; left: 20px; right: 20px; }
-.chat-input-field { width: 100%; padding: 15px 20px; border: 2px solid black; border-radius: 30px; font-size: 16px; }
+/* 5. ADMIN ADD/DELETE TOOLS (From snippet) */
+.item-container { position: relative; width: 100%; }
+.wide-list-container { width: 100%; }
 
-/* NEW: Template Preview inside Chat */
-.admin-template-preview-grid { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-.chat-template-pill { background: white; border: 1px solid black; border-radius: 15px; padding: 5px 10px; font-size: 11px; cursor: pointer; }
-
-/* 7. ADMIN SETTINGS STYLES */
-.admin-text-input { width: 100%; padding: 12px; border: 2px solid black; border-radius: 10px; margin-bottom: 10px; }
-.admin-save-btn { width: 100%; padding: 10px; background: black; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
-.admin-item-row { 
-    display: flex; justify-content: space-between; align-items: center; 
-    width: 100%; padding: 10px; border: 1px solid black; border-radius: 8px; margin-bottom: 8px; 
+.delete-badge {
+    position: absolute; top: -5px; right: -5px; background: red; color: white;
+    border: 2px solid black; border-radius: 50%; width: 35px; height: 35px;
+    cursor: pointer; font-weight: bold; z-index: 10; font-size: 16px;
 }
-.admin-item-row button { background: red; color: white; border: none; border-radius: 5px; padding: 2px 8px; cursor: pointer; }
 
-/* 8. TOP RIGHT & GPS */
+.add-item-wide-btn {
+    width: 100%; height: 80px; border: 2px dashed black; border-radius: 15px;
+    background: #f9f9f9; font-size: 40px; cursor: pointer; margin-top: 15px;
+}
+
+/* 6. CHAT & SETTINGS UI */
+.chat-messages-container { flex: 1; width: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.bot-msg { background: #f0f0f0; padding: 12px; border-radius: 15px 15px 15px 0px; border: 1px solid black; font-size: 14px; }
+.template-preview-area { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.chat-pill { background: white; border: 1px solid black; border-radius: 15px; padding: 5px 10px; font-size: 11px; }
+
+.admin-text-input { width: 100%; padding: 12px; border: 2px solid black; border-radius: 10px; margin-bottom: 10px; }
+.admin-save-btn { width: 100%; padding: 12px; background: black; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+.admin-template-row { 
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 10px; border: 1px solid black; border-radius: 8px; margin-bottom: 8px; 
+}
+.admin-template-row button { background: red; color: white; border: none; border-radius: 5px; padding: 2px 8px; cursor: pointer; }
+
+/* 7. OTHER */
 .top-right-container { position: absolute; top: 20px; right: 20px; z-index: 1500; display: flex; flex-direction: column; gap: 15px; }
-.active-gps { background-color: #3498db !important; }
-.active-gps img { filter: invert(1); }
-
-/* 9. SEARCH & MAP */
 .search-container { position: absolute; top: 20px; left: 140px; z-index: 1000; }
-.search-bar { width: 300px; padding: 12px 25px; border: 2px solid black; border-radius: 30px; font-size: 16px; }
+.search-bar { width: 300px; padding: 12px 20px; border: 2px solid black; border-radius: 25px; }
 #map { width: 100%; height: 100%; z-index: 1; }
 .icon-img { width: 60%; height: 60%; object-fit: contain; }
 .profile-img { width: 100%; height: 100%; object-fit: cover; }
