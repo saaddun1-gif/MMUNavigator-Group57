@@ -31,8 +31,8 @@
         <button class="nav-btn" onclick="openChatMenu()"><img src="chatbox.png" class="icon-img"></button>
         <button class="nav-btn" onclick="openHomeMenu()"><img src="home.png" class="icon-img"></button>
         
-        <button class="nav-btn" onclick="openSettingsMenu()">
-            <img src="plus.jpg" class="icon-img">
+        <button id="settingBtn" class="nav-btn" onclick="toggleEditMode()">
+            <img src="setting.png" class="icon-img">
         </button>
         
         <div style="margin-top: auto;">
@@ -44,31 +44,28 @@
 
     <div class="sub-sidebar" id="homeSidebar">
         <h1 id="subHeaderTitle">Categories</h1> 
-        <div id="categoryBody" class="category-body-content"></div>
+        <div id="categoryBody" class="category-body-content" style="width: 100%;"></div>
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
-            <div class="bot-msg">Hello! This is how the chat looks for users.</div>
+            <div class="bot-msg">Hello! How can I help you navigate MMU today?</div>
             <div id="templateDisplay" class="template-preview-area"></div>
         </div>
-        <div class="chat-input-wrapper">
-            <input type="text" class="chat-input-field" placeholder="User types here..." disabled>
-        </div>
-    </div>
 
-    <div class="sub-sidebar" id="settingsSidebar">
-        <h1>Chat Settings</h1>
-        <p style="margin-bottom: 10px; font-weight: bold;">Add Chat Template:</p>
-        <input type="text" id="templateInput" class="admin-text-input" placeholder="Enter question...">
-        <button class="admin-save-btn" onclick="addChatTemplate()">Save Question</button>
-        
-        <hr style="width: 100%; margin: 20px 0; border: 1px solid black;">
-        
-        <p style="margin-bottom: 10px; font-weight: bold;">Manage Templates:</p>
-        <div id="adminTemplateList" style="width: 100%;"></div>
+        <div id="chatAdminSettings" style="display: none; width: 100%; margin-bottom: 20px;">
+            <hr style="border: 1px solid black; margin: 10px 0;">
+            <p style="font-weight: bold; margin-bottom: 5px;">Add New Question:</p>
+            <input type="text" id="templateInput" class="admin-text-input" placeholder="Type here...">
+            <button class="admin-save-btn" onclick="addChatTemplate()">Save</button>
+            <div id="adminTemplateList" style="width: 100%; margin-top: 10px;"></div>
+        </div>
+
+        <div class="chat-input-wrapper" id="chatInputArea">
+            <input type="text" class="chat-input-field" placeholder="Ask me anything...">
+        </div>
     </div>
 
     <div class="search-container">
@@ -79,7 +76,10 @@
 
     <script>
         /* --- STATE & DATA --- */
-        let isAdminMode = true; 
+        let isEditMode = false; // Starts OFF (Looks like Public User)
+        let currentView = ''; // tracks if we are looking at 'home' or 'chat'
+        let currentCategory = ''; // tracks which category is open
+
         let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
         
         const campusData = {
@@ -93,6 +93,26 @@
             loadMainCategories();
         }
 
+        /* --- EDIT MODE LOGIC --- */
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('settingBtn');
+            
+            if (isEditMode) {
+                btn.classList.add('setting-on');
+            } else {
+                btn.classList.remove('setting-on');
+            }
+
+            // Refresh what we are looking at
+            if (currentView === 'chat') {
+                openChatMenu();
+            } else if (currentView === 'home') {
+                if (currentCategory === '') loadMainCategories();
+                else showSubCategory(currentCategory);
+            }
+        }
+
         /* --- SIDEBAR LOGIC --- */
         function toggleSidebar() {
             const sidebar = document.getElementById("mySidebar");
@@ -102,35 +122,44 @@
             }
         }
 
-        function openHomeMenu() {
-            closeAllSubSidebars();
-            document.getElementById("mySidebar").classList.add("active");
-            document.getElementById("homeSidebar").classList.add("active");
-            loadMainCategories();
-        }
-
-        function openChatMenu() {
-            closeAllSubSidebars();
-            document.getElementById("mySidebar").classList.add("active");
-            document.getElementById("chatSidebar").classList.add("active");
-            renderTemplatePreview();
-        }
-
-        function openSettingsMenu() {
-            closeAllSubSidebars();
-            document.getElementById("mySidebar").classList.add("active");
-            document.getElementById("settingsSidebar").classList.add("active");
-            renderAdminTemplateList();
-        }
-
         function closeAllSubSidebars() {
             document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
         }
 
-        /* --- HOME CATEGORY LOGIC (Add/Delete) --- */
+        function openHomeMenu() {
+            currentView = 'home';
+            closeAllSubSidebars();
+            document.getElementById("mySidebar").classList.add("active");
+            document.getElementById("homeSidebar").classList.add("active");
+            
+            if (currentCategory === '') loadMainCategories();
+            else showSubCategory(currentCategory);
+        }
+
+        function openChatMenu() {
+            currentView = 'chat';
+            closeAllSubSidebars();
+            document.getElementById("mySidebar").classList.add("active");
+            document.getElementById("chatSidebar").classList.add("active");
+            
+            renderTemplatePreview();
+
+            // Show or hide admin tools inside chat
+            if (isEditMode) {
+                document.getElementById('chatAdminSettings').style.display = 'block';
+                document.getElementById('chatInputArea').style.display = 'none'; // hide normal input
+                renderAdminTemplateList();
+            } else {
+                document.getElementById('chatAdminSettings').style.display = 'none';
+                document.getElementById('chatInputArea').style.display = 'block'; // show normal input
+            }
+        }
+
+        /* --- HOME CATEGORY LOGIC --- */
         function loadMainCategories() {
+            currentCategory = '';
             const body = document.getElementById('categoryBody');
-            document.getElementById('subHeaderTitle').innerText = isAdminMode ? "Delete" : "Categories";
+            document.getElementById('subHeaderTitle').innerText = isEditMode ? "Delete Categories" : "Categories";
             document.getElementById('backBtn').style.display = 'none';
             body.innerHTML = '';
 
@@ -140,9 +169,11 @@
         }
 
         function showSubCategory(category) {
+            currentCategory = category;
             const body = document.getElementById('categoryBody');
-            document.getElementById('subHeaderTitle').innerText = isAdminMode ? "Add/Update" : category;
+            document.getElementById('subHeaderTitle').innerText = isEditMode ? "Editing: " + category : category;
             document.getElementById('backBtn').style.display = 'block';
+            backBtn.onclick = loadMainCategories;
             body.innerHTML = '';
 
             const listContainer = document.createElement('div');
@@ -155,7 +186,7 @@
                 const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
                 container.innerHTML = `<div class="${btnClass}">${item}</div>`;
 
-                if (isAdminMode) {
+                if (isEditMode) {
                     const del = document.createElement('button');
                     del.className = 'delete-badge';
                     del.innerText = 'X';
@@ -171,7 +202,7 @@
 
             body.appendChild(listContainer);
 
-            if (isAdminMode) {
+            if (isEditMode) {
                 const addBtn = document.createElement('button');
                 addBtn.className = 'add-item-wide-btn';
                 addBtn.innerText = '+';
@@ -183,14 +214,29 @@
             }
         }
 
-        /* --- CHAT SETTINGS LOGIC --- */
+        /* --- CHAT TEMPLATE LOGIC --- */
         function addChatTemplate() {
             const input = document.getElementById('templateInput');
             if(input.value) {
                 chatTemplates.push(input.value);
                 input.value = '';
                 renderAdminTemplateList();
+                renderTemplatePreview();
             }
+        }
+
+        function deleteChatTemplate(index) {
+            chatTemplates.splice(index, 1);
+            renderAdminTemplateList();
+            renderTemplatePreview();
+        }
+
+        function renderTemplatePreview() {
+            const container = document.getElementById('templateDisplay');
+            container.innerHTML = '';
+            chatTemplates.forEach(t => {
+                container.innerHTML += `<button class="chat-pill">${t}</button>`;
+            });
         }
 
         function renderAdminTemplateList() {
@@ -200,21 +246,8 @@
                 container.innerHTML += `
                     <div class="admin-template-row">
                         <span>${t}</span>
-                        <button onclick="deleteChatTemplate(${i})">×</button>
+                        <button onclick="deleteChatTemplate(${i})">X</button>
                     </div>`;
-            });
-        }
-
-        function deleteChatTemplate(index) {
-            chatTemplates.splice(index, 1);
-            renderAdminTemplateList();
-        }
-
-        function renderTemplatePreview() {
-            const container = document.getElementById('templateDisplay');
-            container.innerHTML = '';
-            chatTemplates.forEach(t => {
-                container.innerHTML += `<button class="chat-pill">${t}</button>`;
             });
         }
 
