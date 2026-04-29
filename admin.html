@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMU Navigator - Admin</title>
+    <title>MMU Navigator - Admin Mode</title>
     
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -19,11 +19,11 @@
         <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
             <img src="menu.png" class="icon-img">
         </button>
-        <button class="nav-btn"><img src="chatbox.png" class="icon-img"></button>
+        <button class="nav-btn" onclick="openChatMenu()"><img src="chatbox.png" class="icon-img"></button>
         <button class="nav-btn" onclick="openHomeMenu()"><img src="home.png" class="icon-img"></button>
         
-        <button id="adminBtn" class="nav-btn" onclick="toggleAdminMode()">
-            <img src="1.png" class="icon-img">
+        <button class="nav-btn" onclick="openSettingsMenu()">
+            <img src="setting.png" class="icon-img">
         </button>
         
         <div style="margin-top: auto;">
@@ -39,114 +39,137 @@
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
-    <div class="search-container">
-        <input type="text" class="search-bar" placeholder="Search MMU locations...">
+    <div class="sub-sidebar" id="chatSidebar">
+        <h1>AI Chat box</h1>
+        <div class="chat-messages-container" id="chatMessages">
+            <div class="bot-msg">Hello! How can I help you?</div>
+            <div id="templateContainer" class="template-grid"></div>
+        </div>
+        <div class="chat-input-wrapper">
+            <input type="text" class="chat-input-field" placeholder="Ask me anything...">
+        </div>
     </div>
-    
+
+    <div class="sub-sidebar" id="settingsSidebar">
+        <h1>Chat Settings</h1>
+        <p style="margin-bottom: 10px; font-weight: bold;">Add Template Question:</p>
+        <input type="text" id="newTemplateInput" class="admin-input" placeholder="Enter question here...">
+        <button class="add-item-wide-btn" onclick="addTemplate()" style="height: 50px; font-size: 18px; margin-top: 10px;">Save Question</button>
+        
+        <hr style="width: 100%; margin: 20px 0; border: 1px solid #ddd;">
+        
+        <p style="margin-bottom: 10px; font-weight: bold;">Existing Templates:</p>
+        <div id="templateManagerList" style="width: 100%;"></div>
+    </div>
+
     <div id="map"></div>
 
     <script>
-        let isAdminMode = false;
-        let currentView = 'main';
-        let currentCategory = '';
-
+        // Data Arrays
         const campusData = {
-            'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
-            'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
+            'Facility': ['Library', 'Surau', 'Gym', 'Cafe'],
+            'Hall': ['Dewan Tun Canselor', 'Exam Hall'],
             'Faculty': ['FCI', 'FOE', 'FCM', 'FAC']
         };
+
+        // Templates stored here
+        let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
 
         function initApp() {
             initMap();
             loadMainCategories();
+            renderTemplates();
+        }
+
+        /* --- SIDEBAR CONTROLS --- */
+        function closeAllSubSidebars() {
+            document.getElementById("homeSidebar").classList.remove("active");
+            document.getElementById("chatSidebar").classList.remove("active");
+            document.getElementById("settingsSidebar").classList.remove("active");
         }
 
         function toggleSidebar() {
             const sidebar = document.getElementById("mySidebar");
-            const subSidebar = document.getElementById("homeSidebar");
             sidebar.classList.toggle("active");
-            if (!sidebar.classList.contains("active")) { subSidebar.classList.remove("active"); }
+            if (!sidebar.classList.contains("active")) closeAllSubSidebars();
         }
 
         function openHomeMenu() {
+            closeAllSubSidebars();
             document.getElementById("mySidebar").classList.add("active");
             document.getElementById("homeSidebar").classList.add("active");
             loadMainCategories();
         }
 
-        function toggleAdminMode() {
-            isAdminMode = !isAdminMode;
-            document.getElementById('adminBtn').classList.toggle('admin-active');
-            refreshUI();
+        function openChatMenu() {
+            closeAllSubSidebars();
+            document.getElementById("mySidebar").classList.add("active");
+            document.getElementById("chatSidebar").classList.add("active");
+            renderTemplates(); // Refresh view
         }
 
-        function refreshUI() {
-            if (currentView === 'main') loadMainCategories();
-            else showSubCategory(currentCategory);
+        function openSettingsMenu() {
+            closeAllSubSidebars();
+            document.getElementById("mySidebar").classList.add("active");
+            document.getElementById("settingsSidebar").classList.add("active");
+            renderTemplateManager();
         }
 
+        /* --- TEMPLATE LOGIC --- */
+        function addTemplate() {
+            const input = document.getElementById('newTemplateInput');
+            if (input.value.trim() !== "") {
+                chatTemplates.push(input.value.trim());
+                input.value = "";
+                renderTemplateManager();
+            }
+        }
+
+        function deleteTemplate(index) {
+            chatTemplates.splice(index, 1);
+            renderTemplateManager();
+        }
+
+        // Displays buttons in the Chat Preview
+        function renderTemplates() {
+            const container = document.getElementById('templateContainer');
+            container.innerHTML = '';
+            chatTemplates.forEach(text => {
+                container.innerHTML += `<button class="chat-template-btn">${text}</button>`;
+            });
+        }
+
+        // Displays list in the Settings Sidebar
+        function renderTemplateManager() {
+            const list = document.getElementById('templateManagerList');
+            list.innerHTML = '';
+            chatTemplates.forEach((text, index) => {
+                list.innerHTML += `
+                    <div class="item-container" style="margin-bottom: 10px;">
+                        <div class="admin-template-item">${text}</div>
+                        <button class="delete-badge" onclick="deleteTemplate(${index})">X</button>
+                    </div>
+                `;
+            });
+        }
+
+        /* --- BASIC UI --- */
         function loadMainCategories() {
-            currentView = 'main';
             const body = document.getElementById('categoryBody');
-            const title = document.getElementById('subHeaderTitle');
-            const backBtn = document.getElementById('backBtn');
-            title.innerText = isAdminMode ? "Delete" : "Categories";
-            backBtn.style.display = 'none';
             body.innerHTML = '';
-
             ['Facility', 'Faculty', 'Hall'].forEach(cat => {
                 body.innerHTML += `<button class="category-btn-wide" onclick="showSubCategory('${cat}')">${cat}</button>`;
             });
         }
 
         function showSubCategory(category) {
-            currentView = 'sub';
-            currentCategory = category;
             const body = document.getElementById('categoryBody');
-            const title = document.getElementById('subHeaderTitle');
-            const backBtn = document.getElementById('backBtn');
-            title.innerText = isAdminMode ? "Add/Update" : category;
-            backBtn.style.display = 'block';
-            body.innerHTML = '';
-
-            // Use Grid for Facility (2 side by side), Use List for others (1 wide button)
-            const listContainer = document.createElement('div');
-            listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
-
-            campusData[category].forEach((item, index) => {
-                const container = document.createElement('div');
-                container.className = 'item-container';
-                
-                // Hall/Faculty get Wide Rectangle, Facilities get Square-ish Grid
-                const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
-                container.innerHTML = `<div class="${btnClass}">${item}</div>`;
-
-                if (isAdminMode) {
-                    const del = document.createElement('button');
-                    del.className = 'delete-badge';
-                    del.innerText = 'X';
-                    del.onclick = (e) => {
-                        e.stopPropagation();
-                        campusData[category].splice(index, 1);
-                        showSubCategory(category);
-                    };
-                    container.appendChild(del);
-                }
-                listContainer.appendChild(container);
+            document.getElementById('backBtn').style.display = 'block';
+            body.innerHTML = `<div class="grid-container-2col"></div>`;
+            const grid = body.querySelector('.grid-container-2col');
+            campusData[category].forEach(item => {
+                grid.innerHTML += `<div class="facility-grid-btn">${item}</div>`;
             });
-
-            body.appendChild(listContainer);
-
-            if (isAdminMode) {
-                const addBtn = document.createElement('button');
-                addBtn.className = 'add-item-wide-btn';
-                addBtn.innerText = '+';
-                addBtn.onclick = () => {
-                    const val = prompt("Enter Name:");
-                    if (val) { campusData[category].push(val); showSubCategory(category); }
-                };
-                body.appendChild(addBtn);
-            }
         }
 
         function initMap() {

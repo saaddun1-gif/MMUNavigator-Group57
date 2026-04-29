@@ -1,70 +1,328 @@
-/* 1. RESET */
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-body, html { height: 100%; width: 100%; overflow: hidden; }
+/* 1. GENERAL RESET & BASE */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Arial', sans-serif; 
+}
 
-/* 2. SIDEBARS */
+body, html { 
+    height: 100%; 
+    width: 100%; 
+    overflow: hidden; /* Prevents scrolling of the whole page / Elak skrol seluruh laman */
+}
+
+/* 2. THE MAIN SIDEBAR (Left Thin Bar) */
 .sidebar {
-    position: fixed; top: 0; left: -210px; width: 200px; height: 100%;
-    background: white; border-right: 2px solid black;
-    display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 15px;
-    z-index: 3000; transition: 0.4s;
+    position: fixed;
+    top: 0;
+    left: -210px; /* Hidden by default */
+    width: 200px; 
+    height: 100%;
+    background-color: white;
+    border-right: 2px solid black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    gap: 15px;
+    z-index: 3000; /* Stays on top of everything */
+    transition: 0.4s ease;
 }
-.sidebar.active { left: 0; }
 
+.sidebar.active {
+    left: 0;
+}
+
+/* 3. THE SUB-SIDEBARS (Categories, Chat, & Settings) */
 .sub-sidebar {
-    position: fixed; top: 0; left: -310px; width: 300px; height: 100%;
-    background: white; border-right: 2px solid black;
-    display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
-    z-index: 2000; transition: 0.4s; overflow-y: auto;
+    position: fixed; 
+    top: 0; 
+    left: -310px; /* Hidden behind main sidebar */
+    width: 300px; 
+    height: 100%;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    z-index: 2000;
+    transition: 0.4s ease;
+    border-right: 2px solid black;
+    overflow-y: auto; /* Allows scrolling inside the drawer */
 }
-.sub-sidebar.active { left: 200px; }
 
-/* 3. BUTTONS (100x100 Nav) */
-.nav-btn, .menu-toggle-btn {
-    width: 100px; height: 100px; border: 2px solid black; background: white;
-    display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 12px;
+.sub-sidebar.active {
+    left: 200px; /* Slides out next to the main sidebar */
 }
-.menu-toggle-btn { position: absolute; top: 20px; left: 20px; z-index: 1500; }
 
+/* 4. PRIMARY BUTTONS (100x100 Style) */
+.nav-btn, .control-btn, .menu-toggle-btn {
+    width: 100px; 
+    height: 100px; 
+    border: 2px solid black;
+    background-color: white; 
+    display: flex; 
+    justify-content: center;
+    align-items: center; 
+    cursor: pointer; 
+    border-radius: 12px;
+}
 
+.menu-toggle-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1500;
+}
+
+/* 5. CATEGORY & FACULTY BUTTONS */
 .category-btn-wide {
-    width: 100%; height: 100px; border: 2px solid black; background: white;
-    margin-bottom: 15px; border-radius: 15px; font-weight: bold; font-size: 20px; 
-    cursor: pointer; justify-content: center; align-items: center;
-    text-align: center; padding: 10px;
+    width: 100%;
+    height: 120px; /* Large rectangle / Segi empat besar */
+    border: 2px solid black; 
+    background: white;
+    font-size: 22px;
+    font-weight: bold;
+    border-radius: 15px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
-/* 5. FACILITY GRID (Side by Side) */
+/* Facility Grid (2 per row) */
 .grid-container-2col {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
 }
+
 .facility-grid-btn {
-    aspect-ratio: 1/0.8; width: 100%; border: 2px solid black; background: white;
-    border-radius: 12px; font-weight: bold; font-size: 16px;
-    display: flex; justify-content: center; align-items: center; text-align: center;
+    aspect-ratio: 1 / 0.8;
+    border: 2px solid black;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
 }
 
-.admin-active { background-color: #b90000 !important; }
+/* Faculty Levels & Classes */
+.level-btn, .chosen-level-box {
+    width: 100%;
+    height: 60px;
+    border: 2px solid black;
+    border-radius: 30px;
+    background: white;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
 
-/* 6. ADMIN TOOLS */
-.wide-list-container { width: 100%; }
-.item-container { position: relative; width: 100%; }
+.class-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+}
 
-.add-item-wide-btn {
-    width: 100%; height: 80px; border: 2px dashed black; border-radius: 15px;
-    background: #f9f9f9; font-size: 40px; cursor: pointer; margin-top: 15px;
+.class-item-btn {
+    height: 70px;
+    border: 2px solid black;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-weight: bold;
+}
+
+.chosen-box {
+    width: 100%;
+    padding: 20px;
+    border: 2px solid black;
+    border-radius: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+/* 6. ADMIN & CHAT SETTINGS TOOLS */
+.admin-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid black;
+    border-radius: 10px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.admin-template-item {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid black;
+    background: #f9f9f9;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.item-container { 
+    position: relative; 
+    width: 100%; 
 }
 
 .delete-badge {
-    position: absolute; top: -5px; right: -5px; background: red; color: white;
-    border: 2px solid black; border-radius: 50%; width: 35px; height: 35px;
-    cursor: pointer; font-weight: bold; z-index: 10; font-size: 16px;
+    position: absolute; 
+    top: -8px; 
+    right: -8px; 
+    background: red; 
+    color: white;
+    border: 2px solid black; 
+    border-radius: 50%; 
+    width: 32px; 
+    height: 32px;
+    cursor: pointer; 
+    font-weight: bold; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
 }
 
-/* 7. SEARCH & MAP */
-.search-container { position: absolute; top: 20px; left: 140px; z-index: 1000; }
-.search-bar { width: 300px; padding: 12px 20px; border: 2px solid black; border-radius: 25px; }
-#map { width: 100%; height: 100%; z-index: 1; }
-.icon-img { width: 60%; height: 60%; object-fit: contain; }
-.profile-img { width: 100%; height: 100%; object-fit: cover; }
-.back-link { margin-top: 20px; font-weight: bold; cursor: pointer; background: none; border: none; text-decoration: underline; }
+.add-item-wide-btn {
+    width: 100%; 
+    height: 60px; 
+    border: 2px dashed black; 
+    border-radius: 15px;
+    background: #fdfdfd; 
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 7. CHATBOX PREVIEW STYLE */
+.chat-messages-container {
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 80px;
+}
+
+.bot-msg {
+    align-self: flex-start;
+    background: #f0f0f0;
+    padding: 12px;
+    border-radius: 15px 15px 15px 0px;
+    border: 1px solid black;
+    font-size: 14px;
+    max-width: 85%;
+}
+
+.template-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.chat-template-btn {
+    background: white;
+    border: 1px solid black;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.chat-input-wrapper {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+}
+
+.chat-input-field {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid black;
+    border-radius: 30px;
+    font-size: 16px;
+}
+
+/* 8. TOP CONTROLS & SEARCH */
+.top-right-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1500;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.active-gps {
+    background-color: #3498db !important; /* Blue when active */
+}
+
+.active-gps img {
+    filter: invert(1);
+}
+
+.search-container {
+    position: absolute;
+    top: 20px;
+    left: 140px;
+    z-index: 1000;
+}
+
+.search-bar {
+    width: 300px; 
+    padding: 12px 25px; 
+    border: 2px solid black;
+    border-radius: 30px; 
+    font-size: 16px; 
+}
+
+/* 9. ASSETS (Icons & Images) */
+.icon-img { 
+    width: 60%; 
+    height: 60%; 
+    object-fit: contain; 
+}
+
+.profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 10. THE MAP */
+#map { 
+    width: 100%; 
+    height: 100%; 
+    z-index: 1; 
+}
+
+.back-link {
+    margin-top: 20px;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+}
