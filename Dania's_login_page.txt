@@ -1,0 +1,27 @@
+Suruh miso tgk skali ni
+
+
+
+Dania time meeting nnt try pull aku punya database pastu guna try paste ni kat page baru (Make sure kau ada flask)
+ada 2 btw so rembat je
+Lepastu nnt paste ni kat dashboard lain au
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    if current_user.is_admin:
+        # Flask ini nampask cam interface yg kau buat
+        return render_template('Nama interface kau') 
+    else:
+        # Flask looks interface yang kalau buat
+        return render_template('Nama interface kau')
+
+
+
+Kalau tk clear lagi search youtube sbb aku bab2 flask masih bela lagi ni sorry au sbb tk master aku benda ni gang
+By ths week aku try belajar flask and complete kan semua database and make sure yg fucntion dia betul"
+kalau ada error un gitau kat clickup sbb dh minggu ke lima and click up kita kossaong agi ni
+and kalau kau nk bagi aku kerja un bagi kat click up and kerja apa yang perlu buat 
+isnin selasa rabu aku bz ni mintak maaf sgt
+nnt kalau ada update sila roger
