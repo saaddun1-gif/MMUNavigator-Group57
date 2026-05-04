@@ -16,38 +16,35 @@
     </button>
 
     <div class="top-right-container">
-        <a href="guide.html" class="control-btn">
-            <img src="question.png" class="icon-img">
-        </a>
-        <button id="gpsBtn" class="control-btn" onclick="locateUser()">
-            <img src="gps.png" class="icon-img">
-        </button>
+        <a href="guide.html" class="control-btn"><img src="question.png" class="icon-img"></a>
+        <button id="gpsBtn" class="control-btn" onclick="locateUser()"><img src="gps.png" class="icon-img"></button>
     </div>
 
+    <!-- Main Sidebar -->
     <div class="sidebar" id="mySidebar">
-        <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
-            <img src="menu.png" class="icon-img">
-        </button>
+        <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;"><img src="menu.png" class="icon-img"></button>
         <button class="nav-btn" onclick="openChatMenu()"><img src="chatbox.png" class="icon-img"></button>
         <button class="nav-btn" onclick="openHomeMenu()"><img src="home.png" class="icon-img"></button>
         
+        <!-- Setting Button (Edit Mode Toggle) -->
         <button id="settingBtn" class="nav-btn" onclick="toggleEditMode()">
             <img src="plus.jpg" class="icon-img">
         </button>
         
         <div style="margin-top: auto;">
-            <button class="nav-btn" style="border-radius: 50%; overflow: hidden;">
-                <img src="admin.png" class="profile-img">
-            </button>
+            <button class="nav-btn" style="border-radius: 50%; overflow: hidden;"><img src="admin.png" class="profile-img"></button>
         </div>
     </div>
 
+    <!-- Home Sidebar -->
     <div class="sub-sidebar" id="homeSidebar">
+        <div id="topHeaderBox" class="header-box" style="display: none;"></div>
         <h1 id="subHeaderTitle">Categories</h1> 
         <div id="categoryBody" class="category-body-content" style="width: 100%;"></div>
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
+    <!-- Chat Sidebar -->
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
@@ -55,6 +52,7 @@
             <div id="templateDisplay" class="template-preview-area"></div>
         </div>
 
+        <!-- Hidden Admin Chat Settings -->
         <div id="chatAdminSettings" style="display: none; width: 100%; margin-bottom: 20px;">
             <hr style="border: 1px solid black; margin: 10px 0;">
             <p style="font-weight: bold; margin-bottom: 5px;">Add New Question:</p>
@@ -76,90 +74,84 @@
 
     <script>
         /* --- STATE & DATA --- */
-        let isEditMode = false; // Starts OFF (Looks like Public User)
-        let currentView = ''; // tracks if we are looking at 'home' or 'chat'
-        let currentCategory = ''; // tracks which category is open
+        let isEditMode = false; 
+        let currentView = ''; 
+        let currentCategory = ''; 
+        let currentFaculty = '';
+        let currentLevel = '';
 
         let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
         
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
             'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
-            'Faculty': ['FCI', 'FOE', 'FCM', 'FAC']
+            'Faculty': {
+                'FCI': {
+                    'Level 1': ['CR 101', 'CR 102', 'Lab 1', 'Lab 2'],
+                    'Level 2': ['CR 201', 'CR 202', 'Meeting Room']
+                },
+                'FOE': {
+                    'Level 1': ['Lab A', 'Lab B']
+                }
+            }
         };
 
-        function initApp() {
-            initMap();
-            loadMainCategories();
-        }
+        function initApp() { initMap(); loadMainCategories(); }
 
         /* --- EDIT MODE LOGIC --- */
         function toggleEditMode() {
             isEditMode = !isEditMode;
             const btn = document.getElementById('settingBtn');
-            
-            if (isEditMode) {
-                btn.classList.add('setting-on');
-            } else {
-                btn.classList.remove('setting-on');
-            }
+            isEditMode ? btn.classList.add('setting-on') : btn.classList.remove('setting-on');
+            refreshScreen();
+        }
 
-            // Refresh what we are looking at
-            if (currentView === 'chat') {
-                openChatMenu();
-            } else if (currentView === 'home') {
-                if (currentCategory === '') loadMainCategories();
-                else showSubCategory(currentCategory);
+        // Refreshes the screen so Add/Delete buttons appear instantly
+        function refreshScreen() {
+            if (currentView === 'chat') openChatMenu();
+            else if (currentView === 'home') {
+                if (currentLevel) showClasses(currentFaculty, currentLevel);
+                else if (currentFaculty) showFacultyLevels(currentFaculty);
+                else if (currentCategory) showSubCategory(currentCategory);
+                else loadMainCategories();
             }
         }
 
         /* --- SIDEBAR LOGIC --- */
         function toggleSidebar() {
-            const sidebar = document.getElementById("mySidebar");
-            sidebar.classList.toggle("active");
-            if (!sidebar.classList.contains("active")) {
+            document.getElementById("mySidebar").classList.toggle("active");
+            if (!document.getElementById("mySidebar").classList.contains("active")) {
                 document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             }
         }
 
-        function closeAllSubSidebars() {
-            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
-        }
-
         function openHomeMenu() {
             currentView = 'home';
-            closeAllSubSidebars();
+            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("mySidebar").classList.add("active");
             document.getElementById("homeSidebar").classList.add("active");
-            
-            if (currentCategory === '') loadMainCategories();
-            else showSubCategory(currentCategory);
+            refreshScreen();
         }
 
         function openChatMenu() {
             currentView = 'chat';
-            closeAllSubSidebars();
+            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("mySidebar").classList.add("active");
             document.getElementById("chatSidebar").classList.add("active");
             
             renderTemplatePreview();
-
-            // Show or hide admin tools inside chat
-            if (isEditMode) {
-                document.getElementById('chatAdminSettings').style.display = 'block';
-                document.getElementById('chatInputArea').style.display = 'none'; // hide normal input
-                renderAdminTemplateList();
-            } else {
-                document.getElementById('chatAdminSettings').style.display = 'none';
-                document.getElementById('chatInputArea').style.display = 'block'; // show normal input
-            }
+            document.getElementById('chatAdminSettings').style.display = isEditMode ? 'block' : 'none';
+            document.getElementById('chatInputArea').style.display = isEditMode ? 'none' : 'block';
+            if (isEditMode) renderAdminTemplateList();
         }
 
-        /* --- HOME CATEGORY LOGIC --- */
+        /* --- HOME MENU LOGIC --- */
         function loadMainCategories() {
-            currentCategory = '';
+            currentCategory = ''; currentFaculty = ''; currentLevel = '';
             const body = document.getElementById('categoryBody');
+            document.getElementById('topHeaderBox').style.display = 'none';
             document.getElementById('subHeaderTitle').innerText = isEditMode ? "Delete Categories" : "Categories";
+            document.getElementById('subHeaderTitle').style.display = 'block';
             document.getElementById('backBtn').style.display = 'none';
             body.innerHTML = '';
 
@@ -168,90 +160,158 @@
             });
         }
 
+        // LEVEL 1: List of Faculties OR List of Facilities
         function showSubCategory(category) {
-            currentCategory = category;
+            currentCategory = category; currentFaculty = ''; currentLevel = '';
             const body = document.getElementById('categoryBody');
-            document.getElementById('subHeaderTitle').innerText = isEditMode ? "Editing: " + category : category;
+            
+            document.getElementById('topHeaderBox').innerText = isEditMode ? `Editing: ${category}` : category;
+            document.getElementById('topHeaderBox').style.display = 'block';
+            document.getElementById('subHeaderTitle').style.display = 'none';
             document.getElementById('backBtn').style.display = 'block';
-            backBtn.onclick = loadMainCategories;
+            document.getElementById('backBtn').onclick = loadMainCategories;
+            
             body.innerHTML = '';
-
             const listContainer = document.createElement('div');
             listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
 
-            campusData[category].forEach((item, index) => {
+            const items = (category === 'Faculty') ? Object.keys(campusData[category]) : campusData[category];
+
+            items.forEach((item, index) => {
                 const container = document.createElement('div');
                 container.className = 'item-container';
-                
                 const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
+                
+                // Click behavior changes if it's Faculty or a normal item
                 container.innerHTML = `<div class="${btnClass}">${item}</div>`;
+                if (category === 'Faculty') {
+                    container.onclick = () => showFacultyLevels(item);
+                }
 
                 if (isEditMode) {
                     const del = document.createElement('button');
-                    del.className = 'delete-badge';
-                    del.innerText = 'X';
+                    del.className = 'delete-badge'; del.innerText = 'X';
                     del.onclick = (e) => {
-                        e.stopPropagation();
-                        campusData[category].splice(index, 1);
+                        e.stopPropagation(); // Prevents opening the folder when clicking X
+                        if (category === 'Faculty') delete campusData['Faculty'][item];
+                        else campusData[category].splice(index, 1);
                         showSubCategory(category);
                     };
                     container.appendChild(del);
                 }
                 listContainer.appendChild(container);
             });
-
             body.appendChild(listContainer);
 
-            if (isEditMode) {
-                const addBtn = document.createElement('button');
-                addBtn.className = 'add-item-wide-btn';
-                addBtn.innerText = '+';
-                addBtn.onclick = () => {
-                    const val = prompt("Enter Name:");
-                    if (val) { campusData[category].push(val); showSubCategory(category); }
-                };
-                body.appendChild(addBtn);
-            }
+            if (isEditMode) renderAddButton(body, () => {
+                const val = prompt(`Enter New ${category}:`);
+                if (val) {
+                    if (category === 'Faculty') campusData['Faculty'][val] = {};
+                    else campusData[category].push(val);
+                    showSubCategory(category);
+                }
+            });
         }
 
-        /* --- CHAT TEMPLATE LOGIC --- */
+        // LEVEL 2: List of Levels inside a Faculty
+        function showFacultyLevels(facultyName) {
+            currentFaculty = facultyName; currentLevel = '';
+            const body = document.getElementById('categoryBody');
+            
+            document.getElementById('topHeaderBox').innerText = facultyName;
+            document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
+            body.innerHTML = '';
+
+            const listContainer = document.createElement('div');
+            listContainer.className = 'wide-list-container';
+
+            const levels = Object.keys(campusData['Faculty'][facultyName]);
+            levels.forEach((level) => {
+                const container = document.createElement('div');
+                container.className = 'item-container';
+                container.onclick = () => showClasses(facultyName, level);
+                container.innerHTML = `<div class="category-btn-wide">${level}</div>`;
+
+                if (isEditMode) {
+                    const del = document.createElement('button');
+                    del.className = 'delete-badge'; del.innerText = 'X';
+                    del.onclick = (e) => {
+                        e.stopPropagation();
+                        delete campusData['Faculty'][facultyName][level];
+                        showFacultyLevels(facultyName);
+                    };
+                    container.appendChild(del);
+                }
+                listContainer.appendChild(container);
+            });
+            body.appendChild(listContainer);
+
+            if (isEditMode) renderAddButton(body, () => {
+                const val = prompt(`Enter New Level for ${facultyName}:`);
+                if (val) { campusData['Faculty'][facultyName][val] = []; showFacultyLevels(facultyName); }
+            });
+        }
+
+        // LEVEL 3: List of Classes inside a Level
+        function showClasses(facultyName, levelName) {
+            currentLevel = levelName;
+            const body = document.getElementById('categoryBody');
+            
+            document.getElementById('topHeaderBox').innerHTML = `${facultyName}<br><br>${levelName}`;
+            document.getElementById('backBtn').onclick = () => showFacultyLevels(facultyName);
+            body.innerHTML = '<p style="text-align:center; margin-bottom:10px;">List of classes</p>';
+
+            const listContainer = document.createElement('div');
+            listContainer.className = 'grid-container-2col';
+
+            const classes = campusData['Faculty'][facultyName][levelName];
+            classes.forEach((className, index) => {
+                const container = document.createElement('div');
+                container.className = 'item-container';
+                container.innerHTML = `<div class="class-grid-btn">${className}</div>`;
+
+                if (isEditMode) {
+                    const del = document.createElement('button');
+                    del.className = 'delete-badge'; del.innerText = 'X';
+                    del.onclick = (e) => {
+                        e.stopPropagation();
+                        campusData['Faculty'][facultyName][levelName].splice(index, 1);
+                        showClasses(facultyName, levelName);
+                    };
+                    container.appendChild(del);
+                }
+                listContainer.appendChild(container);
+            });
+            body.appendChild(listContainer);
+
+            if (isEditMode) renderAddButton(body, () => {
+                const val = prompt(`Enter New Class for ${levelName}:`);
+                if (val) { campusData['Faculty'][facultyName][levelName].push(val); showClasses(facultyName, levelName); }
+            });
+        }
+
+        function renderAddButton(parent, onClickFunc) {
+            const addBtn = document.createElement('button');
+            addBtn.className = 'add-item-wide-btn';
+            addBtn.innerText = '+';
+            addBtn.onclick = onClickFunc;
+            parent.appendChild(addBtn);
+        }
+
+        /* --- CHAT TEMPLATE & MAP (Unchanged) --- */
         function addChatTemplate() {
-            const input = document.getElementById('templateInput');
-            if(input.value) {
-                chatTemplates.push(input.value);
-                input.value = '';
-                renderAdminTemplateList();
-                renderTemplatePreview();
-            }
+            const val = document.getElementById('templateInput').value;
+            if(val) { chatTemplates.push(val); document.getElementById('templateInput').value = ''; renderAdminTemplateList(); renderTemplatePreview(); }
         }
-
-        function deleteChatTemplate(index) {
-            chatTemplates.splice(index, 1);
-            renderAdminTemplateList();
-            renderTemplatePreview();
-        }
-
+        function deleteChatTemplate(i) { chatTemplates.splice(i, 1); renderAdminTemplateList(); renderTemplatePreview(); }
         function renderTemplatePreview() {
-            const container = document.getElementById('templateDisplay');
-            container.innerHTML = '';
-            chatTemplates.forEach(t => {
-                container.innerHTML += `<button class="chat-pill">${t}</button>`;
-            });
+            const c = document.getElementById('templateDisplay'); c.innerHTML = '';
+            chatTemplates.forEach(t => c.innerHTML += `<button class="chat-pill">${t}</button>`);
         }
-
         function renderAdminTemplateList() {
-            const container = document.getElementById('adminTemplateList');
-            container.innerHTML = '';
-            chatTemplates.forEach((t, i) => {
-                container.innerHTML += `
-                    <div class="admin-template-row">
-                        <span>${t}</span>
-                        <button onclick="deleteChatTemplate(${i})">X</button>
-                    </div>`;
-            });
+            const c = document.getElementById('adminTemplateList'); c.innerHTML = '';
+            chatTemplates.forEach((t, i) => c.innerHTML += `<div class="admin-template-row"><span>${t}</span><button onclick="deleteChatTemplate(${i})">X</button></div>`);
         }
-
-        /* --- MAP --- */
         function initMap() {
             var map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
