@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMU Navigator - Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+    <link rel="stylesheet" href="Admin_interface.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+</head>
+<body>
+
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="icon">☰</div>
+            <div class="icon">💬</div>
+            <div class="icon">🏠</div>
+            <div class="plus-btn">+</div>
+            <div class="avatar-circle">👤</div>
+        </nav>
+
+        <main class="main-content">
+            <header class="top-nav">
+                <div class="search-oval">Search bar</div>
+                <div id="dist-result" class="dist-display">0 meters</div>
+            </header>
+
+            <div class="content-body">
+                <section class="admin-panel">
+                    <h1>Update</h1>
+                    
+                    <div class="input-pill">Faculty</div>
+
+                    <div class="delete-box">
+                        <span>Chosen faculty</span>
+                        <span class="trash-icon">✏️</span>
+                    </div>
+
+                    <div class="delete-box">
+                        <span>Chosen level</span>
+                        <span class="trash-icon">✏️</span>
+                    </div>
+
+                    <p class="label-text">List of classes</p>
+
+                    <div class="delete-box">
+                        <span>Chosen Class</span>
+                        <span class="trash-icon">✏️</span>
+                    </div>
+
+                    <p id="status-text" class="prompt-text">Please select to Update</p>
+                </section>
+
+                <section class="map-wrapper">
+                    <div id="map-area"></div>
+                </section>
+            </div>
+        </main>
+
+        <nav class="mobile-nav">
+            <div class="nav-item">📍</div>
+            <div class="nav-item plus-item">+</div>
+            <div class="nav-item">☰</div>
+        </nav>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <script>
+        // 1. Initialize Map (MMU Cyberjaya Coordinates)
+var map = L.map('map-area').setView([2.927028, 101.642134], 17);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© Hazyq' }).addTo(map);
+
+// 2. Existing Draw Logic (Preserved)
+var drawnItems = new L.FeatureGroup();
+map.addLayer(drawnItems);
+var drawControl = new L.Control.Draw({
+    edit: { featureGroup: drawnItems },
+    draw: { circle: false, circlemarker: false }
+});
+map.addControl(drawControl);
+
+// --- NEW LIVE LOCATION & PINNING LOGIC ---
+
+var liveMarker = null;
+var targetPin = null;
+var routingControl = null;
+
+// Function to calculate distance and status
+function updateStatus() {
+    if (liveMarker && targetPin) {
+        var d = liveMarker.getLatLng().distanceTo(targetPin.getLatLng());
+        document.getElementById('dist-result').innerText = d.toFixed(2) + "m to Pin";
+        
+        if (d < 20) {
+            document.getElementById('status-text').innerText = "You have arrived at the destination!";
+            document.getElementById('status-text').style.color = "#28a745";
+        } else {
+            document.getElementById('status-text').innerText = "Navigating to pinned area...";
+            document.getElementById('status-text').style.color = "#555";
+        }
+    }
+}
+
+// 3. Handle Map Click for Pinning
+map.on('click', function(e) {
+    // If we are currently drawing, don't drop a pin
+    if (document.querySelector('.leaflet-draw-actions:not([style*="display: none"])')) return;
+
+    if (targetPin) {
+        targetPin.setLatLng(e.latlng);
+    } else {
+        targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
+        targetPin.bindPopup("Destination Pin").openPopup();
+        targetPin.on('drag', updateStatus);
+    }
+    updateStatus();
+});
+
+// 4. Start Live GPS Tracking
+if ("geolocation" in navigator) {
+    navigator.geolocation.watchPosition(function(pos) {
+        var latlng = [pos.coords.latitude, pos.coords.longitude];
+
+        if (!liveMarker) {
+            liveMarker = L.circleMarker(latlng, {
+                radius: 8,
+                fillColor: "#3388ff",
+                color: "#fff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+        } else {
+            liveMarker.setLatLng(latlng);
+        }
+        updateStatus();
+    }, function(err) {
+        console.log("GPS Access Denied");
+    }, { enableHighAccuracy: true });
+}
+
+// 5. Preservation of your Original Draw Distance Logic
+map.on(L.Draw.Event.CREATED, function (e) {
+    var layer = e.layer;
+    drawnItems.addLayer(layer);
+    if (layer instanceof L.Polyline) {
+        var latlngs = layer.getLatLngs();
+        var dist = 0;
+        for (var i = 0; i < latlngs.length - 1; i++) {
+            dist += latlngs[i].distanceTo(latlngs[i+1]);
+        }
+        document.getElementById('dist-result').innerText = "Drawn: " + dist.toFixed(2) + "m";
+    }
+});
+    </script>
+</body>
+</html>
