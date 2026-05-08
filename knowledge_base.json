@@ -1,0 +1,31 @@
+{
+  "questions": [
+    {
+      "question": "Where is the library located?",
+      "answer": "The library is located in the middle of the campus."
+    },
+    {
+        "question": "hello",
+        "answer": "hello there",
+        "synonyms": ["hi", "hey", "greetings"]
+    },
+       {
+          "question": "Where is the library located?",
+         "answer": "The library is located in the middle of the campus.",
+          "keywords": ["library", "lib", "books", "study", "reading"],
+         "synonyms": ["library location", "where can I find library", "library building"]
+      },
+      {
+         "question": "Where is the cafeteria?",
+         "answer": "Starbees is located below CNMX, beside gym.",
+         "keywords": ["cafeteria", "canteen", "food", "eat", "dining", "lunch", "breakfast"],
+         "synonyms": ["cafe", "food court", "dining hall", "mamak"]
+       },
+       {
+         "question": "Where is FCI?",
+         "answer": "FCI (Faculty of Computing and Informatics) is at idk",
+         "keywords": ["fci", "computing", "informatics", "computer science", "it faculty"],
+          "synonyms": ["computing faculty", "informatics faculty", "north wing"]
+       }
+  ]
+}

@@ -3,7 +3,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link rel="stylesheet" href="style_about.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style_about.css') }}">
     </head>
     <body>
         <div>
@@ -22,9 +22,9 @@
             </ul>
         </div>
         <br>
-        <a class="button" href="home_page.html">Go back</a>
+        <a class="button" href="{{ url_for('home') }}">Go back</a>
         <br>
-        <a class="button" href="contact.html">Feedback?</a>
+        <a class="button" href="{{ url_for('contact') }}">Feedback?</a>
 </body>
 
 </html>
