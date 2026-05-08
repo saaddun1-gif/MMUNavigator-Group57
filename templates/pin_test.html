@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Walk Route</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='pin_test.css') }}">
+
+    
+    <style>
+        #map { height: 600px; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <h2>My Live Walking Route</h2>
+    <div id="map"></div>
+
+    <!-- Leaflet and Routing JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <script>
+        // 1. Initialize the map
+        const map = L.map('map').setView([0, 0], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // 2. Get User's Live Location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                map.setView([lat, lon], 15);
+
+                // 3. Add Routing (Example: From Live Location to a set Destination)
+                // In a real app, 'destination' could come from a click event
+                const destination = [lat + 0.01, lon + 0.01]; 
+
+                L.Routing.control({
+                    waypoints: [
+                        L.latLng(lat, lon),       // Start: Live Location
+                        L.latLng(destination)      // End: Your target
+                    ],
+                    router: L.Routing.osrmv1({
+                        serviceUrl: `https://router.project-osrm.org/route/v1`,
+                        profile: 'foot' // Sets mode to WALKING
+                    }),
+                    lineOptions: {
+                        styles: [{ color: 'blue', weight: 4 }]
+                    }
+                }).addTo(map);
+
+            }, () => {
+                alert("Location access denied.");
+            });
+        }
+    </script>
+</body>
+</html>

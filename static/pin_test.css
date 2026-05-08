@@ -1,0 +1,76 @@
+/* General Reset */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Container for the map */
+#map {
+    height: 100vh; /* Full viewport height */
+    width: 100vw;  /* Full viewport width */
+    z-index: 1;
+}
+
+/* Floating Header Overlay */
+.map-header {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 10px 25px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    pointer-events: none; /* Allows clicking the map through the header padding */
+}
+
+.map-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Customizing the Routing Panel */
+.leaflet-routing-container {
+    background-color: white !important;
+    opacity: 0.95;
+    padding: 15px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+    max-height: 400px !important;
+    width: 300px !important;
+    border: none !important;
+    margin-right: 20px !important;
+}
+
+/* Style the turn-by-turn instruction rows */
+.leaflet-routing-alt {
+    max-height: 300px !important;
+}
+
+.leaflet-routing-alt tr:hover {
+    background-color: #f0f7ff !important;
+    cursor: pointer;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .leaflet-routing-container {
+        width: 80% !important;
+        margin: 10px auto !important;
+        float: none !important;
+    }
+    
+    .map-header {
+        width: 70%;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+}
