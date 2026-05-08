@@ -3,59 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMU Navigator</title>
+    <title>MMU Navigator - Public User</title>
     
-    <link rel="stylesheet" href="test.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
+    
+    <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body onload="initApp()">
 
-    <!-- Menu Toggle Button -->
+    <!-- Menu Toggle -->
     <button class="menu-toggle-btn" onclick="toggleSidebar()">
-        <img src="menu.png" class="icon-img" alt="Menu">
+        <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
     </button>
 
     <!-- Top Right Controls -->
     <div class="top-right-container">
         <a href="guide.html" class="control-btn">
-            <img src="question.png" class="icon-img" alt="Help">
+            <img src="{{ url_for('static', filename='question.png') }}" class="icon-img">
         </a>
         <button id="gpsBtn" class="control-btn" onclick="locateUser()">
-            <img src="gps.png" class="icon-img" alt="GPS">
+            <img src="{{ url_for('static', filename='gps.png') }}" class="icon-img">
         </button>
     </div>
 
-    <!-- Main Sidebar -->
+    <!-- Sidebar Menu -->
     <div class="sidebar" id="mySidebar">
         <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
-            <img src="menu.png" class="icon-img" alt="Menu">
+            <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
         </button>
         <button class="nav-btn" onclick="openChatMenu()">
-            <img src="chatbox.png" class="icon-img" alt="Chat">
+            <img src="{{ url_for('static', filename='chatbox.png') }}" class="icon-img">
         </button>
         <button class="nav-btn" onclick="openHomeMenu()">
-            <img src="home.png" class="icon-img" alt="Home">
+            <img src="{{ url_for('static', filename='home.png') }}" class="icon-img">
         </button>
         
         <div style="margin-top: auto;">
             <button class="nav-btn" style="border-radius: 50%; overflow: hidden;">
-                <img src="admin.png" class="profile-img" alt="Profile">
+                <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
             </button>
         </div>
     </div>
 
-    <!-- Home Sidebar (Categories) -->
+    <!-- Home Menu (Folders) -->
     <div class="sub-sidebar" id="homeSidebar">
-        <!-- This title changes based on where we are -->
         <div id="topHeaderBox" class="header-box" style="display: none;"></div>
         <h1 id="subHeaderTitle">Categories</h1> 
-        
         <div id="categoryBody" class="category-body-content" style="width: 100%;"></div>
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
-    <!-- Chat Sidebar -->
+    <!-- Chat Menu -->
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
@@ -70,7 +70,7 @@
         </div>
     </div>
 
-    <!-- Search Box -->
+    <!-- Search Bar -->
     <div class="search-container">
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
@@ -78,7 +78,10 @@
     <div id="map"></div>
 
     <script>
-        // Data is updated. Faculty now has levels and classes inside it.
+        let map;
+        let userMarker;
+
+        // Data for MMU Navigator
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
             'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
@@ -89,21 +92,9 @@
                     'Level 3': ['CR 301', 'Staff Room'],
                     'Level 4': ['CR 401', 'CR 402']
                 },
-                'FAIE': {
+                'FOE': {
                     'Level 1': ['Lab A', 'Lab B'],
                     'Level 2': ['CR 1', 'CR 2']
-                },
-                'FAC': {
-                    'Level 1': ['CR 101', 'CR 102', 'Lab 1', 'Lab 2'],
-                    'Level 2': ['CR 201', 'CR 202', 'Meeting Room'],
-                    'Level 3': ['CR 301', 'Staff Room'],
-                    'Level 4': ['CR 401', 'CR 402']
-                },
-                'FOM': {
-                    'Level 1': ['CR 101', 'CR 102', 'Lab 1', 'Lab 2'],
-                    'Level 2': ['CR 201', 'CR 202', 'Meeting Room'],
-                    'Level 3': ['CR 301', 'Staff Room'],
-                    'Level 4': ['CR 401', 'CR 402']
                 }
             }
         };
@@ -113,38 +104,51 @@
             loadMainCategories();
         }
 
-        /* --- SIDEBAR LOGIC --- */
+        /* --- GPS & MAP LOGIC --- */
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            map.on('locationfound', function(e) {
+                if (userMarker) map.removeLayer(userMarker);
+                userMarker = L.marker(e.latlng).addTo(map).bindPopup("You are here!").openPopup();
+
+                // Send Live Location to Flask
+                fetch('/live-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ latitude: e.latlng.lat, longitude: e.latlng.lng })
+                });
+            });
+        }
+
+        function locateUser() {
+            map.locate({setView: true, maxZoom: 18, watch: true}); 
+        }
+
+        /* --- NAVIGATION LOGIC --- */
         function toggleSidebar() {
-            const sidebar = document.getElementById("mySidebar");
-            sidebar.classList.toggle("active");
-            if (!sidebar.classList.contains("active")) {
-                closeAllSubSidebars();
+            document.getElementById("mySidebar").classList.toggle("active");
+            if (!document.getElementById("mySidebar").classList.contains("active")) {
+                document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             }
         }
 
-        function closeAllSubSidebars() {
-            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
-        }
-
         function openHomeMenu() {
-            closeAllSubSidebars();
-            document.getElementById("mySidebar").classList.add("active");
+            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("homeSidebar").classList.add("active");
             loadMainCategories();
         }
 
         function openChatMenu() {
-            closeAllSubSidebars();
-            document.getElementById("mySidebar").classList.add("active");
+            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("chatSidebar").classList.add("active");
         }
 
-        /* --- HOME CATEGORY LOGIC --- */
-
-        // Main Menu (Facility, Faculty, Hall)
+        /* --- HOME CONTENT LOGIC --- */
         function loadMainCategories() {
             const body = document.getElementById('categoryBody');
-            document.getElementById('topHeaderBox').style.display = 'none'; // Hide the big chosen box
+            document.getElementById('topHeaderBox').style.display = 'none';
             document.getElementById('subHeaderTitle').innerText = "Categories";
             document.getElementById('subHeaderTitle').style.display = 'block';
             document.getElementById('backBtn').style.display = 'none';
@@ -155,33 +159,23 @@
             });
         }
 
-        // Sub Menu (Shows list of items or list of faculties)
         function showSubCategory(category) {
             const body = document.getElementById('categoryBody');
-            
-            // Set up headers
             document.getElementById('topHeaderBox').innerText = category;
-            document.getElementById('topHeaderBox').style.display = 'block'; // Show big box like wireframe
-            document.getElementById('subHeaderTitle').style.display = 'none'; // Hide normal title
-            
-            const backBtn = document.getElementById('backBtn');
-            backBtn.style.display = 'block';
-            backBtn.onclick = loadMainCategories;
-            
+            document.getElementById('topHeaderBox').style.display = 'block';
+            document.getElementById('subHeaderTitle').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'block';
+            document.getElementById('backBtn').onclick = loadMainCategories;
             body.innerHTML = '';
 
             if (category === 'Faculty') {
-                // If it's Faculty, show the list of faculties (FCI, FOE)
-                const faculties = Object.keys(campusData['Faculty']);
-                faculties.forEach(fac => {
+                Object.keys(campusData['Faculty']).forEach(fac => {
                     body.innerHTML += `<button class="category-btn-wide" onclick="showFacultyLevels('${fac}')">${fac}</button>`;
                 });
             } else {
-                // If it's Facility or Hall, show grid or list like before
                 const listContainer = document.createElement('div');
                 listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
-
-                campusData[category].forEach((item) => {
+                campusData[category].forEach(item => {
                     const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
                     listContainer.innerHTML += `<div class="${btnClass}">${item}</div>`;
                 });
@@ -189,54 +183,32 @@
             }
         }
 
-        // Picture 1: Shows levels inside a chosen faculty
         function showFacultyLevels(facultyName) {
             const body = document.getElementById('categoryBody');
-            
-            // Top box shows chosen faculty
             document.getElementById('topHeaderBox').innerText = facultyName;
-            
-            const backBtn = document.getElementById('backBtn');
-            backBtn.onclick = () => showSubCategory('Faculty'); // Go back to faculty list
-            
+            document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
             body.innerHTML = '';
 
-            const levels = Object.keys(campusData['Faculty'][facultyName]);
-            levels.forEach(level => {
+            Object.keys(campusData['Faculty'][facultyName]).forEach(level => {
                 body.innerHTML += `<button class="category-btn-wide" onclick="showClasses('${facultyName}', '${level}')">${level}</button>`;
             });
         }
 
-        // Picture 2: Shows classes inside a chosen level
         function showClasses(facultyName, levelName) {
             const body = document.getElementById('categoryBody');
-            
-            // Show both Faculty and Level in the top box
             document.getElementById('topHeaderBox').innerHTML = `${facultyName}<br><br>${levelName}`;
-            
-            const backBtn = document.getElementById('backBtn');
-            backBtn.onclick = () => showFacultyLevels(facultyName); // Go back to level list
-            
+            document.getElementById('backBtn').onclick = () => showFacultyLevels(facultyName);
             body.innerHTML = '<p style="text-align:center; margin-bottom:10px;">List of classes</p>';
 
-            const listContainer = document.createElement('div');
-            listContainer.className = 'grid-container-2col'; // 2 columns for classes like Picture 2
-
-            const classes = campusData['Faculty'][facultyName][levelName];
-            classes.forEach((className) => {
-                listContainer.innerHTML += `<div class="class-grid-btn">${className}</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid-container-2col';
+            campusData['Faculty'][facultyName][levelName].forEach(cls => {
+                grid.innerHTML += `<div class="class-grid-btn">${cls}</div>`;
             });
-
-            body.appendChild(listContainer);
+            body.appendChild(grid);
         }
 
-        /* --- MAP & CHAT LOGIC --- */
         function fillChat(text) { document.getElementById('userInput').value = text; }
-        function initMap() {
-            var map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        }
-        function locateUser() { alert("Finding your location..."); }
     </script>
 </body>
 </html>
