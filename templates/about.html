@@ -1,30 +1,74 @@
 <!DOCTYPE html>
-
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" href="{{ url_for('static', filename='style_about.css') }}">
-    </head>
-    <body>
-        <div>
-            <h1>MMU Navigator</h1>
-            <h2>Your Smart Campus Map</h2>
-        </div>
+<head>
+    <meta charset="UTF-8">
+    <title>MMU Navigator - About</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            margin: 0;
+            padding: 40px;
+            text-align: center;
+        }
+        h1 {
+            color: #004e92;
+            font-size: 48px;
+            margin-bottom: 0;
+        }
+        h2 {
+            color: #0077b6;
+            margin-top: 0;
+        }
+        .about {
+            background: white;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: left;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .about li {
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+        .button {
+            display: inline-block;
+            background: #0077b6;
+            color: white;
+            padding: 10px 24px;
+            margin: 10px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .button:hover {
+            background: #004e92;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>🗺️ MMU Navigator</h1>
+        <h2>Your Smart Campus Map</h2>
+    </div>
 
-        <br>
+    <br>
 
-        <div class="about">
-            <h2>about:</h2>
-            <ul>
-                <li>The "MMU Navigator - Your Smart Campus Map" acts like a digital map to help new students easily find places around the Multimedia University (MMU) Cyberjaya campus.</li>
-                <li>New students often feel lost because the campus is big and confusing. They waste time looking for classes, cafes, or the library because they do not have a clear, easy-to-use map that shows their exact location.</li>
-                <li>The main users are new students at MMU Cyberjaya especially for WIN week. It also can apply for student that didn't know the location of their class when new semester begin. This system is perfect for them because it gives clear directions and shows where they are standing, making them feel confident walking around a new place.</li>
-            </ul>
-        </div>
-        <br>
-        <a class="button" href="{{ url_for('home') }}">Go back</a>
-        <br>
-        <a class="button" href="{{ url_for('contact') }}">Feedback?</a>
+    <div class="about">
+        <h2>About:</h2>
+        <ul>
+            <li>The "MMU Navigator - Your Smart Campus Map" acts like a digital map to help new students easily find places around the Multimedia University (MMU) Cyberjaya campus.</li>
+            <li>New students often feel lost because the campus is big and confusing. They waste time looking for classes, cafes, or the library because they do not have a clear, easy-to-use map that shows their exact location.</li>
+            <li>The main users are new students at MMU Cyberjaya especially for WIN week. It also can apply for student that didn't know the location of their class when new semester begin. This system is perfect for them because it gives clear directions and shows where they are standing, making them feel confident walking around a new place.</li>
+        </ul>
+    </div>
+    
+    <br>
+    
+    <a class="button" href="/">Go back</a>
+    <br>
+    <a class="button" href="/contact">Feedback?</a>
 </body>
-
 </html>
