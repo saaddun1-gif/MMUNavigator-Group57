@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMU Navigator - Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+    <link rel="stylesheet" href="Admin_interface.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="icon">☰</div>
+            <div class="icon">💬</div>
+            <div class="icon">🏠</div>
+            <div class="plus-btn">+</div>
+            <div class="avatar-circle">👤</div>
+        </nav>
+
+        <main class="main-content">
+            <header class="top-nav">
+                <div class="search-oval">Search bar</div>
+                <div id="dist-result" class="dist-display">0 meters</div>
+            </header>
+
+            <div class="content-body">
+                <section class="admin-panel">
+                    <h1>Update</h1>
+                    
+                    <div class="input-pill">Faculty</div>
+
+                    <div class="delete-box">
+                        <span>Chosen faculty</span>
+                        <span class="trash-icon">✏️</span>
+                    </div>
+
+                    <div class="delete-box">
+                        <span>Chosen level</span>
+                        <span class="trash-icon">✏️</span>
+                    </div>
+
+                    <p class="label-text">List of classes</p>
+
+                    <div class="delete-box">
+                        <span>Chosen Class</span>
+                        <span class="trash-icon">✏️</span>
+                    </div>
+
+                    <p id="status-text" class="prompt-text">Please select to Update</p>
+                </section>
+
+                <section class="map-wrapper">
+                    <div id="map-area"></div>
+                </section>
+            </div>
+        </main>
+
+        <nav class="mobile-nav">
+            <div class="nav-item">📍</div>
+            <div class="nav-item plus-item">+</div>
+            <div class="nav-item">☰</div>
+        </nav>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script>
+        // Initialize Map
+        var map = L.map('map-area').setView([2.927028, 101.642134], 17);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© Hazyq' }).addTo(map);
+
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        var drawControl = new L.Control.Draw({
+            edit: { featureGroup: drawnItems },
+            draw: { circle: false, circlemarker: false }
+        });
+        map.addControl(drawControl);
+
+        // Distance Calculation Logic
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var layer = e.layer;
+            drawnItems.addLayer(layer);
+            if (layer instanceof L.Polyline) {
+                var latlngs = layer.getLatLngs();
+                var dist = 0;
+                for (var i = 0; i < latlngs.length - 1; i++) {
+                    dist += latlngs[i].distanceTo(latlngs[i+1]);
+                }
+                document.getElementById('dist-result').innerText = dist.toFixed(2) + " meters";
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Navigator</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+    <link rel="stylesheet" href="menu.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+</head>
+</head>
+<body>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="icon" oneclick "filter map('menu')" >☰</div>
+            <div class="icon" oneclick "filter map('chatbox')">💬</div>
+            <div class="icon" oneclick "filter map('menu')">🏠</div>
+            <div class="add-btn" pneclick "filter map('')">+</div>
+            
+            <div style="margin-top: auto;" class="icon">👤</div>
+        </div>
+
+        <div class="main">
+            <input type="text" class="search-bar" placeholder="Search bar">
+            
+            <div id="map-area">
+                <h2 id="status-text">Map View</h2>
+                
+                <div class="distance-tool">
+                    <strong>Distance Tool</strong><br>
+                    <small>Point A to Point B</small><br>
+                    <button onclick="calculateDist()">Calculate</button>
+                    <p id="dist-result" style="margin-top:5px; font-weight:bold;">--- meters</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Initialize the Map ---
+        // Setting coordinates to a default (Latitude, Longitude)
+        var map = L.map('map-area').setView([2.927028, 101.642134], 17);
+
+        // --- 2. Load Map Tiles (OpenStreetMap) ---
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // --- 3. Setup the Draw Plugin ---
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        var drawControl = new L.Control.Draw({
+            edit: { featureGroup: drawnItems },
+            draw: {
+                polygon: true,
+                polyline: true,
+                rectangle: true,
+                circle: false,
+                marker: true
+            }
+        });
+        map.addControl(drawControl);
+
+        // --- 4. Logic for Buttons & Calculations ---
+        function filterMap(cat) {
+            const status = document.getElementById('status-text');
+            status.innerText = "Viewing: " + cat;
+        }
+
+        // When a user finishes drawing a line, calculate real distance
+        map.on(L.Draw.Event.CREATED, function (event) {
+            var layer = event.layer;
+            drawnItems.addLayer(layer);
+
+            if (layer instanceof L.Polyline) {
+                var latlngs = layer.getLatLngs();
+                var distance = 0;
+                for (var i = 0; i < latlngs.length - 1; i++) {
+                    distance += latlngs[i].distanceTo(latlngs[i+1]);
+                }
+                // Update your "--- meters" text with real data
+                document.getElementById('dist-result').innerText = distance.toFixed(2) + " meters";
+            }
+        });
+
+        function activateDraw() {
+            alert("Click the toolbar on the left of the map to start drawing!");
+        }
+    </Script>
+</body>
+</html>
