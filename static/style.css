@@ -1,54 +1,107 @@
+/* Modern Reset & Smooth Scrolling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f2f5;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    /* Using a subtle gradient makes the background look less "flat" */
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
 }
 
 .login-container {
     background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 350px;
+    padding: 2.5rem;
+    border-radius: 12px;
+    /* Softened the shadow for a more modern "lifted" look */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    width: 90%;
+    max-width: 400px;
     text-align: center;
+    transition: transform 0.3s ease;
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 1.6rem;
+}
+
+p {
+    color: #777;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
 }
 
 .input-group {
     text-align: left;
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
 }
 
 .input-group label {
     display: block;
-    margin-bottom: 5px;
-    font-size: 0.9rem;
-    color: #555;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #444;
 }
 
 .input-group input {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box; /* Prevents input from overflowing */
+    padding: 12px;
+    border: 2px solid #e1e1e1; /* Slightly thicker border */
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: all 0.3s ease; /* Smooth transition for focus state */
+}
+
+/* Important: Improves accessibility and user experience */
+.input-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .login-btn {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s active;
 }
 
 .login-btn:hover {
     background-color: #0056b3;
+}
+
+/* Gives feedback when clicked */
+.login-btn:active {
+    transform: scale(0.98);
+}
+
+/* Style for the OTP input specifically */
+#otp-code {
+    text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 10px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+/* Error message styling */
+#message {
+    font-size: 0.85rem;
+    margin-top: 15px;
+    min-height: 1.2rem;
 }
