@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMU Navigator - Admin Portal</title>
     
-    <!-- 1. CORE LEAFLET FIRST -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- 2. ROUTING MACHINE SECOND -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-
     <!-- Flask CSS Link -->
     <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+    
+    <!-- Leaflet Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body onload="initApp()">
 
@@ -45,18 +41,19 @@
             <img src="{{ url_for('static', filename='home.png') }}" class="icon-img">
         </button>
         
+        <!-- Red Setting Button for Admin -->
         <button id="settingBtn" class="nav-btn" onclick="toggleEditMode()">
             <img src="{{ url_for('static', filename='setting.png') }}" class="icon-img">
         </button>
         
         <div style="margin-top: auto;">
-            <button class="nav-btn" style="border-radius: 50%; overflow: hidden;">
-                <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
-            </button>
-        </div>
+          <button class="nav-btn" style="border-radius: 50%; overflow: hidden;" onclick="confirmSwitch()">
+             <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
+         </button>
+       </div>
     </div>
 
-    <!-- Home Sidebar -->
+    <!-- Home Sidebar (Categories/Faculty/Levels) -->
     <div class="sub-sidebar" id="homeSidebar">
         <div id="topHeaderBox" class="header-box" style="display: none;"></div>
         <h1 id="subHeaderTitle">Categories</h1> 
@@ -64,7 +61,7 @@
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
-    <!-- Chat Sidebar -->
+    <!-- Chat Sidebar (Admin Templates) -->
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
@@ -72,6 +69,7 @@
             <div id="templateDisplay" class="template-preview-area"></div>
         </div>
 
+        <!-- Admin Chat Settings -->
         <div id="chatAdminSettings" style="display: none; width: 100%; margin-bottom: 20px;">
             <hr style="border: 1px solid black; margin: 10px 0;">
             <p style="font-weight: bold; margin-bottom: 5px;">Add New Question:</p>
@@ -93,18 +91,18 @@
     <div id="map"></div>
 
     <script>
+        /* --- APP STATE & DATA --- */
         let isEditMode = false; 
         let currentView = ''; 
         let currentCategory = ''; 
         let currentFaculty = '';
         let currentLevel = '';
         let map;
-        let userMarker = null; 
-        let targetPin = null; 
-        let routingControl = null; 
+        let userMarker;
 
         let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
-
+        
+        
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe'],
             'Hall': ['Exam Hall', 'MPH'],
@@ -116,91 +114,28 @@
             }
         };
 
-        function initApp() { 
-            initMap(); 
-            loadMainCategories(); 
-        }
+        function initApp() { initMap(); loadMainCategories(); }
 
+        /* --- GPS & MAP LOGIC --- */
         function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([2.927028, 101.642134], 17);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© Hazyq'
-            }).addTo(map);
-
-            routingControl = L.Routing.control({
-                waypoints: [],
-                routeWhileDragging: true,
-                show: false,
-                addWaypoints: false,
-                lineOptions: {
-                    styles: [{ color: '#3388ff', weight: 6 }] 
-                },
-                createMarker: function() { return null; }
-            }).addTo(map);
-
-            map.on('click', function(e) {
-                if (targetPin) {
-                    targetPin.setLatLng(e.latlng);
-                } else {
-                    targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
-                    targetPin.bindPopup("Destination").openPopup();
-                    targetPin.on('drag', updateNavigationStatus);
-                }
-                updateNavigationStatus();
-            });
+            map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
             map.on('locationfound', (e) => {
-                const latlng = e.latlng;
-                if (!userMarker) {
-                    userMarker = L.circleMarker(latlng, {
-                        radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
-                    }).addTo(map);
-                } else {
-                    userMarker.setLatLng(latlng);
-                }
-                updateNavigationStatus();
-            });
-
-            map.on('locationerror', (e) => {
-                alert("Location access denied or unavailable. Please ensure you are using HTTPS.");
-                console.log(e.message);
+                if (userMarker) map.removeLayer(userMarker);
+                userMarker = L.marker(e.latlng).addTo(map).bindPopup("Admin is here").openPopup();
+                
+                fetch('/live-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ latitude: e.latlng.lat, longitude: e.latlng.lng })
+                });
             });
         }
 
-        function updateNavigationStatus() {
-            if (userMarker && targetPin) {
-                const start = userMarker.getLatLng();
-                const end = targetPin.getLatLng();
+        function locateUser() { map.locate({setView: true, maxZoom: 18, watch: true}); }
 
-                routingControl.setWaypoints([
-                    L.latLng(start.lat, start.lng),
-                    L.latLng(end.lat, end.lng)
-                ]);
-
-                const d = start.distanceTo(end);
-                const searchInput = document.querySelector('.search-bar');
-                if (searchInput) {
-                    searchInput.placeholder = d.toFixed(1) + "m to destination";
-                }
-
-                const botMsg = document.querySelector('.bot-msg');
-                if (botMsg) {
-                    if (d < 15) {
-                        botMsg.innerText = "You have arrived!";
-                        botMsg.style.color = "#28a745";
-                    } else {
-                        botMsg.innerText = "Following route: " + d.toFixed(0) + "m left.";
-                        botMsg.style.color = "#000";
-                    }
-                }
-            }
-        }
-
-        function locateUser() { 
-            map.locate({setView: true, maxZoom: 18, watch: true}); 
-        }
-
-        /* --- UI & CRUD Logic remains the same --- */
+        /* --- ADMIN EDIT MODE --- */
         function toggleEditMode() {
             isEditMode = !isEditMode;
             const btn = document.getElementById('settingBtn');
@@ -218,6 +153,7 @@
             }
         }
 
+        /* --- NAVIGATION --- */
         function toggleSidebar() {
             document.getElementById("mySidebar").classList.toggle("active");
             if (!document.getElementById("mySidebar").classList.contains("active")) {
@@ -236,12 +172,14 @@
             currentView = 'chat';
             document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("chatSidebar").classList.add("active");
+            
             renderTemplatePreview();
             document.getElementById('chatAdminSettings').style.display = isEditMode ? 'block' : 'none';
             document.getElementById('chatInputArea').style.display = isEditMode ? 'none' : 'block';
             if (isEditMode) renderAdminTemplateList();
         }
 
+        /* --- HOME CONTENT (CRUD) --- */
         function loadMainCategories() {
             currentCategory = ''; currentFaculty = ''; currentLevel = '';
             const body = document.getElementById('categoryBody');
@@ -249,6 +187,7 @@
             document.getElementById('subHeaderTitle').style.display = 'block';
             document.getElementById('backBtn').style.display = 'none';
             body.innerHTML = '';
+
             ['Facility', 'Faculty', 'Hall'].forEach(cat => {
                 body.innerHTML += `<button class="category-btn-wide" onclick="showSubCategory('${cat}')">${cat}</button>`;
             });
@@ -262,16 +201,21 @@
             document.getElementById('subHeaderTitle').style.display = 'none';
             document.getElementById('backBtn').style.display = 'block';
             document.getElementById('backBtn').onclick = loadMainCategories;
+            
             body.innerHTML = '';
             const listContainer = document.createElement('div');
             listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+
             const items = (category === 'Faculty') ? Object.keys(campusData[category]) : campusData[category];
+
             items.forEach((item, index) => {
                 const container = document.createElement('div');
                 container.className = 'item-container';
                 const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
+                
                 container.innerHTML = `<div class="${btnClass}">${item}</div>`;
                 if (category === 'Faculty') container.onclick = () => showFacultyLevels(item);
+
                 if (isEditMode) {
                     const del = document.createElement('button');
                     del.className = 'delete-badge'; del.innerText = 'X';
@@ -298,6 +242,7 @@
             document.getElementById('topHeaderBox').innerText = fac;
             document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
             body.innerHTML = '';
+
             const list = document.createElement('div');
             list.className = 'wide-list-container';
             Object.keys(campusData['Faculty'][fac]).forEach(lvl => {
@@ -325,6 +270,7 @@
             document.getElementById('topHeaderBox').innerHTML = `${fac}<br><br>${lvl}`;
             document.getElementById('backBtn').onclick = () => showFacultyLevels(fac);
             body.innerHTML = '<p style="text-align:center; margin-bottom:10px;">List of classes</p>';
+
             const grid = document.createElement('div');
             grid.className = 'grid-container-2col';
             campusData['Faculty'][fac][lvl].forEach((cls, i) => {
@@ -350,6 +296,7 @@
             b.onclick = onClick; parent.appendChild(b);
         }
 
+        /* --- CHAT TEMPLATE LOGIC --- */
         function addChatTemplate() {
             const val = document.getElementById('templateInput').value;
             if(val) { chatTemplates.push(val); document.getElementById('templateInput').value = ''; renderAdminTemplateList(); renderTemplatePreview(); }
@@ -362,6 +309,17 @@
         function renderAdminTemplateList() {
             const c = document.getElementById('adminTemplateList'); c.innerHTML = '';
             chatTemplates.forEach((t, i) => c.innerHTML += `<div class="admin-template-row"><span>${t}</span><button onclick="deleteChatTemplate(${i})">X</button></div>`);
+        }
+        function confirmSwitch() {
+            // Ask the question (Tanya soalan)
+            let userAnswer = confirm("Are you sure you want to log out and go to Public View?\n\nAdakah anda pasti mahu log keluar dan pergi ke Paparan Awam?");
+            
+            // If they click "OK" (Jika mereka klik "OK")
+            if (userAnswer === true) {
+                // Tell Flask to go to the main index page (Public View)
+                window.location.href = "{{ url_for('index') }}"; 
+            }
+            // If they click "Cancel", nothing happens, they stay on the page.
         }
     </script>
 </body>
