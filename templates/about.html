@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome - MMU Navigator</title>
     
+    <!-- This correctly links to your CSS in the 'static' folder -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style_about.css') }}">
 </head>
 <body>
@@ -19,15 +20,22 @@
         <h2>About:</h2>
         <ul>
             <li>The "MMU Navigator - Your Smart Campus Map" acts like a digital map to help new students easily find places around the Multimedia University (MMU) Cyberjaya campus.</li>
-            <li>New students often feel lost because the campus is big and confusing. They waste time looking for classes, cafes, or the library because they do not have a clear, easy-to-use map that shows their exact location.</li>
-            <li>The main users are new students at MMU Cyberjaya especially for WIN week. It also can apply for students that didn't know the location of their class when new semester begins.</li>
+            <li>New students often feel lost because the campus is big and confusing. They waste time looking for classes, cafes, or the library.</li>
+            <li>The main users are new students at MMU Cyberjaya especially for WIN week.</li>
         </ul>
     </div>
 
     <br>
 
     <div class="button-container">
+        <!-- Connects to the @app.route('/public') -->
         <a class="button" href="{{ url_for('public_view') }}">Start Navigating</a>
+        
+        <br><br>
+        
+        <!-- NEW: Added link to your Admin Login page -->
+        <a class="button" href="{{ url_for('login') }}">Admin Login</a>
+        
         <br><br>
         <a class="button" href="#">Feedback?</a>
     </div>
