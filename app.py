@@ -1,12 +1,15 @@
-<<<<<<< HEAD
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 app = Flask(__name__)
+
+# ==========================================
+# 🗺️ YOUR CODE (MAPS & LIVE GPS)
+# ==========================================
 
 # Main Public View
 @app.route('/')
 def index():
-    return render_template('test.html') # Using your specific filename
+    return render_template('test.html') 
 
 # Admin View
 @app.route('/admin')
@@ -21,10 +24,11 @@ def receive_location():
     lng = data.get('longitude')
     print(f"Update: Admin/User GPS is at {lat}, {lng}")
     return jsonify({"status": "received"})
-=======
-from flask import Flask, render_template, request, redirect, url_for
 
-app = Flask(__name__)
+
+# ==========================================
+# 🔑 YOUR FRIEND'S CODE (LOGIN SYSTEM)
+# ==========================================
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -34,7 +38,7 @@ def login():
 
         # Check credentials
         if username == "admin" and password == "1234":
-            # redirect(url_for('name_of_function'))
+            # Right now it goes to dashboard.html
             return redirect(url_for('dashboard', user_name=username))
         else:
             return "<h1>Login Failed.</h1><a href='/login'>Try again</a>"
@@ -43,9 +47,8 @@ def login():
 
 @app.route('/dashboard/<user_name>')
 def dashboard(user_name):
-    # This page only displays after a successful redirect
     return render_template('dashboard.html', user=user_name)
->>>>>>> f018650092444a20a45c7cbe3d198914a87a7269
+
 
 if __name__ == '__main__':
     app.run(debug=True)
