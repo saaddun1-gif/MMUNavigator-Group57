@@ -22,40 +22,101 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <script>
-        // 1. Initialize the map
-        const map = L.map('map').setView([0, 0], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        // 1. Initialize Map without a view - it stays "blank" until location is found
+const map = L.map('map');
 
-        // 2. Get User's Live Location
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                
-                map.setView([lat, lon], 15);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '©OpenStreetMap, ©CartoDB'
+}).addTo(map);
 
-                // 3. Add Routing (Example: From Live Location to a set Destination)
-                // In a real app, 'destination' could come from a click event
-                const destination = [lat + 0.01, lon + 0.01]; 
+let userMarker, routingControl, destinationMarker;
+let hasFoundLocation = false; 
 
-                L.Routing.control({
-                    waypoints: [
-                        L.latLng(lat, lon),       // Start: Live Location
-                        L.latLng(destination)      // End: Your target
-                    ],
-                    router: L.Routing.osrmv1({
-                        serviceUrl: `https://router.project-osrm.org/route/v1`,
-                        profile: 'foot' // Sets mode to WALKING
-                    }),
-                    lineOptions: {
-                        styles: [{ color: 'blue', weight: 4 }]
-                    }
-                }).addTo(map);
+// 2. Clear Route Function
+function clearRoute() {
+    if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+    if (destinationMarker) { map.removeLayer(destinationMarker); destinationMarker = null; }
+}
 
-            }, () => {
-                alert("Location access denied.");
+// 3. The GPS Watcher
+if (navigator.geolocation) {
+    navigator.geolocation.watchPosition(position => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        const userLatLng = L.latLng(lat, lon);
+
+        // Update pulsing blue dot
+        if (!userMarker) {
+            const pulsingIcon = L.divIcon({
+                className: 'current-location-marker',
+                iconSize: [15, 15]
             });
+            userMarker = L.marker(userLatLng, { icon: pulsingIcon }).addTo(map);
+        } else {
+            userMarker.setLatLng(userLatLng);
         }
+
+        // ONLY center the map the very first time we get a valid coordinate
+        if (!hasFoundLocation) {
+            map.setView(userLatLng, 17); 
+            hasFoundLocation = true;
+        }
+
+        // Keep route starting point updated if walking
+        if (routingControl) {
+            const currentDest = routingControl.getWaypoints()[1].latLng;
+            routingControl.setWaypoints([userLatLng, currentDest]);
+        }
+
+    }, (error) => {
+        console.error("GPS Error:", error);
+        // Fallback: If GPS fails after 5 seconds, jump to MMU Cyberjaya
+        if (!hasFoundLocation) {
+            map.setView([2.9279, 101.6413], 15);
+            hasFoundLocation = true;
+        }
+    }, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000 // Give it 5 seconds to find you before falling back
+    });
+}
+
+// 4. Click to Pin
+map.on('click', function(e) {
+    if (!hasFoundLocation) return;
+
+    if (destinationMarker) map.removeLayer(destinationMarker);
+    destinationMarker = L.marker(e.latlng).addTo(map);
+    
+    if (routingControl) map.removeControl(routingControl);
+
+    routingControl = L.Routing.control({
+        waypoints: [userMarker.getLatLng(), e.latlng],
+        router: L.Routing.osrmv1({ profile: 'foot' }),
+        lineOptions: {
+            styles: [{ color: '#2563eb', weight: 5, opacity: 0.8 }]
+        },
+        addWaypoints: false,
+        draggableWaypoints: false
+    }).addTo(map);
+});
+
+// Inside your watchPosition function:
+
+if (!userMarker) {
+    // Define the GIF icon
+    const gifIcon = L.icon({
+        iconUrl: '/static/cat-scuba.gif', // Put your GIF file in the static folder
+        iconSize: [50, 50], // Adjust size to fit your GIF
+        iconAnchor: [25, 50], // Point of the GIF that sits on the exact coordinate
+        className: 'user-gif-style' // Optional: for extra CSS styling
+    });
+
+    userMarker = L.marker(userLatLng, { icon: gifIcon }).addTo(map);
+} else {
+    userMarker.setLatLng(userLatLng);
+}
     </script>
 </body>
 </html>
