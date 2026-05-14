@@ -2,16 +2,17 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 app = Flask(__name__)
 
-# ==========================================
-# 🗺️ YOUR CODE (MAPS & LIVE GPS)
-# ==========================================
-
-# Main Public View
+# 1. LANDING PAGE (First thing you see when running terminal)
 @app.route('/')
-def index():
+def landing():
+    return render_template('about.html') # You need to create this file
+
+# 2. PUBLIC USER VIEW
+@app.route('/public')
+def public_view():
     return render_template('test.html') 
 
-# Admin View
+# 3. ADMIN VIEW
 @app.route('/admin')
 def admin():
     return render_template('admin.html')
@@ -25,11 +26,7 @@ def receive_location():
     print(f"Update: Admin/User GPS is at {lat}, {lng}")
     return jsonify({"status": "received"})
 
-
-# ==========================================
-# 🔑 YOUR FRIEND'S CODE (LOGIN SYSTEM)
-# ==========================================
-
+# 4. LOGIN PAGE
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -38,17 +35,12 @@ def login():
 
         # Check credentials
         if username == "admin" and password == "1234":
-            # Right now it goes to dashboard.html
-            return redirect(url_for('dashboard', user_name=username))
+            # SUCCESS -> Directly go to Admin Map!
+            return redirect(url_for('admin'))
         else:
             return "<h1>Login Failed.</h1><a href='/login'>Try again</a>"
 
     return render_template('login.html')
-
-@app.route('/dashboard/<user_name>')
-def dashboard(user_name):
-    return render_template('dashboard.html', user=user_name)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
