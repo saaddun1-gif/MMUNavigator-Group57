@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMU Navigator - Public User</title>
     
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
     
     <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 </head>
 <body onload="initApp()">
 
@@ -80,7 +83,9 @@
 
     <script>
         let map;
-        let userMarker;
+        let userMarker = null;
+        let targetPin = null; 
+        let routingControl = null;
 
         // Data for MMU Navigator
         const campusData = {
@@ -114,26 +119,100 @@
         }
 
         /* --- GPS & MAP LOGIC --- */
-        function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+function initApp() {
+        initMap();
+        loadMainCategories();
+    }
 
-            map.on('locationfound', function(e) {
-                if (userMarker) map.removeLayer(userMarker);
-                userMarker = L.marker(e.latlng).addTo(map).bindPopup("You are here!").openPopup();
+    function initMap() {
+        // Initialize Map
+        map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-                // Send Live Location to Flask
-                fetch('/live-location', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ latitude: e.latlng.lat, longitude: e.latlng.lng })
-                });
-            });
+        // 1. Initialize Routing Control with Walking Profile
+        routingControl = L.Routing.control({
+            waypoints: [],
+            router: L.Routing.osrmv1({
+                serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+                profile: 'foot',
+                useHints: false
+            }),
+            routeWhileDragging: false,
+            show: false,
+            addWaypoints: false,
+            lineOptions: {
+                styles: [{ color: 'red', opacity: 0.7, weight: 5, dashArray: '10, 10' }] 
+            },
+            createMarker: function() { return null; }
+        }).addTo(map);
+
+        // 2. LIVE LOCATION LOGIC
+        map.on('locationfound', function(e) {
+            const latlng = e.latlng;
+            if (!userMarker) {
+                userMarker = L.circleMarker(latlng, {
+                    radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
+                }).addTo(map);
+            } else {
+                userMarker.setLatLng(latlng);
+            }
+            
+            // CRITICAL: This line calculates distance the moment your location is found
+            updateNavigationStatus(); 
+        });
+
+        // 3. PINNING LOGIC
+        map.on('click', function(e) {
+            if (targetPin) {
+                targetPin.setLatLng(e.latlng);
+            } else {
+                targetPin = L.marker(e.latlng, { draggable: true }).addTo(map);
+                targetPin.on('dragend', updateNavigationStatus);
+            }
+            targetPin.bindPopup("Calculating...").openPopup();
+            updateNavigationStatus();
+        });
+
+        // 4. DISTANCE DISPLAY LOGIC
+        routingControl.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            
+            const distanceText = summary.totalDistance > 1000 
+                ? (summary.totalDistance / 1000).toFixed(2) + "km" 
+                : Math.round(summary.totalDistance) + "m";
+            const timeMin = Math.round(summary.totalTime / 60);
+
+            // Update search bar
+            const searchInput = document.querySelector('.search-bar');
+            if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
+
+            // Update pin popup
+            if (targetPin) {
+                targetPin.setPopupContent(`
+                    <div style="text-align: center;">
+                        <strong>Destination</strong><br>
+                        <b style="color: red;">${distanceText}</b><br>
+                        <small>${timeMin} min walk</small>
+                    </div>
+                `).openPopup();
+            }
+        });
+    }
+
+    function updateNavigationStatus() {
+        if (userMarker && targetPin) {
+            routingControl.setWaypoints([
+                L.latLng(userMarker.getLatLng()),
+                L.latLng(targetPin.getLatLng())
+            ]);
         }
+    }
 
-        function locateUser() {
-            map.locate({setView: true, maxZoom: 18, watch: true}); 
-        }
+    function locateUser() {
+        map.locate({setView: true, maxZoom: 18, watch: true}); 
+    }
+        
 
         /* --- NAVIGATION LOGIC --- */
         function toggleSidebar() {

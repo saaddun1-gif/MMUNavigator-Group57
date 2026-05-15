@@ -5,25 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMU Navigator - Admin Portal</title>
     
-    <!-- 1. CORE LEAFLET FIRST -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- 2. ROUTING MACHINE SECOND -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
-    <!-- Flask CSS Link -->
     <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
 </head>
 <body onload="initApp()">
 
-    <!-- Menu Toggle -->
     <button class="menu-toggle-btn" onclick="toggleSidebar()">
         <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
     </button>
 
-    <!-- Top Right Controls -->
     <div class="top-right-container">
         <a href="guide.html" class="control-btn">
             <img src="{{ url_for('static', filename='question.png') }}" class="icon-img">
@@ -33,7 +28,6 @@
         </button>
     </div>
 
-    <!-- Main Sidebar -->
     <div class="sidebar" id="mySidebar">
         <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
             <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
@@ -56,7 +50,6 @@
         </div>
     </div>
 
-    <!-- Home Sidebar -->
     <div class="sub-sidebar" id="homeSidebar">
         <div id="topHeaderBox" class="header-box" style="display: none;"></div>
         <h1 id="subHeaderTitle">Categories</h1> 
@@ -64,7 +57,6 @@
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
-    <!-- Chat Sidebar -->
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
@@ -85,7 +77,6 @@
         </div>
     </div>
 
-    <!-- Search Box -->
     <div class="search-container">
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
@@ -122,50 +113,71 @@
         }
 
         function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([2.927028, 101.642134], 17);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© Hazyq'
-            }).addTo(map);
+    // 1. Initialize the map
+    map = L.map('map', { zoomControl: false }).setView([2.927028, 101.642134], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© Hazyq'
+    }).addTo(map);
 
-            routingControl = L.Routing.control({
-                waypoints: [],
-                routeWhileDragging: true,
-                show: false,
-                addWaypoints: false,
-                lineOptions: {
-                    styles: [{ color: '#3388ff', weight: 6 }] 
-                },
-                createMarker: function() { return null; }
-            }).addTo(map);
+    // 2. Initialize Routing Control ONCE with 'foot' profile
+    routingControl = L.Routing.control({
+        waypoints: [],
+        router: L.Routing.osrmv1({
+            serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+            profile: 'foot', // This forces use of the thin red walking paths
+            useHints: false
+        }),
+        routeWhileDragging: true,
+        show: false,
+        addWaypoints: false,
+        lineOptions: {
+            styles: [{ color: 'red', opacity: 0.8, weight: 5, dashArray: '10, 10' }] 
+        },
+        createMarker: function() { return null; }
+    }).addTo(map);
 
-            map.on('click', function(e) {
-                if (targetPin) {
-                    targetPin.setLatLng(e.latlng);
-                } else {
-                    targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
-                    targetPin.bindPopup("Destination").openPopup();
-                    targetPin.on('drag', updateNavigationStatus);
-                }
-                updateNavigationStatus();
-            });
+    // 3. Setup Route Found Logic
+    routingControl.on('routesfound', function(e) {
+        const routes = e.routes;
+        const summary = routes[0].summary;
+        const distanceText = summary.totalDistance > 1000 
+            ? (summary.totalDistance / 1000).toFixed(2) + "km" 
+            : Math.round(summary.totalDistance) + "m";
+        const timeMin = Math.round(summary.totalTime / 60);
 
-            map.on('locationfound', (e) => {
-                const latlng = e.latlng;
-                if (!userMarker) {
-                    userMarker = L.circleMarker(latlng, {
-                        radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
-                    }).addTo(map);
-                } else {
-                    userMarker.setLatLng(latlng);
-                }
-                updateNavigationStatus();
-            });
+        const searchInput = document.querySelector('.search-bar');
+        if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
+    });
 
-            map.on('locationerror', (e) => {
-                alert("Location access denied or unavailable. Please ensure you are using HTTPS.");
-                console.log(e.message);
-            });
+    // 4. Map Click for Destination
+    map.on('click', function(e) {
+        if (targetPin) {
+            targetPin.setLatLng(e.latlng);
+        } else {
+            targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
+            targetPin.bindPopup("Destination").openPopup();
+            targetPin.on('drag', updateNavigationStatus);
         }
+        updateNavigationStatus();
+    });
+
+    // 5. LIVE LOCATION LOGIC (Restore this part)
+    map.on('locationfound', (e) => {
+        const latlng = e.latlng;
+        if (!userMarker) {
+            userMarker = L.circleMarker(latlng, {
+                radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
+            }).addTo(map);
+        } else {
+            userMarker.setLatLng(latlng);
+        }
+        updateNavigationStatus();
+    });
+
+    map.on('locationerror', (e) => {
+        alert("Location access denied. Please ensure you are using HTTPS and allow permissions.");
+    });
+}
 
         function updateNavigationStatus() {
             if (userMarker && targetPin) {
@@ -176,23 +188,6 @@
                     L.latLng(start.lat, start.lng),
                     L.latLng(end.lat, end.lng)
                 ]);
-
-                const d = start.distanceTo(end);
-                const searchInput = document.querySelector('.search-bar');
-                if (searchInput) {
-                    searchInput.placeholder = d.toFixed(1) + "m to destination";
-                }
-
-                const botMsg = document.querySelector('.bot-msg');
-                if (botMsg) {
-                    if (d < 15) {
-                        botMsg.innerText = "You have arrived!";
-                        botMsg.style.color = "#28a745";
-                    } else {
-                        botMsg.innerText = "Following route: " + d.toFixed(0) + "m left.";
-                        botMsg.style.color = "#000";
-                    }
-                }
             }
         }
 
@@ -200,7 +195,7 @@
             map.locate({setView: true, maxZoom: 18, watch: true}); 
         }
 
-        /* --- UI & CRUD Logic remains the same --- */
+        /* --- UI & CRUD Logic --- */
         function toggleEditMode() {
             isEditMode = !isEditMode;
             const btn = document.getElementById('settingBtn');
