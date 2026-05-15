@@ -40,14 +40,14 @@
         </button>
         
         <button id="settingBtn" class="nav-btn" onclick="toggleEditMode()">
-            <img src="{{ url_for('static', filename='setting.png') }}" class="icon-img">
+            <img src="{{ url_for('static', filename='plus.jpg') }}" class="icon-img">
         </button>
         
         <div style="margin-top: auto;">
-            <button class="nav-btn" style="border-radius: 50%; overflow: hidden;">
-                <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
-            </button>
-        </div>
+          <button class="nav-btn" style="border-radius: 50%; overflow: hidden;" onclick="confirmSwitch()">
+             <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
+         </button>
+       </div>
     </div>
 
     <div class="sub-sidebar" id="homeSidebar">
@@ -90,11 +90,9 @@
         let currentFaculty = '';
         let currentLevel = '';
         let map;
-        let userMarker = null; 
-        let targetPin = null; 
-        let routingControl = null; 
-
-        let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
+        let userMarker = null;
+        let targetPin = null;         
+        let routingControl = null;    
 
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe'],
@@ -107,99 +105,77 @@
             }
         };
 
-        function initApp() { 
-            initMap(); 
-            loadMainCategories(); 
-        }
+        let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
+
+        function initApp() { initMap(); loadMainCategories(); }
 
         function initMap() {
-    // 1. Initialize the map
-    map = L.map('map', { zoomControl: false }).setView([2.927028, 101.642134], 17);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© Hazyq'
-    }).addTo(map);
+            map = L.map('map', { zoomControl: false }).setView([2.927028, 101.642134], 17);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // 2. Initialize Routing Control ONCE with 'foot' profile
-    routingControl = L.Routing.control({
-        waypoints: [],
-        router: L.Routing.osrmv1({
-            serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
-            profile: 'foot', // This forces use of the thin red walking paths
-            useHints: false
-        }),
-        routeWhileDragging: true,
-        show: false,
-        addWaypoints: false,
-        lineOptions: {
-            styles: [{ color: 'red', opacity: 0.8, weight: 5, dashArray: '10, 10' }] 
-        },
-        createMarker: function() { return null; }
-    }).addTo(map);
-
-    // 3. Setup Route Found Logic
-    routingControl.on('routesfound', function(e) {
-        const routes = e.routes;
-        const summary = routes[0].summary;
-        const distanceText = summary.totalDistance > 1000 
-            ? (summary.totalDistance / 1000).toFixed(2) + "km" 
-            : Math.round(summary.totalDistance) + "m";
-        const timeMin = Math.round(summary.totalTime / 60);
-
-        const searchInput = document.querySelector('.search-bar');
-        if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
-    });
-
-    // 4. Map Click for Destination
-    map.on('click', function(e) {
-        if (targetPin) {
-            targetPin.setLatLng(e.latlng);
-        } else {
-            targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
-            targetPin.bindPopup("Destination").openPopup();
-            targetPin.on('drag', updateNavigationStatus);
-        }
-        updateNavigationStatus();
-    });
-
-    // 5. LIVE LOCATION LOGIC (Restore this part)
-    map.on('locationfound', (e) => {
-        const latlng = e.latlng;
-        if (!userMarker) {
-            userMarker = L.circleMarker(latlng, {
-                radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
+            routingControl = L.Routing.control({
+                waypoints: [],
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+                    profile: 'foot',
+                    useHints: false
+                }),
+                show: false,
+                addWaypoints: false,
+                lineOptions: {
+                    styles: [{ color: 'red', opacity: 0.8, weight: 5, dashArray: '10, 10' }] 
+                },
+                createMarker: function() { return null; }
             }).addTo(map);
-        } else {
-            userMarker.setLatLng(latlng);
-        }
-        updateNavigationStatus();
-    });
 
-    map.on('locationerror', (e) => {
-        alert("Location access denied. Please ensure you are using HTTPS and allow permissions.");
-    });
-}
+            routingControl.on('routesfound', function(e) {
+                const summary = e.routes[0].summary;
+                const distanceText = summary.totalDistance > 1000 
+                    ? (summary.totalDistance / 1000).toFixed(2) + "km" 
+                    : Math.round(summary.totalDistance) + "m";
+                const timeMin = Math.round(summary.totalTime / 60);
+
+                const searchInput = document.querySelector('.search-bar');
+                if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
+
+                if (targetPin) {
+                    targetPin.setPopupContent(`<b>Destination</b><br>${distanceText}<br><small>${timeMin} min walk</small>`).openPopup();
+                }
+            });
+
+            map.on('click', function(e) {
+                if (targetPin) {
+                    targetPin.setLatLng(e.latlng);
+                } else {
+                    targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
+                    targetPin.on('dragend', updateNavigationStatus);
+                }
+                targetPin.bindPopup("Calculating...").openPopup();
+                updateNavigationStatus();
+            });
+
+            map.on('locationfound', (e) => {
+                const latlng = e.latlng;
+                if (!userMarker) {
+                    userMarker = L.circleMarker(latlng, { radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, fillOpacity: 0.8 }).addTo(map);
+                } else {
+                    userMarker.setLatLng(latlng);
+                }
+                updateNavigationStatus();
+            });
+        }
 
         function updateNavigationStatus() {
             if (userMarker && targetPin) {
-                const start = userMarker.getLatLng();
-                const end = targetPin.getLatLng();
-
-                routingControl.setWaypoints([
-                    L.latLng(start.lat, start.lng),
-                    L.latLng(end.lat, end.lng)
-                ]);
+                routingControl.setWaypoints([L.latLng(userMarker.getLatLng()), L.latLng(targetPin.getLatLng())]);
             }
         }
 
-        function locateUser() { 
-            map.locate({setView: true, maxZoom: 18, watch: true}); 
-        }
+        function locateUser() { map.locate({setView: true, maxZoom: 18, watch: true}); }
 
-        /* --- UI & CRUD Logic --- */
         function toggleEditMode() {
             isEditMode = !isEditMode;
-            const btn = document.getElementById('settingBtn');
-            isEditMode ? btn.classList.add('setting-on') : btn.classList.remove('setting-on');
+            document.getElementById('settingBtn').classList.toggle('setting-on', isEditMode);
             refreshScreen();
         }
 
@@ -213,12 +189,7 @@
             }
         }
 
-        function toggleSidebar() {
-            document.getElementById("mySidebar").classList.toggle("active");
-            if (!document.getElementById("mySidebar").classList.contains("active")) {
-                document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
-            }
-        }
+        function toggleSidebar() { document.getElementById("mySidebar").classList.toggle("active"); }
 
         function openHomeMenu() {
             currentView = 'home';
@@ -250,7 +221,7 @@
         }
 
         function showSubCategory(category) {
-            currentCategory = category; currentFaculty = ''; currentLevel = '';
+            currentCategory = category;
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerText = category;
             document.getElementById('topHeaderBox').style.display = 'block';
@@ -261,6 +232,7 @@
             const listContainer = document.createElement('div');
             listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
             const items = (category === 'Faculty') ? Object.keys(campusData[category]) : campusData[category];
+
             items.forEach((item, index) => {
                 const container = document.createElement('div');
                 container.className = 'item-container';
@@ -270,12 +242,7 @@
                 if (isEditMode) {
                     const del = document.createElement('button');
                     del.className = 'delete-badge'; del.innerText = 'X';
-                    del.onclick = (e) => {
-                        e.stopPropagation();
-                        if (category === 'Faculty') delete campusData['Faculty'][item];
-                        else campusData[category].splice(index, 1);
-                        showSubCategory(category);
-                    };
+                    del.onclick = (e) => { e.stopPropagation(); if (category === 'Faculty') delete campusData['Faculty'][item]; else campusData[category].splice(index, 1); showSubCategory(category); };
                     container.appendChild(del);
                 }
                 listContainer.appendChild(container);
@@ -288,7 +255,7 @@
         }
 
         function showFacultyLevels(fac) {
-            currentFaculty = fac; currentLevel = '';
+            currentFaculty = fac;
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerText = fac;
             document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
@@ -356,7 +323,13 @@
         }
         function renderAdminTemplateList() {
             const c = document.getElementById('adminTemplateList'); c.innerHTML = '';
-            chatTemplates.forEach((t, i) => c.innerHTML += `<div class="admin-template-row"><span>${t}</span><button onclick="deleteChatTemplate(${i})">X</button></div>`);
+            chatTemplates.forEach((t, i) => { c.innerHTML += `<div class="admin-template-row"><span>${t}</span><button onclick="deleteChatTemplate(${i})">X</button></div>`; });
+        }
+
+        function confirmSwitch() {
+            if (confirm("Are you sure you want to log out and go to Public View?")) {
+                window.location.href = "{{ url_for('index') }}"; 
+            }
         }
     </script>
 </body>
