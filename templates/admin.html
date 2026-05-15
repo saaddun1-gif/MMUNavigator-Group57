@@ -376,7 +376,7 @@
         }
 
         function confirmSwitch() {
-            let userAnswer = confirm("Are you sure you want to log out and go to Public View?\n\nAdakah anda pasti mahu log keluar dan pergi ke Paparan Awam?");
+            let userAnswer = confirm("Are you sure you want to log out and go to Public View?");
             if (userAnswer === true) {
                 // Ensure this matches your route name in app.py
                 window.location.href = "{{ url_for('index') }}"; 
