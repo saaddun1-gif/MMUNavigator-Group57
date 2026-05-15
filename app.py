@@ -30,7 +30,7 @@ ADMIN_DATA = {
 @app.route('/')
 def index(): # <--- Changed from 'landing' to 'index' to fix the error
     """Renders about.html as the primary landing page."""
-    return render_template('about.html')
+    return render_template('test.html')
 
 @app.route('/public')
 def public_view():
