@@ -31,3 +31,82 @@ body, html { height: 100%; width: 100%; overflow: hidden; }
 .chat-pill { background: white; border: 1px solid black; border-radius: 15px; padding: 5px 10px; font-size: 11px; cursor: pointer; }
 .chat-input-wrapper { width: 100%; margin-top: 10px; }
 .chat-input-field { width: 100%; padding: 15px 20px; border: 2px solid black; border-radius: 30px; }
+/* Intro Popup Modal - IMPROVED VERSION */
+.intro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Arial', sans-serif;
+}
+
+.intro-modal {
+    background: white;
+    width: 90%;
+    max-width: 450px;
+    border-radius: 24px;
+    padding: 35px 30px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.intro-modal h1 {
+    color: #2E7D32;
+    margin-bottom: 15px;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.intro-modal p {
+    color: #444;
+    line-height: 1.6;
+    margin: 15px 0;
+    font-size: 16px;
+}
+
+.intro-modal ul {
+    text-align: left;
+    margin: 20px 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.intro-modal li {
+    margin: 12px 0;
+    color: #333;
+    font-size: 15px;
+    padding-left: 28px;
+    position: relative;
+}
+
+
+.continue-btn {
+    background: #4c7aaf;
+    color: white;
+    border: none;
+    padding: 14px 35px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+.continue-btn:hover {
+    background: #3c7a8a;
+    transform: scale(1.02);
+}

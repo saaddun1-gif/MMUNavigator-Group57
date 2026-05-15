@@ -4,11 +4,9 @@ import random
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
-# This is like a secret password for your website's memory
 app.secret_key = 'your_super_secret_key_here'
 
 # --- 1. Flask-Mail Configuration ---
-# This part helps the computer send emails
 app.config.update(
     MAIL_SERVER='smtp.gmail.com',
     MAIL_PORT=587,
@@ -28,31 +26,48 @@ ADMIN_DATA = {
 # --- 3. Public & Landing Routes ---
 
 @app.route('/')
-def index(): # <--- Changed from 'landing' to 'index' to fix the error
-    """Renders about.html as the primary landing page."""
+def index():
     return render_template('test.html')
 
 @app.route('/public')
 def public_view():
-    """Renders the map view (test.html)."""
     return render_template('test.html') 
 
-# --- 4. Admin Login System ---
+@app.route('/guide')
+def guide():
+    """This route was missing! It renders the guide page."""
+    return render_template('guide.html')
+
+# --- 4. Chatbot API (This was missing!) ---
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    """This helps the chatbot talk to the user."""
+    data = request.get_json()
+    user_message = data.get('message', '').lower()
+    
+    # Simple logic for the chatbot
+    if 'library' in user_message:
+        response = "The Library is located near the central plaza."
+    elif 'fci' in user_message:
+        response = "FCI is the Faculty of Computing and Informatics."
+    else:
+        response = "I'm still learning! You can find that in the Categories menu."
+        
+    return jsonify({"response": response})
+
+# --- 5. Admin Login System ---
 
 @app.route('/Admin_Login', methods=['GET', 'POST'])
 def login():
-    """Handles showing the login page and the AJAX POST request."""
     if request.method == 'POST':
         data = request.get_json()
-        
-        # Checking if the username and password match our secret list
         if data.get('username') == ADMIN_DATA['username'] and data.get('password') == ADMIN_DATA['password']:
             otp = str(random.randint(100000, 999999))
             session['otp'] = otp
             session['otp_expiry'] = (datetime.now() + timedelta(minutes=2)).timestamp()
             
             try:
-                # Sending the secret code to your email
                 msg = Message("Admin Login Verification", 
                               sender=app.config['MAIL_USERNAME'], 
                               recipients=[ADMIN_DATA['email']])
@@ -68,25 +83,21 @@ def login():
 
 @app.route('/verify-otp', methods=['POST'])
 def verify_otp():
-    """Verifies the 6-digit code sent to email."""
     data = request.get_json()
     user_otp = data.get('otp')
     current_time = datetime.now().timestamp()
     
-    # Check if the code is correct and not too old
     if session.get('otp') and current_time < session.get('otp_expiry', 0):
         if user_otp == session['otp']:
             session['logged_in'] = True
             session['role'] = 'admin'
-            session.pop('otp', None) # Remove the code after it's used
+            session.pop('otp', None)
             return jsonify({"status": "success", "redirect": url_for('admin')})
     
     return jsonify({"status": "error", "message": "Invalid or expired OTP"}), 401
 
 @app.route('/admin')
 def admin():
-    """Protected Admin View."""
-    # If the user is not logged in, kick them back to the login page
     if not session.get('logged_in') or session.get('role') == 'guest':
         return redirect(url_for('login'))
     return render_template('admin.html')

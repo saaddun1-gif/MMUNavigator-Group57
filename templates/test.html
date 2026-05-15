@@ -3,27 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMU Navigator - Public User</title>
-    
+    <title>MMU Navigator - Final Version</title>
     
     <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
-    
-    <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 </head>
 <body onload="initApp()">
 
-    <!-- Menu Toggle -->
+    <div id="introPopup" class="intro-overlay">
+        <div class="intro-modal">
+            <h1>🎓 Welcome to MMU Navigator</h1>
+            <p>Your complete campus navigation assistant!</p>
+            <ul>
+                <li>📍 Find any building, faculty, or facility</li>
+                <li>🗺️ Real-time map with GPS tracking</li>
+                <li>🤖 AI chatbot to answer your questions</li>
+                <li>📚 Browse categories for quick access</li>
+            </ul>
+            <button class="continue-btn" onclick="closeIntro()">Continue to Map →</button>
+        </div>
+    </div>
+
     <button class="menu-toggle-btn" onclick="toggleSidebar()">
         <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
     </button>
 
-    <!-- Top Right Controls -->
     <div class="top-right-container">
-        <a href="guide.html" class="control-btn">
+        <a href="{{ url_for('guide') }}" class="control-btn">
             <img src="{{ url_for('static', filename='question.png') }}" class="icon-img">
         </a>
         <button id="gpsBtn" class="control-btn" onclick="locateUser()">
@@ -31,7 +41,6 @@
         </button>
     </div>
 
-    <!-- Sidebar Menu -->
     <div class="sidebar" id="mySidebar">
         <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
             <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
@@ -42,24 +51,20 @@
         <button class="nav-btn" onclick="openHomeMenu()">
             <img src="{{ url_for('static', filename='home.png') }}" class="icon-img">
         </button>
-        
-         <div style="margin-top: auto;">
-            <a href="{{ url_for('login') }}" class="nav-btn" style="border-radius: 50%; overflow: hidden; display: flex; justify-content: center; align-items: center; background: none; border: none;">
-             <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img" style="width: 100%; height: 100%; object-fit: cover;">
+        <div style="margin-top: auto;">
+            <a href="{{ url_for('login') }}" class="nav-btn" style="border-radius: 50%; overflow: hidden;">
+                <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
             </a>
-         </div>
         </div>
     </div>
 
-    <!-- Home Menu (Folders) -->
     <div class="sub-sidebar" id="homeSidebar">
         <div id="topHeaderBox" class="header-box" style="display: none;"></div>
         <h1 id="subHeaderTitle">Categories</h1> 
-        <div id="categoryBody" class="category-body-content" style="width: 100%;"></div>
+        <div id="categoryBody" class="category-body-content"></div>
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
-    <!-- Chat Menu -->
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
@@ -74,7 +79,6 @@
         </div>
     </div>
 
-    <!-- Search Bar -->
     <div class="search-container">
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
@@ -82,139 +86,66 @@
     <div id="map"></div>
 
     <script>
-        let map;
-        let userMarker = null;
-        let targetPin = null; 
-        let routingControl = null;
-
-        // Data for MMU Navigator
+        /* --- CORE DATA & MAP VARIABLES --- */
+        let map, userMarker = null, targetPin = null, routingControl = null;
+        
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
             'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
             'Faculty': {
                 'FCI': {
-                    'Level 1': ['CR 101', 'CR 102', 'Lab 1', 'Lab 2'],
-                    'Level 2': ['CR 201', 'CR 202', 'Meeting Room'],
-                    'Level 3': ['CR 301', 'Staff Room'],
-                    'Level 4': ['CR 401', 'CR 402']
+                    'Level 1': ['Lab 1.1', 'Classroom A', 'Lobby', 'Admin'],
+                    'Level 2': ['Tutorial 2.1', 'Lab 2.2', 'Seminar 2'],
+                    'Level 3': ['Server Room', 'Dean Office'],
+                    'Level 4': ['FYP Lab', 'Staff Room']
                 },
-                'FCM': {
-                    'Level 1': ['Lab A', 'Lab B'],
-                    'Level 2': ['CR 1', 'CR 2']
-                },
-                'FAIE': {
-                    'Level 1': ['Lab A', 'Lab B'],
-                    'Level 2': ['CR 1', 'CR 2']
-                },
-                'FCA': {
-                    'Level 1': ['Lab A', 'Lab B'],
-                    'Level 2': ['CR 1', 'CR 2']
-                }
+                'FCM': { 'Level 1': ['Lab A', 'Lab B'], 'Level 2': ['CR 1', 'CR 2'] }
             }
         };
 
         function initApp() {
             initMap();
             loadMainCategories();
+            checkIntro();
         }
 
-        /* --- GPS & MAP LOGIC --- */
-function initApp() {
-        initMap();
-        loadMainCategories();
-    }
+        /* --- MAP & ROUTING LOGIC (Your Logic) --- */
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    function initMap() {
-        // Initialize Map
-        map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            routingControl = L.Routing.control({
+                waypoints: [],
+                router: L.Routing.osrmv1({ serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1', profile: 'foot' }),
+                show: false,
+                createMarker: function() { return null; },
+                lineOptions: { styles: [{ color: 'red', opacity: 0.7, weight: 5, dashArray: '10, 10' }] }
+            }).addTo(map);
 
-        // 1. Initialize Routing Control with Walking Profile
-        routingControl = L.Routing.control({
-            waypoints: [],
-            router: L.Routing.osrmv1({
-                serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
-                profile: 'foot',
-                useHints: false
-            }),
-            routeWhileDragging: false,
-            show: false,
-            addWaypoints: false,
-            lineOptions: {
-                styles: [{ color: 'red', opacity: 0.7, weight: 5, dashArray: '10, 10' }] 
-            },
-            createMarker: function() { return null; }
-        }).addTo(map);
+            map.on('locationfound', (e) => {
+                if (!userMarker) {
+                    userMarker = L.circleMarker(e.latlng, { radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2 }).addTo(map);
+                } else { userMarker.setLatLng(e.latlng); }
+                updateNavigationStatus();
+            });
 
-        // 2. LIVE LOCATION LOGIC
-        map.on('locationfound', function(e) {
-            const latlng = e.latlng;
-            if (!userMarker) {
-                userMarker = L.circleMarker(latlng, {
-                    radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
-                }).addTo(map);
-            } else {
-                userMarker.setLatLng(latlng);
-            }
-            
-            // CRITICAL: This line calculates distance the moment your location is found
-            updateNavigationStatus(); 
-        });
-
-        // 3. PINNING LOGIC
-        map.on('click', function(e) {
-            if (targetPin) {
-                targetPin.setLatLng(e.latlng);
-            } else {
-                targetPin = L.marker(e.latlng, { draggable: true }).addTo(map);
-                targetPin.on('dragend', updateNavigationStatus);
-            }
-            targetPin.bindPopup("Calculating...").openPopup();
-            updateNavigationStatus();
-        });
-
-        // 4. DISTANCE DISPLAY LOGIC
-        routingControl.on('routesfound', function(e) {
-            const routes = e.routes;
-            const summary = routes[0].summary;
-            
-            const distanceText = summary.totalDistance > 1000 
-                ? (summary.totalDistance / 1000).toFixed(2) + "km" 
-                : Math.round(summary.totalDistance) + "m";
-            const timeMin = Math.round(summary.totalTime / 60);
-
-            // Update search bar
-            const searchInput = document.querySelector('.search-bar');
-            if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
-
-            // Update pin popup
-            if (targetPin) {
-                targetPin.setPopupContent(`
-                    <div style="text-align: center;">
-                        <strong>Destination</strong><br>
-                        <b style="color: red;">${distanceText}</b><br>
-                        <small>${timeMin} min walk</small>
-                    </div>
-                `).openPopup();
-            }
-        });
-    }
-
-    function updateNavigationStatus() {
-        if (userMarker && targetPin) {
-            routingControl.setWaypoints([
-                L.latLng(userMarker.getLatLng()),
-                L.latLng(targetPin.getLatLng())
-            ]);
+            map.on('click', (e) => {
+                if (targetPin) { targetPin.setLatLng(e.latlng); } 
+                else { targetPin = L.marker(e.latlng, { draggable: true }).addTo(map); }
+                targetPin.bindPopup("Calculating...").openPopup();
+                updateNavigationStatus();
+            });
         }
-    }
 
-    function locateUser() {
-        map.locate({setView: true, maxZoom: 18, watch: true}); 
-    }
-        
+        function updateNavigationStatus() {
+            if (userMarker && targetPin) {
+                routingControl.setWaypoints([L.latLng(userMarker.getLatLng()), L.latLng(targetPin.getLatLng())]);
+            }
+        }
 
-        /* --- NAVIGATION LOGIC --- */
+        function locateUser() { map.locate({setView: true, maxZoom: 18, watch: true}); }
+
+        /* --- UI & SIDEBAR LOGIC --- */
         function toggleSidebar() {
             document.getElementById("mySidebar").classList.toggle("active");
             if (!document.getElementById("mySidebar").classList.contains("active")) {
@@ -233,15 +164,13 @@ function initApp() {
             document.getElementById("chatSidebar").classList.add("active");
         }
 
-        /* --- HOME CONTENT LOGIC --- */
+        /* --- CATEGORY NAVIGATION (Your Logic) --- */
         function loadMainCategories() {
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').style.display = 'none';
-            document.getElementById('subHeaderTitle').innerText = "Categories";
             document.getElementById('subHeaderTitle').style.display = 'block';
             document.getElementById('backBtn').style.display = 'none';
             body.innerHTML = '';
-
             ['Facility', 'Faculty', 'Hall'].forEach(cat => {
                 body.innerHTML += `<button class="category-btn-wide" onclick="showSubCategory('${cat}')">${cat}</button>`;
             });
@@ -261,13 +190,13 @@ function initApp() {
                     body.innerHTML += `<button class="category-btn-wide" onclick="showFacultyLevels('${fac}')">${fac}</button>`;
                 });
             } else {
-                const listContainer = document.createElement('div');
-                listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+                const container = document.createElement('div');
+                container.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
                 campusData[category].forEach(item => {
                     const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
-                    listContainer.innerHTML += `<div class="${btnClass}">${item}</div>`;
+                    container.innerHTML += `<div class="${btnClass}">${item}</div>`;
                 });
-                body.appendChild(listContainer);
+                body.appendChild(container);
             }
         }
 
@@ -276,7 +205,6 @@ function initApp() {
             document.getElementById('topHeaderBox').innerText = facultyName;
             document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
             body.innerHTML = '';
-
             Object.keys(campusData['Faculty'][facultyName]).forEach(level => {
                 body.innerHTML += `<button class="category-btn-wide" onclick="showClasses('${facultyName}', '${level}')">${level}</button>`;
             });
@@ -287,7 +215,6 @@ function initApp() {
             document.getElementById('topHeaderBox').innerHTML = `${facultyName}<br><br>${levelName}`;
             document.getElementById('backBtn').onclick = () => showFacultyLevels(facultyName);
             body.innerHTML = '<p style="text-align:center; margin-bottom:10px;">List of classes</p>';
-
             const grid = document.createElement('div');
             grid.className = 'grid-container-2col';
             campusData['Faculty'][facultyName][levelName].forEach(cls => {
@@ -296,7 +223,55 @@ function initApp() {
             body.appendChild(grid);
         }
 
-        function fillChat(text) { document.getElementById('userInput').value = text; }
+        /* --- CHATBOT BACKEND CONNECTION (Friend's Logic) --- */
+        async function sendToPython(message) {
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                return data.response;
+            } catch (error) {
+                return '❌ Connection error to Flask server.';
+            }
+        }
+
+        async function handleUserInput() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
+            input.value = '';
+            addMessage(message, true);
+            const reply = await sendToPython(message);
+            addMessage(reply, false);
+        }
+
+        function addMessage(text, isUser) {
+            const chatContainer = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = isUser ? 'user-msg' : 'bot-msg';
+            div.textContent = text;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleUserInput();
+        });
+
+        function fillChat(text) { 
+            document.getElementById('userInput').value = text;
+            handleUserInput();
+        }
+
+        /* --- INTRO POPUP LOGIC --- */
+        function closeIntro() { document.getElementById('introPopup').style.display = 'none'; }
+        function checkIntro() {
+            if (sessionStorage.getItem('introShown')) closeIntro();
+            else sessionStorage.setItem('introShown', 'true');
+        }
     </script>
 </body>
 </html>
