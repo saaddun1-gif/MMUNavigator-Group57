@@ -11,7 +11,24 @@
 </head>
 <body onload="initApp()">
 
-    
+        <!-- Introduction Popup -->
+    <div id="introPopup" class="intro-overlay">
+        <div class="intro-modal">
+            <h1>🎓 Welcome to MMU Navigator</h1>
+            <p>Your complete campus navigation assistant!</p>
+            
+            <ul>
+                <li>📍 Find any building, faculty, or facility</li>
+                <li>🗺️ Real-time map with GPS tracking</li>
+                <li>🤖 AI chatbot to answer your questions</li>
+                <li>📚 Browse categories for quick access</li>
+            </ul>
+            
+            <p>Let us help you find your way around campus!</p>
+            
+            <button class="continue-btn" onclick="closeIntro()">Continue to Map →</button>
+        </div>
+    </div>
     <button class="menu-toggle-btn" onclick="toggleSidebar()">
         <img src="{{ url_for('static', filename='images/menu.png') }}" class="icon-img">
     </button>
@@ -277,5 +294,22 @@
         
         console.log('✅ Chatbot connected to Flask backend at /api/chat');
     </script>
+    <script>
+    // Your existing chatbot script here...
+</script>
+
+<script>
+    // Introduction popup script
+    function closeIntro() {
+        document.getElementById('introPopup').style.display = 'none';
+    }
+    
+    // Optional: Show popup only once per session
+    if (sessionStorage.getItem('introShown')) {
+        document.getElementById('introPopup').style.display = 'none';
+    } else {
+        sessionStorage.setItem('introShown', 'true');
+    }
+</script>
 </body>
 </html>
