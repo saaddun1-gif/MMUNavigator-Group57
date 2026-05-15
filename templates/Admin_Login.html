@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MMU Navigator Admin Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_login.css') }}">
+</head>
+<body>
+    <main>
+        <section id="login">
+            <h1>MMU Navigator Admin Login</h1>
+            <form id="loginForm">
+                <div>
+                    <label for="username">Account ID:</label>
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <br>
+                <div>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <br>
+                <div id="otpSection" style="display:none;">
+                    <label for="otp">Enter OTP:</label>
+                    <input type="text" id="otp" placeholder="6-digit code">
+                    <br><br>
+                </div>
+                <button type="submit" id="submitBtn">Login</button>
+            </form>
+            <p id="message" style="color: red; margin-top: 10px;"></p>
+        </section>
+    </main>
+
+    <script>
+    const loginForm = document.getElementById('loginForm');
+    const otpSection = document.getElementById('otpSection');
+    const message = document.getElementById('message');
+    let isOtpStep = false;
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Clear previous messages and set default error color
+        message.innerText = "";
+        message.style.color = 'red';
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const otp = document.getElementById('otp').value;
+
+        try {
+            if (!isOtpStep) {
+                // Step 1: Initial Login - sending to '/Admin_Login'
+                const response = await fetch('/Admin_Login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'otp_sent') {
+                    otpSection.style.display = 'block';
+                    isOtpStep = true;
+                    message.style.color = 'green';
+                    message.innerText = "OTP sent to your email!";
+                } else {
+                    // Display specific error message from server
+                    message.innerText = result.message || "Login failed.";
+                }
+            } else {
+                // Step 2: Verify OTP
+                const response = await fetch('/verify-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ otp })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    window.location.href = result.redirect;
+                } else {
+                    message.innerText = result.message || "Invalid OTP.";
+                }
+            }
+        } catch (err) {
+            message.innerText = "Connection error. Please check your server.";
+        }
+    });
+</script>
+</body>
+</html>

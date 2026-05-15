@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMU Navigator - Admin Portal</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body onload="initApp()">
+
+    <button class="menu-toggle-btn" onclick="toggleSidebar()">
+        <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
+    </button>
+
+    <div class="top-right-container">
+        <a href="guide.html" class="control-btn">
+            <img src="{{ url_for('static', filename='question.png') }}" class="icon-img">
+        </a>
+        <button id="gpsBtn" class="control-btn" onclick="locateUser()">
+            <img src="{{ url_for('static', filename='gps.png') }}" class="icon-img">
+        </button>
+    </div>
+
+    <div class="sidebar" id="mySidebar">
+        <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
+            <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
+        </button>
+        <button class="nav-btn" onclick="openChatMenu()">
+            <img src="{{ url_for('static', filename='chatbox.png') }}" class="icon-img">
+        </button>
+        <button class="nav-btn" onclick="openHomeMenu()">
+            <img src="{{ url_for('static', filename='home.png') }}" class="icon-img">
+        </button>
+        
+        <button id="settingBtn" class="nav-btn" onclick="toggleEditMode()">
+            <img src="{{ url_for('static', filename='setting.png') }}" class="icon-img">
+        </button>
+        
+        <div style="margin-top: auto;">
+            <button class="nav-btn" style="border-radius: 50%; overflow: hidden;">
+                <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
+            </button>
+        </div>
+    </div>
+
+    <div class="sub-sidebar" id="homeSidebar">
+        <div id="topHeaderBox" class="header-box" style="display: none;"></div>
+        <h1 id="subHeaderTitle">Categories</h1> 
+        <div id="categoryBody" class="category-body-content" style="width: 100%;"></div>
+        <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
+    </div>
+
+    <div class="sub-sidebar" id="chatSidebar">
+        <h1>AI Chat box</h1>
+        <div class="chat-messages-container" id="chatMessages">
+            <div class="bot-msg">Hello! How can I help you navigate MMU today?</div>
+            <div id="templateDisplay" class="template-preview-area"></div>
+        </div>
+
+        <div id="chatAdminSettings" style="display: none; width: 100%; margin-bottom: 20px;">
+            <hr style="border: 1px solid black; margin: 10px 0;">
+            <p style="font-weight: bold; margin-bottom: 5px;">Add New Question:</p>
+            <input type="text" id="templateInput" class="admin-text-input" placeholder="Type here...">
+            <button class="admin-save-btn" onclick="addChatTemplate()">Save</button>
+            <div id="adminTemplateList" style="width: 100%; margin-top: 10px;"></div>
+        </div>
+
+        <div class="chat-input-wrapper" id="chatInputArea">
+            <input type="text" class="chat-input-field" placeholder="Ask me anything...">
+        </div>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="search-bar" placeholder="Search MMU locations...">
+    </div>
+    
+    <div id="map"></div>
+
+    <script>
+        let isEditMode = false; 
+        let currentView = ''; 
+        let currentCategory = ''; 
+        let currentFaculty = '';
+        let currentLevel = '';
+        let map;
+        let userMarker = null; 
+        let targetPin = null; 
+        let routingControl = null; 
+
+        let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
+
+        const campusData = {
+            'Facility': ['Library', 'Surau', 'Gym', 'Cafe'],
+            'Hall': ['Exam Hall', 'MPH'],
+            'Faculty': {
+                'FCI': {
+                    'Level 1': ['CR 101', 'CR 102'],
+                    'Level 2': ['CR 201', 'Meeting Room']
+                }
+            }
+        };
+
+        function initApp() { 
+            initMap(); 
+            loadMainCategories(); 
+        }
+
+        function initMap() {
+    // 1. Initialize the map
+    map = L.map('map', { zoomControl: false }).setView([2.927028, 101.642134], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© Hazyq'
+    }).addTo(map);
+
+    // 2. Initialize Routing Control ONCE with 'foot' profile
+    routingControl = L.Routing.control({
+        waypoints: [],
+        router: L.Routing.osrmv1({
+            serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+            profile: 'foot', // This forces use of the thin red walking paths
+            useHints: false
+        }),
+        routeWhileDragging: true,
+        show: false,
+        addWaypoints: false,
+        lineOptions: {
+            styles: [{ color: 'red', opacity: 0.8, weight: 5, dashArray: '10, 10' }] 
+        },
+        createMarker: function() { return null; }
+    }).addTo(map);
+
+    // 3. Setup Route Found Logic
+    routingControl.on('routesfound', function(e) {
+        const routes = e.routes;
+        const summary = routes[0].summary;
+        const distanceText = summary.totalDistance > 1000 
+            ? (summary.totalDistance / 1000).toFixed(2) + "km" 
+            : Math.round(summary.totalDistance) + "m";
+        const timeMin = Math.round(summary.totalTime / 60);
+
+        const searchInput = document.querySelector('.search-bar');
+        if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
+    });
+
+    // 4. Map Click for Destination
+    map.on('click', function(e) {
+        if (targetPin) {
+            targetPin.setLatLng(e.latlng);
+        } else {
+            targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
+            targetPin.bindPopup("Destination").openPopup();
+            targetPin.on('drag', updateNavigationStatus);
+        }
+        updateNavigationStatus();
+    });
+
+    // 5. LIVE LOCATION LOGIC (Restore this part)
+    map.on('locationfound', (e) => {
+        const latlng = e.latlng;
+        if (!userMarker) {
+            userMarker = L.circleMarker(latlng, {
+                radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
+            }).addTo(map);
+        } else {
+            userMarker.setLatLng(latlng);
+        }
+        updateNavigationStatus();
+    });
+
+    map.on('locationerror', (e) => {
+        alert("Location access denied. Please ensure you are using HTTPS and allow permissions.");
+    });
+}
+
+        function updateNavigationStatus() {
+            if (userMarker && targetPin) {
+                const start = userMarker.getLatLng();
+                const end = targetPin.getLatLng();
+
+                routingControl.setWaypoints([
+                    L.latLng(start.lat, start.lng),
+                    L.latLng(end.lat, end.lng)
+                ]);
+            }
+        }
+
+        function locateUser() { 
+            map.locate({setView: true, maxZoom: 18, watch: true}); 
+        }
+
+        /* --- UI & CRUD Logic --- */
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+            const btn = document.getElementById('settingBtn');
+            isEditMode ? btn.classList.add('setting-on') : btn.classList.remove('setting-on');
+            refreshScreen();
+        }
+
+        function refreshScreen() {
+            if (currentView === 'chat') openChatMenu();
+            else if (currentView === 'home') {
+                if (currentLevel) showClasses(currentFaculty, currentLevel);
+                else if (currentFaculty) showFacultyLevels(currentFaculty);
+                else if (currentCategory) showSubCategory(currentCategory);
+                else loadMainCategories();
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById("mySidebar").classList.toggle("active");
+            if (!document.getElementById("mySidebar").classList.contains("active")) {
+                document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
+            }
+        }
+
+        function openHomeMenu() {
+            currentView = 'home';
+            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
+            document.getElementById("homeSidebar").classList.add("active");
+            refreshScreen();
+        }
+
+        function openChatMenu() {
+            currentView = 'chat';
+            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
+            document.getElementById("chatSidebar").classList.add("active");
+            renderTemplatePreview();
+            document.getElementById('chatAdminSettings').style.display = isEditMode ? 'block' : 'none';
+            document.getElementById('chatInputArea').style.display = isEditMode ? 'none' : 'block';
+            if (isEditMode) renderAdminTemplateList();
+        }
+
+        function loadMainCategories() {
+            currentCategory = ''; currentFaculty = ''; currentLevel = '';
+            const body = document.getElementById('categoryBody');
+            document.getElementById('topHeaderBox').style.display = 'none';
+            document.getElementById('subHeaderTitle').style.display = 'block';
+            document.getElementById('backBtn').style.display = 'none';
+            body.innerHTML = '';
+            ['Facility', 'Faculty', 'Hall'].forEach(cat => {
+                body.innerHTML += `<button class="category-btn-wide" onclick="showSubCategory('${cat}')">${cat}</button>`;
+            });
+        }
+
+        function showSubCategory(category) {
+            currentCategory = category; currentFaculty = ''; currentLevel = '';
+            const body = document.getElementById('categoryBody');
+            document.getElementById('topHeaderBox').innerText = category;
+            document.getElementById('topHeaderBox').style.display = 'block';
+            document.getElementById('subHeaderTitle').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'block';
+            document.getElementById('backBtn').onclick = loadMainCategories;
+            body.innerHTML = '';
+            const listContainer = document.createElement('div');
+            listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+            const items = (category === 'Faculty') ? Object.keys(campusData[category]) : campusData[category];
+            items.forEach((item, index) => {
+                const container = document.createElement('div');
+                container.className = 'item-container';
+                const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
+                container.innerHTML = `<div class="${btnClass}">${item}</div>`;
+                if (category === 'Faculty') container.onclick = () => showFacultyLevels(item);
+                if (isEditMode) {
+                    const del = document.createElement('button');
+                    del.className = 'delete-badge'; del.innerText = 'X';
+                    del.onclick = (e) => {
+                        e.stopPropagation();
+                        if (category === 'Faculty') delete campusData['Faculty'][item];
+                        else campusData[category].splice(index, 1);
+                        showSubCategory(category);
+                    };
+                    container.appendChild(del);
+                }
+                listContainer.appendChild(container);
+            });
+            body.appendChild(listContainer);
+            if (isEditMode) renderAddButton(body, () => {
+                const val = prompt(`New ${category}:`);
+                if (val) { if(category==='Faculty') campusData['Faculty'][val]={}; else campusData[category].push(val); showSubCategory(category); }
+            });
+        }
+
+        function showFacultyLevels(fac) {
+            currentFaculty = fac; currentLevel = '';
+            const body = document.getElementById('categoryBody');
+            document.getElementById('topHeaderBox').innerText = fac;
+            document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
+            body.innerHTML = '';
+            const list = document.createElement('div');
+            list.className = 'wide-list-container';
+            Object.keys(campusData['Faculty'][fac]).forEach(lvl => {
+                const container = document.createElement('div');
+                container.className = 'item-container';
+                container.onclick = () => showClasses(fac, lvl);
+                container.innerHTML = `<div class="category-btn-wide">${lvl}</div>`;
+                if (isEditMode) {
+                    const del = document.createElement('button'); del.className = 'delete-badge'; del.innerText = 'X';
+                    del.onclick = (e) => { e.stopPropagation(); delete campusData['Faculty'][fac][lvl]; showFacultyLevels(fac); };
+                    container.appendChild(del);
+                }
+                list.appendChild(container);
+            });
+            body.appendChild(list);
+            if (isEditMode) renderAddButton(body, () => {
+                const val = prompt(`New Level for ${fac}:`);
+                if(val) { campusData['Faculty'][fac][val]=[]; showFacultyLevels(fac); }
+            });
+        }
+
+        function showClasses(fac, lvl) {
+            currentLevel = lvl;
+            const body = document.getElementById('categoryBody');
+            document.getElementById('topHeaderBox').innerHTML = `${fac}<br><br>${lvl}`;
+            document.getElementById('backBtn').onclick = () => showFacultyLevels(fac);
+            body.innerHTML = '<p style="text-align:center; margin-bottom:10px;">List of classes</p>';
+            const grid = document.createElement('div');
+            grid.className = 'grid-container-2col';
+            campusData['Faculty'][fac][lvl].forEach((cls, i) => {
+                const container = document.createElement('div');
+                container.className = 'item-container';
+                container.innerHTML = `<div class="class-grid-btn">${cls}</div>`;
+                if (isEditMode) {
+                    const del = document.createElement('button'); del.className = 'delete-badge'; del.innerText = 'X';
+                    del.onclick = (e) => { e.stopPropagation(); campusData['Faculty'][fac][lvl].splice(i, 1); showClasses(fac, lvl); };
+                    container.appendChild(del);
+                }
+                grid.appendChild(container);
+            });
+            body.appendChild(grid);
+            if (isEditMode) renderAddButton(body, () => {
+                const val = prompt(`New Class for ${lvl}:`);
+                if(val) { campusData['Faculty'][fac][lvl].push(val); showClasses(fac, lvl); }
+            });
+        }
+
+        function renderAddButton(parent, onClick) {
+            const b = document.createElement('button'); b.className = 'add-item-wide-btn'; b.innerText = '+';
+            b.onclick = onClick; parent.appendChild(b);
+        }
+
+        function addChatTemplate() {
+            const val = document.getElementById('templateInput').value;
+            if(val) { chatTemplates.push(val); document.getElementById('templateInput').value = ''; renderAdminTemplateList(); renderTemplatePreview(); }
+        }
+        function deleteChatTemplate(i) { chatTemplates.splice(i, 1); renderAdminTemplateList(); renderTemplatePreview(); }
+        function renderTemplatePreview() {
+            const c = document.getElementById('templateDisplay'); c.innerHTML = '';
+            chatTemplates.forEach(t => c.innerHTML += `<button class="chat-pill">${t}</button>`);
+        }
+        function renderAdminTemplateList() {
+            const c = document.getElementById('adminTemplateList'); c.innerHTML = '';
+            chatTemplates.forEach((t, i) => c.innerHTML += `<div class="admin-template-row"><span>${t}</span><button onclick="deleteChatTemplate(${i})">X</button></div>`);
+        }
+    </script>
+</body>
+</html>

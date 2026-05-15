@@ -1,0 +1,161 @@
+:root {
+    --primary: #2563eb;
+    --bg-glass: rgba(255, 255, 255, 0.8);
+    --border-glass: rgba(255, 255, 255, 0.3);
+    --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Inter', -apple-system, sans-serif;
+    overflow: hidden;
+}
+
+#map {
+    height: 100vh;
+    width: 100vw;
+    z-index: 1;
+}
+
+/* Floating Header */
+.map-header {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: var(--bg-glass);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 12px 24px;
+    border-radius: 16px;
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow);
+}
+
+.map-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Customizing the Routing Panel (Sidebar Style) */
+.leaflet-routing-container {
+    width: 320px !important;
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--border-glass) !important;
+    border-radius: 20px !important;
+    box-shadow: var(--shadow) !important;
+    margin: 20px !important;
+    padding: 10px !important;
+    transition: all 0.3s ease;
+}
+
+/* Clean up the instruction list */
+.leaflet-routing-alt {
+    max-height: 70vh !important;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+}
+
+.leaflet-routing-alt::-webkit-scrollbar {
+    width: 6px;
+}
+
+.leaflet-routing-alt::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 10px;
+}
+
+/* Table styling for instructions */
+.leaflet-routing-alt tr {
+    padding: 12px !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.leaflet-routing-alt tr:hover {
+    background-color: rgba(37, 99, 235, 0.1) !important;
+    cursor: pointer;
+}
+
+.leaflet-routing-icon {
+    filter: opacity(0.7);
+}
+
+/* Better Zoom Controls */
+.leaflet-bar {
+    border: none !important;
+    box-shadow: var(--shadow) !important;
+}
+
+.leaflet-bar a {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(8px) !important;
+    border-bottom: 1px solid var(--border-glass) !important;
+    color: #1e293b !important;
+}
+
+/* Pulse animation for current location */
+.current-location-marker {
+    width: 15px;
+    height: 15px;
+    background: var(--primary);
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(37, 99, 235, 0.4);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+    .leaflet-routing-container {
+        width: calc(100% - 40px) !important;
+        position: fixed !important;
+        bottom: 0;
+        margin: 10px 20px !important;
+        max-height: 30% !important;
+    }
+    
+    .map-header {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        text-align: center;
+    }
+    #clear-btn {
+    position: absolute;
+    top: 100px; /* Positioned below the zoom buttons */
+    left: 10px;
+    z-index: 1000;
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.user-gif-style {
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
+    transition: transform 0.2s ease-out; /* Makes the movement look smoother */
+}
+
+#clear-btn:hover {
+    background: #cc0000;
+}
+}
