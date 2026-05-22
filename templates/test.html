@@ -120,7 +120,8 @@
        // 2. Setup the map with the locks turned on
           map = L.map('map', { 
           zoomControl: false,
-          minZoom: 15,                 // Stops them from zooming out too far
+          minZoom: 17,                 // Stops them from zooming out too far
+          maxZoom: 19,
          maxBounds: mmuBounds,        // Locks the camera inside the MMU box
          maxBoundsViscosity: 1.0      // Makes the map bounce back if they try to drag outside
          }).setView([2.9276, 101.6418], 18);
