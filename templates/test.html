@@ -5,15 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMU Navigator - Final Version</title>
     
+    <!-- Link to your CSS files -->
     <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     
+    <!-- Link to map tools -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 </head>
 <body onload="initApp()">
 
+    <!-- Intro Popup -->
     <div id="introPopup" class="intro-overlay">
         <div class="intro-modal">
             <h1>🎓 Welcome to MMU Navigator</h1>
@@ -28,6 +31,7 @@
         </div>
     </div>
 
+    <!-- Main Buttons -->
     <button class="menu-toggle-btn" onclick="toggleSidebar()">
         <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
     </button>
@@ -41,6 +45,7 @@
         </button>
     </div>
 
+    <!-- Left Sidebar -->
     <div class="sidebar" id="mySidebar">
         <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
             <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
@@ -58,6 +63,7 @@
         </div>
     </div>
 
+    <!-- Category Menu -->
     <div class="sub-sidebar" id="homeSidebar">
         <div id="topHeaderBox" class="header-box" style="display: none;"></div>
         <h1 id="subHeaderTitle">Categories</h1> 
@@ -65,6 +71,7 @@
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
+    <!-- Chatbot Menu -->
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
@@ -79,14 +86,17 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
     <div class="search-container">
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
     
+    <!-- The Map Space -->
     <div id="map"></div>
 
+    <!-- ONE SINGLE SCRIPT TAG FOR ALL JAVASCRIPT -->
     <script>
-        /* --- CORE DATA & MAP VARIABLES --- */
+        /* --- 1. CORE DATA & MAP VARIABLES --- */
         let map, userMarker = null, targetPin = null, routingControl = null;
         
         const campusData = {
@@ -109,7 +119,7 @@
             checkIntro();
         }
 
-        /* --- MAP & ROUTING LOGIC (Your Logic) --- */
+        /* --- 2. MAP & ROUTING LOGIC --- */
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -145,7 +155,7 @@
 
         function locateUser() { map.locate({setView: true, maxZoom: 18, watch: true}); }
 
-        /* --- UI & SIDEBAR LOGIC --- */
+        /* --- 3. UI & SIDEBAR LOGIC --- */
         function toggleSidebar() {
             document.getElementById("mySidebar").classList.toggle("active");
             if (!document.getElementById("mySidebar").classList.contains("active")) {
@@ -164,7 +174,7 @@
             document.getElementById("chatSidebar").classList.add("active");
         }
 
-        /* --- CATEGORY NAVIGATION (Your Logic) --- */
+        /* --- 4. CATEGORY NAVIGATION --- */
         function loadMainCategories() {
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').style.display = 'none';
@@ -223,7 +233,7 @@
             body.appendChild(grid);
         }
 
-        /* --- CHATBOT BACKEND CONNECTION (Friend's Logic) --- */
+        /* --- 5. CHATBOT LOGIC --- */
         async function sendToPython(message) {
             try {
                 const response = await fetch('/api/chat', {
@@ -234,44 +244,63 @@
                 const data = await response.json();
                 return data.response;
             } catch (error) {
-                return '❌ Connection error to Flask server.';
+                console.error('Connection error:', error);
+                return '❌ Cannot connect to Flask server. Make sure app.py is running!';
             }
+        }
+
+        function addMessage(text, isUser) {
+            const chatContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'user-msg' : 'bot-msg';
+            messageDiv.style.whiteSpace = 'pre-line';
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
         async function handleUserInput() {
             const input = document.getElementById('userInput');
             const message = input.value.trim();
             if (!message) return;
+            
             input.value = '';
             addMessage(message, true);
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'bot-msg';
+            typingDiv.textContent = '🤖 Thinking...';
+            document.getElementById('chatMessages').appendChild(typingDiv);
+            
             const reply = await sendToPython(message);
+            typingDiv.remove();
             addMessage(reply, false);
         }
 
-        function addMessage(text, isUser) {
-            const chatContainer = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            div.className = isUser ? 'user-msg' : 'bot-msg';
-            div.textContent = text;
-            chatContainer.appendChild(div);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        document.getElementById('userInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleUserInput();
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleUserInput();
+            }
         });
 
-        function fillChat(text) { 
+        window.fillChat = function(text) {
             document.getElementById('userInput').value = text;
             handleUserInput();
+        };
+
+        /* --- 6. INTRO POPUP LOGIC --- */
+        function closeIntro() {
+            document.getElementById('introPopup').style.display = 'none';
         }
 
-        /* --- INTRO POPUP LOGIC --- */
-        function closeIntro() { document.getElementById('introPopup').style.display = 'none'; }
         function checkIntro() {
-            if (sessionStorage.getItem('introShown')) closeIntro();
-            else sessionStorage.setItem('introShown', 'true');
+            if (sessionStorage.getItem('introShown')) {
+                closeIntro();
+            } else {
+                sessionStorage.setItem('introShown', 'true');
+            }
         }
+
     </script>
 </body>
 </html>
