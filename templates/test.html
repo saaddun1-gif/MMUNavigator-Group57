@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" href="{{ url_for('static', filename='leaflet.css') }}" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    
 </head>
 <body onload="initApp()">
 
@@ -56,11 +58,21 @@
         </div>
     </div>
 
-    <div class="sub-sidebar" id="homeSidebar">
-        <h1 id="subHeaderTitle">Categories</h1> 
-        <div id="categoryBody" class="category-body-content"></div>
-        <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
+    <div class="sub-sidebar" id="chatSidebar">
+    <h1>AI Chat box</h1>
+    <div class="chat-messages-container" id="chatMessages">
+        <div class="bot-msg">Hello! How can I help you navigate MMU today?</div>
     </div>
+    
+    <div class="template-preview-area">
+        <button class="chat-pill" onclick="fillChat('Where is the Library?')">📚 Where is the Library?</button>
+        <button class="chat-pill" onclick="fillChat('How to go to FCI?')">🏫 How to go to FCI?</button>
+    </div>
+    
+    <div class="chat-input-wrapper">
+        <input type="text" id="userInput" class="chat-input-field" placeholder="Ask me anything...">
+    </div>
+</div>
 
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
@@ -77,22 +89,43 @@
     </div>
     
     <div id="map"></div>
+        <!-- Home Menu (Folders) -->
+    <div class="sub-sidebar" id="homeSidebar">
+        <div id="topHeaderBox" class="header-box" style="display: none;"></div>
+        <h1 id="subHeaderTitle">Categories</h1> 
+        <div id="categoryBody" class="category-body-content" style="width: 100%;"></div>
+        <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
+    </div>
 
-    <script>
-        /* --- DATA STRUCTURES --- */
+ <script>
+        let map;
+        let userMarker = null;
+        let targetPin = null; 
+        let routingControl = null;
+
+        // Data for MMU Navigator
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
-            'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall']
-        };
-
-        const facultyList = ['FCI', 'FOE', 'FCM', 'FAC'];
-
-        const facultyDetails = {
-            'FCI': {
-                'Level 1': ['Lab 1.1', 'Classroom A', 'Lobby', 'Admin'],
-                'Level 2': ['Tutorial 2.1', 'Lab 2.2', 'Seminar 2', 'Meeting Room'],
-                'Level 3': ['Server Room', 'Classroom C', 'Dean Office', 'Research Lab'],
-                'Level 4': ['Final Year Project Lab', 'Staff Room', 'Storage', 'Roof Access']
+            'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
+            'Faculty': {
+                'FCI': {
+                    'Level 1': ['CR 101', 'CR 102', 'Lab 1', 'Lab 2'],
+                    'Level 2': ['CR 201', 'CR 202', 'Meeting Room'],
+                    'Level 3': ['CR 301', 'Staff Room'],
+                    'Level 4': ['CR 401', 'CR 402']
+                },
+                'FCM': {
+                    'Level 1': ['Lab A', 'Lab B'],
+                    'Level 2': ['CR 1', 'CR 2']
+                },
+                'FAIE': {
+                    'Level 1': ['Lab A', 'Lab B'],
+                    'Level 2': ['CR 1', 'CR 2']
+                },
+                'FCA': {
+                    'Level 1': ['Lab A', 'Lab B'],
+                    'Level 2': ['CR 1', 'CR 2']
+                }
             }
         };
 
@@ -101,135 +134,185 @@
             loadMainCategories();
         }
 
-        /* --- SIDEBAR LOGIC --- */
+        /* --- GPS & MAP LOGIC --- */
+function initApp() {
+        initMap();
+        loadMainCategories();
+    }
+
+    function initMap() {
+        // Initialize Map
+        map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // 1. Initialize Routing Control with Walking Profile
+        routingControl = L.Routing.control({
+            waypoints: [],
+            router: L.Routing.osrmv1({
+                serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+                profile: 'foot',
+                useHints: false
+            }),
+            routeWhileDragging: false,
+            show: false,
+            addWaypoints: false,
+            lineOptions: {
+                styles: [{ color: 'red', opacity: 0.7, weight: 5, dashArray: '10, 10' }] 
+            },
+            createMarker: function() { return null; }
+        }).addTo(map);
+
+        // 2. LIVE LOCATION LOGIC
+        map.on('locationfound', function(e) {
+            const latlng = e.latlng;
+            if (!userMarker) {
+                userMarker = L.circleMarker(latlng, {
+                    radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
+                }).addTo(map);
+            } else {
+                userMarker.setLatLng(latlng);
+            }
+            
+            // CRITICAL: This line calculates distance the moment your location is found
+            updateNavigationStatus(); 
+        });
+
+        // 3. PINNING LOGIC
+        map.on('click', function(e) {
+            if (targetPin) {
+                targetPin.setLatLng(e.latlng);
+            } else {
+                targetPin = L.marker(e.latlng, { draggable: true }).addTo(map);
+                targetPin.on('dragend', updateNavigationStatus);
+            }
+            targetPin.bindPopup("Calculating...").openPopup();
+            updateNavigationStatus();
+        });
+
+        // 4. DISTANCE DISPLAY LOGIC
+        routingControl.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            
+            const distanceText = summary.totalDistance > 1000 
+                ? (summary.totalDistance / 1000).toFixed(2) + "km" 
+                : Math.round(summary.totalDistance) + "m";
+            const timeMin = Math.round(summary.totalTime / 60);
+
+            // Update search bar
+            const searchInput = document.querySelector('.search-bar');
+            if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
+
+            // Update pin popup
+            if (targetPin) {
+                targetPin.setPopupContent(`
+                    <div style="text-align: center;">
+                        <strong>Destination</strong><br>
+                        <b style="color: red;">${distanceText}</b><br>
+                        <small>${timeMin} min walk</small>
+                    </div>
+                `).openPopup();
+            }
+        });
+    }
+
+    function updateNavigationStatus() {
+        if (userMarker && targetPin) {
+            routingControl.setWaypoints([
+                L.latLng(userMarker.getLatLng()),
+                L.latLng(targetPin.getLatLng())
+            ]);
+        }
+    }
+
+    function locateUser() {
+        map.locate({setView: true, maxZoom: 18, watch: true}); 
+    }
+        
+
+        /* --- NAVIGATION LOGIC --- */
         function toggleSidebar() {
-            const sidebar = document.getElementById("mySidebar");
-            const homeSidebar = document.getElementById("homeSidebar");
-            const chatSidebar = document.getElementById("chatSidebar");
-            sidebar.classList.toggle("active");
-            if (!sidebar.classList.contains("active")) {
-                homeSidebar.classList.remove("active");
-                chatSidebar.classList.remove("active");
+            document.getElementById("mySidebar").classList.toggle("active");
+            if (!document.getElementById("mySidebar").classList.contains("active")) {
+                document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             }
         }
 
         function openHomeMenu() {
-            document.getElementById("chatSidebar").classList.remove("active");
-            document.getElementById("mySidebar").classList.add("active");
+            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("homeSidebar").classList.add("active");
             loadMainCategories();
         }
 
         function openChatMenu() {
-            document.getElementById("homeSidebar").classList.remove("active");
-            document.getElementById("mySidebar").classList.add("active");
+            document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("chatSidebar").classList.add("active");
         }
 
-        /* --- CATEGORY & FACULTY LOGIC --- */
+        /* --- HOME CONTENT LOGIC --- */
         function loadMainCategories() {
             const body = document.getElementById('categoryBody');
-            const title = document.getElementById('subHeaderTitle');
-            const backBtn = document.getElementById('backBtn');
-            title.innerText = "Categories";
-            backBtn.style.display = 'none';
-            body.innerHTML = `
-                <button class="category-btn-wide" onclick="showSubCategory('Facility')">Facility</button>
-                <button class="category-btn-wide" onclick="showSubCategory('Faculty')">Faculty</button>
-                <button class="category-btn-wide" onclick="showSubCategory('Hall')">Hall</button>
-            `;
+            document.getElementById('topHeaderBox').style.display = 'none';
+            document.getElementById('subHeaderTitle').innerText = "Categories";
+            document.getElementById('subHeaderTitle').style.display = 'block';
+            document.getElementById('backBtn').style.display = 'none';
+            body.innerHTML = '';
+
+            ['Facility', 'Faculty', 'Hall'].forEach(cat => {
+                body.innerHTML += `<button class="category-btn-wide" onclick="showSubCategory('${cat}')">${cat}</button>`;
+            });
         }
 
         function showSubCategory(category) {
             const body = document.getElementById('categoryBody');
-            const title = document.getElementById('subHeaderTitle');
-            const backBtn = document.getElementById('backBtn');
-            title.innerText = category;
-            backBtn.style.display = 'block';
-            backBtn.onclick = loadMainCategories;
+            document.getElementById('topHeaderBox').innerText = category;
+            document.getElementById('topHeaderBox').style.display = 'block';
+            document.getElementById('subHeaderTitle').style.display = 'none';
+            document.getElementById('backBtn').style.display = 'block';
+            document.getElementById('backBtn').onclick = loadMainCategories;
             body.innerHTML = '';
 
             if (category === 'Faculty') {
-                facultyList.forEach(fac => {
-                    body.innerHTML += `<button class="category-btn-wide" onclick="selectFaculty('${fac}')">${fac}</button>`;
+                Object.keys(campusData['Faculty']).forEach(fac => {
+                    body.innerHTML += `<button class="category-btn-wide" onclick="showFacultyLevels('${fac}')">${fac}</button>`;
                 });
             } else {
-                const grid = document.createElement('div');
-                // Facility uses 2-column grid, Hall uses 1-column wide list
-                grid.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
-                
+                const listContainer = document.createElement('div');
+                listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
                 campusData[category].forEach(item => {
                     const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
-                    grid.innerHTML += `<div class="${btnClass}">${item}</div>`;
+                    listContainer.innerHTML += `<div class="${btnClass}">${item}</div>`;
                 });
-                body.appendChild(grid);
+                body.appendChild(listContainer);
             }
         }
 
-        function selectFaculty(facultyName) {
+        function showFacultyLevels(facultyName) {
             const body = document.getElementById('categoryBody');
-            const backBtn = document.getElementById('backBtn');
-            body.innerHTML = `
-                <div class="chosen-box">${facultyName}</div>
-                <button class="level-btn" onclick="selectLevel('${facultyName}', 'Level 1')">level 1</button>
-                <button class="level-btn" onclick="selectLevel('${facultyName}', 'Level 2')">level 2</button>
-                <button class="level-btn" onclick="selectLevel('${facultyName}', 'Level 3')">level 3</button>
-                <button class="level-btn" onclick="selectLevel('${facultyName}', 'Level 4')">level 4</button>
-            `;
-            backBtn.onclick = () => showSubCategory('Faculty');
+            document.getElementById('topHeaderBox').innerText = facultyName;
+            document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
+            body.innerHTML = '';
+
+            Object.keys(campusData['Faculty'][facultyName]).forEach(level => {
+                body.innerHTML += `<button class="category-btn-wide" onclick="showClasses('${facultyName}', '${level}')">${level}</button>`;
+            });
         }
 
-        function selectLevel(facultyName, levelName) {
+        function showClasses(facultyName, levelName) {
             const body = document.getElementById('categoryBody');
-            const backBtn = document.getElementById('backBtn');
-            body.innerHTML = `
-                <div class="chosen-box">${facultyName}</div>
-                <div class="chosen-level-box">${levelName}</div>
-                <p style="margin: 15px 0; font-weight: bold; text-align:center;">List of classes</p>
-                <div class="class-grid" id="classGrid"></div>
-            `;
-            const grid = document.getElementById('classGrid');
-            const classes = (facultyDetails[facultyName] && facultyDetails[facultyName][levelName]) 
-                            ? facultyDetails[facultyName][levelName] 
-                            : ['Room 1', 'Room 2', 'Room 3', 'Room 4'];
+            document.getElementById('topHeaderBox').innerHTML = `${facultyName}<br><br>${levelName}`;
+            document.getElementById('backBtn').onclick = () => showFacultyLevels(facultyName);
+            body.innerHTML = '<p style="text-align:center; margin-bottom:10px;">List of classes</p>';
 
-            classes.forEach(cls => {
-                grid.innerHTML += `<div class="class-item-btn">${cls}</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid-container-2col';
+            campusData['Faculty'][facultyName][levelName].forEach(cls => {
+                grid.innerHTML += `<div class="class-grid-btn">${cls}</div>`;
             });
-            backBtn.onclick = () => selectFaculty(facultyName);
+            body.appendChild(grid);
         }
 
-        /* --- MAP & GPS --- */
-        var map, userMarker, isFollowing = false;
-        function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(map);
-        }
-
-        function locateUser() {
-            isFollowing = true;
-            document.getElementById('gpsBtn').classList.add('active-gps');
-            map.locate({setView: true, maxZoom: 18, watch: true, enableHighAccuracy: true});
-        }
-
-        function onLocationFound(e) {
-            if (!userMarker) {
-                userMarker = L.marker(e.latlng).addTo(map);
-            } else {
-                userMarker.setLatLng(e.latlng);
-            }
-            if (isFollowing) map.panTo(e.latlng);
-        }
-        
-        // Leaflet events
-        initApp(); // Fallback trigger
-        window.addEventListener('load', () => {
-            map.on('locationfound', onLocationFound);
-            map.on('dragstart', () => {
-                isFollowing = false;
-                document.getElementById('gpsBtn').classList.remove('active-gps');
-            });
-        });
+        function fillChat(text) { document.getElementById('userInput').value = text; }
     </script>
     <script>
         // This connects to Flask backend - FIXED FOR COMBINED app.py
@@ -299,17 +382,25 @@
 </script>
 
 <script>
-    // Introduction popup script
+    // Introduction popup script - SHOW ON FIRST VISIT
     function closeIntro() {
         document.getElementById('introPopup').style.display = 'none';
     }
     
-    // Optional: Show popup only once per session
-    if (sessionStorage.getItem('introShown')) {
-        document.getElementById('introPopup').style.display = 'none';
-    } else {
-        sessionStorage.setItem('introShown', 'true');
-    }
+    // Show popup when page loads (only once per session)
+    document.addEventListener('DOMContentLoaded', function() {
+        const introPopup = document.getElementById('introPopup');
+        
+        // Check if already shown in this session
+        if (!sessionStorage.getItem('introShown')) {
+            // SHOW the popup
+            introPopup.style.display = 'flex';
+            sessionStorage.setItem('introShown', 'true');
+        } else {
+            // Hide the popup if already shown
+            introPopup.style.display = 'none';
+        }
+    });
 </script>
 </body>
 </html>
