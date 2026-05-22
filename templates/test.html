@@ -111,7 +111,19 @@
 
         /* --- MAP & ROUTING LOGIC (Your Logic) --- */
         function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
+            // 1. Draw the invisible box around MMU Cyberjaya
+          const mmuBounds = L.latLngBounds(
+            [2.9220, 101.6370], // Bottom-Left corner (Penjuru Bawah-Kiri)
+            [2.9320, 101.6480]  // Top-Right corner (Penjuru Atas-Kanan)
+         );
+
+       // 2. Setup the map with the locks turned on
+          map = L.map('map', { 
+          zoomControl: false,
+          minZoom: 15,                 // Stops them from zooming out too far
+         maxBounds: mmuBounds,        // Locks the camera inside the MMU box
+         maxBoundsViscosity: 1.0      // Makes the map bounce back if they try to drag outside
+         }).setView([2.9276, 101.6418], 18);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
             routingControl = L.Routing.control({
