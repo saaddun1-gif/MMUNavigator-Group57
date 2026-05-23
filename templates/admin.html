@@ -94,9 +94,18 @@
         let targetPin = null;         
         let routingControl = null;    
 
+        // Updated campusData structure to hold objects with coordinate locations
         const campusData = {
-            'Facility': ['Library', 'Surau', 'Gym', 'Cafe'],
-            'Hall': ['Exam Hall', 'MPH'],
+            'Facility': [
+                { name: 'Library',latlng: [2.927514, 101.641695] }, 
+                { name: 'Surau', latlng: [2.924351, 101.642975]}, 
+                { name: 'Gym', latlng: [2.927183, 101.643105]}, 
+                { name: 'Cafe', latlng: [2.925228, 101.642405] }
+            ],
+            'Hall': [
+                { name: 'Exam Hall', latlng: [2.92842, 101.64215] },
+                { name: 'MPH', latlng: [2.92764, 101.64255] } // Coordinates pointing exactly to the red circle area
+            ],
             'Faculty': {
                 'FCI': {
                     'Level 1': ['CR 101', 'CR 102'],
@@ -144,14 +153,7 @@
             });
 
             map.on('click', function(e) {
-                if (targetPin) {
-                    targetPin.setLatLng(e.latlng);
-                } else {
-                    targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
-                    targetPin.on('dragend', updateNavigationStatus);
-                }
-                targetPin.bindPopup("Calculating...").openPopup();
-                updateNavigationStatus();
+                setDestination(e.latlng);
             });
 
             map.on('locationfound', (e) => {
@@ -162,7 +164,22 @@
                     userMarker.setLatLng(latlng);
                 }
                 updateNavigationStatus();
+                map.on('locationerror', function(e) {
+                      alert("Location access failed: " + e.message);
+                         console.error(e);
+                });
             });
+        }
+
+        function setDestination(latlng, title = "Destination") {
+            if (targetPin) {
+                targetPin.setLatLng(latlng);
+            } else {
+                targetPin = L.marker(latlng, {draggable: true}).addTo(map);
+                targetPin.on('dragend', updateNavigationStatus);
+            }
+            targetPin.bindPopup("Calculating...").openPopup();
+            updateNavigationStatus();
         }
 
         function updateNavigationStatus() {
@@ -231,26 +248,64 @@
             body.innerHTML = '';
             const listContainer = document.createElement('div');
             listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+            
             const items = (category === 'Faculty') ? Object.keys(campusData[category]) : campusData[category];
 
             items.forEach((item, index) => {
                 const container = document.createElement('div');
                 container.className = 'item-container';
                 const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
-                container.innerHTML = `<div class="${btnClass}">${item}</div>`;
-                if (category === 'Faculty') container.onclick = () => showFacultyLevels(item);
+                
+                // Read names cleanly depending on if data item is a plain string or structured object
+                const itemName = (typeof item === 'object') ? item.name : item;
+                container.innerHTML = `<div class="${btnClass}">${itemName}</div>`;
+                
+                if (category === 'Faculty') {
+                    container.onclick = () => showFacultyLevels(itemName);
+                } else if (typeof item === 'object' && item.latlng) {
+                    // Item contains geospatial data -> Trigger mapping events
+                    container.onclick = () => {
+                        // Automatically trigger user location check if it hasn't started yet
+                        if (!userMarker) {
+                            locateUser();
+                        }
+                        setDestination(item.latlng, itemName);
+                        map.setView(item.latlng, 18);
+                    };
+                }
+
                 if (isEditMode) {
                     const del = document.createElement('button');
                     del.className = 'delete-badge'; del.innerText = 'X';
-                    del.onclick = (e) => { e.stopPropagation(); if (category === 'Faculty') delete campusData['Faculty'][item]; else campusData[category].splice(index, 1); showSubCategory(category); };
+                    del.onclick = (e) => { 
+                        e.stopPropagation(); 
+                        if (category === 'Faculty') delete campusData['Faculty'][itemName]; 
+                        else campusData[category].splice(index, 1); 
+                        showSubCategory(category); 
+                    };
                     container.appendChild(del);
                 }
                 listContainer.appendChild(container);
             });
             body.appendChild(listContainer);
+            
             if (isEditMode) renderAddButton(body, () => {
                 const val = prompt(`New ${category}:`);
-                if (val) { if(category==='Faculty') campusData['Faculty'][val]={}; else campusData[category].push(val); showSubCategory(category); }
+                if (val) { 
+                    if(category==='Faculty') {
+                        campusData['Faculty'][val]={}; 
+                    } else {
+                        // Ask for coordinates if adding elements under structured lists
+                        const lat = prompt("Enter Latitude (Optional):");
+                        const lng = prompt("Enter Longitude (Optional):");
+                        if(lat && lng) {
+                            campusData[category].push({ name: val, latlng: [parseFloat(lat), parseFloat(lng)] });
+                        } else {
+                            campusData[category].push({ name: val });
+                        }
+                    } 
+                    showSubCategory(category); 
+                }
             });
         }
 
