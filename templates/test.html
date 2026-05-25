@@ -285,6 +285,11 @@
             if (sessionStorage.getItem('introShown')) closeIntro();
             else sessionStorage.setItem('introShown', 'true');
         }
+        navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
+         enableHighAccuracy: true, // This tells the browser to try for GPS, not just IP
+          timeout: 10000,
+          maximumAge: 0
+});
     </script>
 </body>
 </html>
