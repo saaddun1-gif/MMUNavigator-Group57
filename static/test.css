@@ -110,3 +110,15 @@ body, html { height: 100%; width: 100%; overflow: hidden; }
     background: #3c7a8a;
     transform: scale(1.02);
 }
+.user-msg {
+    background: #007bff;
+    color: white;
+    padding: 12px;
+    border-radius: 15px 15px 0px 15px;
+    border: 1px solid #0056b3;
+    font-size: 14px;
+    text-align: right;
+    margin-left: auto;
+    max-width: 85%;
+    word-wrap: break-word;
+}
