@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Pin Detector</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* FIX: Map MUST have a height or it stays invisible */
+        #map { height: 500px; width: 100%; border: 2px solid #333; }
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        .info-panel { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 10px; }
+        .success { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Map Detector</h1>
+    <p>1. Click the map to set a <b>Target Pin</b>.<br>
+       2. Allow location access to see your <b>Live Blue Dot</b>.</p>
+
+    <div id="map"></div>
+
+    <div class="info-panel">
+        <div>Distance to Pin: <span id="dist-val">N/A</span> meters</div>
+        <div id="status-msg">Waiting for pin and GPS...</div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on a default (London) until GPS kicks in
+        var map = L.map('map').setView([51.5, -0.09], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        var targetMarker = null;
+        var liveMarker = null;
+
+        // --- STEP 1: DROP THE PIN ---
+        map.on('click', function(e) {
+            if (targetMarker) {
+                targetMarker.setLatLng(e.latlng);
+            } else {
+                targetMarker = L.marker(e.latlng, {draggable: true}).addTo(map);
+                targetMarker.bindPopup("Target Area").openPopup();
+            }
+            calculateDistance();
+        });
+
+        // --- STEP 2: GET LIVE LOCATION ---
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(function(pos) {
+                var lat = pos.coords.latitude;
+                var lon = pos.coords.longitude;
+                var accuracy = pos.coords.accuracy;
+
+                if (!liveMarker) {
+                    // Create blue dot for live location
+                    liveMarker = L.circleMarker([lat, lon], {color: 'blue', radius: 8}).addTo(map);
+                    map.setView([lat, lon], 15); // Zoom to user on first find
+                } else {
+                    liveMarker.setLatLng([lat, lon]);
+                }
+                calculateDistance();
+            }, function(err) {
+                document.getElementById('status-msg').innerText = "Error: Please enable GPS.";
+            }, { enableHighAccuracy: true });
+        }
+
+        // --- STEP 3: MEASURE DISTANCE ---
+        function calculateDistance() {
+            if (!targetMarker || !liveMarker) return;
+
+            var d = liveMarker.getLatLng().distanceTo(targetMarker.getLatLng());
+            document.getElementById('dist-val').innerText = d.toFixed(1);
+
+            if (d < 30) { // If within 30 meters
+                document.getElementById('status-msg').innerHTML = "<span class='success'>ARRIVAL DETECTED!</span>";
+                
+                // Optional: Send data to Flask
+                fetch('/log_arrival', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({distance: d, arrived: true})
+                });
+            } else {
+                document.getElementById('status-msg').innerText = "Keep moving toward the pin...";
+            }
+        }
+        // Add this inside your watchPosition function
+if (!liveMarker) {
+    liveMarker = L.circleMarker(latlng, {
+        radius: 10,
+        fillColor: "#007bff", // Bright Blue
+        color: "#fff",
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 1,
+        zIndexOffset: 1000  // Force it to the top layer
+    }).addTo(map);
+} else {
+    liveMarker.setLatLng(latlng).bringToFront();
+}
+L.marker([2.927028, 101.642134]).addTo(map).bindPopup("Test Pin").openPopup();
+    </script>
+</body>
+</html>
