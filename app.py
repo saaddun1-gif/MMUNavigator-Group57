@@ -158,6 +158,8 @@ def login():
         data = request.get_json() or {}
         if data.get('username') == ADMIN_DATA['username'] and data.get('password') == ADMIN_DATA['password']:
             otp = str(random.randint(100000, 999999))
+            
+            # Save the code and compute expiry time (2 minutes into the future)
             session['otp'] = otp
             session['otp_expiry'] = (datetime.now() + timedelta(minutes=2)).timestamp()
             
@@ -181,14 +183,27 @@ def verify_otp():
     user_otp = data.get('otp')
     current_time = datetime.now().timestamp()
     
-    if session.get('otp') and current_time < session.get('otp_expiry', 0):
-        if user_otp == session['otp']:
-            session['logged_in'] = True
-            session['role'] = 'admin'
-            session.pop('otp', None)
-            return jsonify({"status": "success", "redirect": url_for('admin')})
+    # 1. Grab values safely out of session context
+    saved_otp = session.get('otp')
+    expiry_time = session.get('otp_expiry', 0)
     
-    return jsonify({"status": "error", "message": "Invalid or expired OTP"}), 401
+    # 2. Server check: Has the OTP officially expired?
+    if current_time > expiry_time:
+        session.pop('otp', None)
+        session.pop('otp_expiry', None)
+        return jsonify({"status": "error", "message": "OTP has expired. Please log in again."}), 401
+        
+    # 3. Match the user's input with the saved OTP token
+    if saved_otp and user_otp == saved_otp:
+        session['logged_in'] = True
+        session['role'] = 'admin'
+        
+        # Cleanup temporary keys upon a successful verification loop
+        session.pop('otp', None)
+        session.pop('otp_expiry', None)
+        return jsonify({"status": "success", "redirect": url_for('admin')})
+    
+    return jsonify({"status": "error", "message": "Invalid OTP"}), 401
 
 @app.route('/admin')
 def admin():
