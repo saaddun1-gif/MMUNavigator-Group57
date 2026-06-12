@@ -88,7 +88,26 @@
     <script>
         /* --- CORE DATA & MAP VARIABLES --- */
         let map, userMarker = null, targetPin = null, routingControl = null;
+        let currentImageOverlay = null; // Keeps track of the active blueprint picture layer
         
+        /* --- MAP IMAGES BLUEPRINT SETTINGS --- */
+        const facultyImages = {
+            'FCI': {
+                'bounds': [[2.9270, 101.6410], [2.9282, 101.6424]], 
+                'building': "{{ url_for('static', filename='fci_building.png') }}", 
+                'Level 1': "{{ url_for('static', filename='fci_level1.png') }}",    
+                'Level 2': "{{ url_for('static', filename='fci_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='fci_level3.png') }}",
+                'Level 4': "{{ url_for('static', filename='fci_level4.png') }}"
+            },
+            'FCM': {
+                'bounds': [[2.9250, 101.6430], [2.9262, 101.6444]],
+                'building': "{{ url_for('static', filename='fcm_building.png') }}",
+                'Level 1': "{{ url_for('static', filename='fcm_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fcm_level2.png') }}"
+            }
+        };
+
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
             'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
@@ -109,22 +128,21 @@
             checkIntro();
         }
 
-        /* --- MAP & ROUTING LOGIC (Your Logic) --- */
+        /* --- MAP & ROUTING LOGIC --- */
         function initMap() {
-            // 1. Draw the invisible box around MMU Cyberjaya
-          const mmuBounds = L.latLngBounds(
-            [2.9220, 101.6370], // Bottom-Left corner (Penjuru Bawah-Kiri)
-            [2.9320, 101.6480]  // Top-Right corner (Penjuru Atas-Kanan)
-         );
+            const mmuBounds = L.latLngBounds(
+                [2.9220, 101.6370], 
+                [2.9320, 101.6480]  
+            );
 
-       // 2. Setup the map with the locks turned on
-          map = L.map('map', { 
-          zoomControl: false,
-          minZoom: 17,                 // Stops them from zooming out too far
-          maxZoom: 19,
-         maxBounds: mmuBounds,        // Locks the camera inside the MMU box
-         maxBoundsViscosity: 1.0      // Makes the map bounce back if they try to drag outside
-         }).setView([2.9276, 101.6418], 18);
+            map = L.map('map', { 
+                zoomControl: false,
+                minZoom: 17,                 
+                maxZoom: 19,
+                maxBounds: mmuBounds,        
+                maxBoundsViscosity: 1.0      
+            }).setView([2.9276, 101.6418], 18);
+            
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
             routingControl = L.Routing.control({
@@ -148,6 +166,18 @@
                 targetPin.bindPopup("Calculating...").openPopup();
                 updateNavigationStatus();
             });
+        }
+
+        // Helper function to update map image layers
+        function setMapImageOverlay(imgUrl, bounds) {
+            if (currentImageOverlay) {
+                map.removeLayer(currentImageOverlay);
+                currentImageOverlay = null;
+            }
+            if (imgUrl && bounds) {
+                currentImageOverlay = L.imageOverlay(imgUrl, bounds, { opacity: 0.85 }).addTo(map);
+                map.fitBounds(bounds);
+            }
         }
 
         function updateNavigationStatus() {
@@ -177,8 +207,9 @@
             document.getElementById("chatSidebar").classList.add("active");
         }
 
-        /* --- CATEGORY NAVIGATION (Your Logic) --- */
+        /* --- CATEGORY NAVIGATION --- */
         function loadMainCategories() {
+            setMapImageOverlay(null, null); // Wipe out any active blueprint map pictures when going back to home
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').style.display = 'none';
             document.getElementById('subHeaderTitle').style.display = 'block';
@@ -214,6 +245,13 @@
         }
 
         function showFacultyLevels(facultyName) {
+            // Load the overarching building blueprint layout picture
+            if (facultyImages[facultyName] && facultyImages[facultyName]['building']) {
+                setMapImageOverlay(facultyImages[facultyName]['building'], facultyImages[facultyName]['bounds']);
+            } else {
+                setMapImageOverlay(null, null);
+            }
+
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerText = facultyName;
             document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
@@ -224,6 +262,11 @@
         }
 
         function showClasses(facultyName, levelName) {
+            // Swap out picture layout to floor specific blueprint map picture
+            if (facultyImages[facultyName] && facultyImages[facultyName][levelName]) {
+                setMapImageOverlay(facultyImages[facultyName][levelName], facultyImages[facultyName]['bounds']);
+            }
+
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerHTML = `${facultyName}<br><br>${levelName}`;
             document.getElementById('backBtn').onclick = () => showFacultyLevels(facultyName);
@@ -236,7 +279,7 @@
             body.appendChild(grid);
         }
 
-        /* --- CHATBOT BACKEND CONNECTION (Friend's Logic) --- */
+        /* --- CHATBOT BACKEND CONNECTION --- */
         async function sendToPython(message) {
             try {
                 const response = await fetch('/api/chat', {
@@ -285,11 +328,6 @@
             if (sessionStorage.getItem('introShown')) closeIntro();
             else sessionStorage.setItem('introShown', 'true');
         }
-        navigator.geolocation.getCurrentPosition(successCallback, errorCallback, {
-         enableHighAccuracy: true, // This tells the browser to try for GPS, not just IP
-          timeout: 10000,
-          maximumAge: 0
-});
     </script>
 </body>
 </html>
