@@ -93,8 +93,7 @@
         /* --- MAP IMAGES BLUEPRINT SETTINGS --- */
         const facultyImages = {
             'FCI': {
-                'bounds': [[2.927450, 101.641250], [2.928850, 101.642550]], 
-                'building': "{{ url_for('static', filename='FCI.png') }}", 
+                'bounds': [[2.929232, 101.640521], [2.928216, 101.641700]],  
                 'Level G': "{{ url_for('static', filename='FCIG.png') }}",    
                 'Level 1': "{{ url_for('static', filename='FCI1.png') }}",
                 'Level 2': "{{ url_for('static', filename='FCI2.png') }}",
@@ -102,25 +101,21 @@
                 'Level 4': "{{ url_for('static', filename='FCI4.png') }}"
             },
             'FCM': {
-                'bounds': [[2.9268, 101.6410], [2.9279, 101.6421]],
-                'building': "{{ url_for('static', filename='fcm_building.png') }}",
+                'bounds': [[2.926850, 101.642121], [2.925657, 101.643329]],
                 'Level LG': "{{ url_for('static', filename='fcm_levellg.png') }}",
                 'Level G': "{{ url_for('static', filename='fcm_levelg.png') }}",
                 'Level 1': "{{ url_for('static', filename='fcm_level1.png') }}",
                 'Level 2': "{{ url_for('static', filename='fcm_level2.png') }}"
             },
             'FOM': {
-                'bounds': [[2.9250, 101.6428], [2.9261, 101.6441]],
-                'building': "{{ url_for('static', filename='fom_building.png') }}",
-                'Level G': "{{ url_for('static', filename='fom_levelg.png') }}",
-                'Level 1': "{{ url_for('static', filename='fom_level1.png') }}",
-                'Level 2': "{{ url_for('static', filename='fom_level2.png') }}",
-                'Level 3': "{{ url_for('static', filename='fom_level3.png') }}",
-                'Level 4': "{{ url_for('static', filename='fom_level4.png') }}"
+                'bounds': [[2.930160, 101.640487], [2.928780, 101.641675]],
+                'Level G': "{{ url_for('static', filename='FOMG.png') }}",
+                'Level 1': "{{ url_for('static', filename='FOM1.png') }}",
+                'Level 2': "{{ url_for('static', filename='FOM2.png') }}",
+                'Level 3': "{{ url_for('static', filename='FOM3.png') }}"
             },
             'FAIE': {
                 'bounds': [[2.9255, 101.6392], [2.9272, 101.6406]],
-                'building': "{{ url_for('static', filename='faie_building.png') }}",
                 'Level G': "{{ url_for('static', filename='faie_levelg.png') }}",
                 'Level 1': "{{ url_for('static', filename='faie_level1.png') }}",
                 'Level 2': "{{ url_for('static', filename='faie_level2.png') }}",
@@ -150,8 +145,7 @@
                     'Level G': ['CLCR0006', 'CLCR0005', 'CLCR0004', 'CLCR0003', 'CLCR0002'],
                     'Level 1': ['CLCR1007', 'CLCR1006', 'CLCR1005', 'CLCR1004', 'CLCR1003', 'CLCR1002'],
                     'Level 2': ['CLCR2006', 'CLCR2005', 'CLCR2004', 'CLCR2003', 'CLCR2002'],
-                    'Level 3': ['CLCR3007', 'CLCR3006', 'CLCR3005', 'CLCR3004', 'CLCR3003', 'CLCR3002'],
-                    'Level 4': ['CLCR4006', 'CLCR4005', 'CLCR4004', 'CLCR4003', 'CLCR4002']
+                    'Level 3': ['CLCR3007', 'CLCR3006', 'CLCR3005', 'CLCR3004', 'CLCR3003', 'CLCR3002']
                 },
                 'FAIE': {
                     'Level G': ['CLCR0006', 'CLCR0005', 'CLCR0004', 'CLCR0003', 'CLCR0002'],
@@ -178,7 +172,7 @@
             // FIX: Changed maxZoom to 22 so users can zoom in closer to inside plans
             map = L.map('map', { 
                 zoomControl: false,
-                minZoom: 18,                 
+                minZoom: 18,                
                 maxZoom: 22,
                 maxBounds: mmuBounds,        
                 maxBoundsViscosity: 1.0      
@@ -297,11 +291,16 @@
             }
         }
 
+        /* NEW FIX APPLIED HERE! */
         function showFacultyLevels(facultyName) {
             if (facultyImages[facultyName] && facultyImages[facultyName]['building']) {
                 setMapImageOverlay(facultyImages[facultyName]['building'], facultyImages[facultyName]['bounds']);
             } else {
                 setMapImageOverlay(null, null);
+                // The map will still zoom to the building coordinates!
+                if (facultyImages[facultyName] && facultyImages[facultyName]['bounds']) {
+                    map.fitBounds(facultyImages[facultyName]['bounds']);
+                }
             }
 
             const body = document.getElementById('categoryBody');
