@@ -23,9 +23,29 @@
        },
        {
          "question": "Where is FCI?",
-         "answer": "FCI (Faculty of Computing and Informatics) is at idk",
-         "keywords": ["fci", "computing", "informatics", "computer science", "it faculty"],
-          "synonyms": ["computing faculty", "informatics faculty", "north wing"]
+         "answer": "FCI building is located near FOM building and DTC.",
+         "keywords": ["fci", "computing", "informatics", "computer science", "computer"],
+          "synonyms": ["computing faculty", "informatics faculty", "computer science faculty", "computer"]
+        },
+        {
+          "question": "Where is FOM?",
+         "answer": "FOM building is located near FCI building and DTC.",
+         "keywords": ["fom", "business", "management", "administration", "bisnes"],
+          "synonyms": ["business faculty", "management faculty"]
+       },
+       {
+          "question": "Where is FAIE?",
+         "answer": "FAIE building is located near FCI building and FOM.",
+         "keywords": ["faie", "engineer", "engineering", "ai", "artificial intelligence"],
+          "synonyms": [
+            "arts faculty",
+            "fine arts faculty",
+            "education faculty",
+            "where is faie located",
+            "what is faie",
+            "faie location",
+            "where can i find faie"
+          ]
        }
   ]
 }
