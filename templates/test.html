@@ -11,6 +11,13 @@
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <style>
+        .typing-dots {
+            font-style: italic;
+            opacity: 0.7;
+        }
+    </style>
 </head>
 <body onload="initApp()">
 
@@ -169,7 +176,6 @@
                 [2.9320, 101.6480]  
             );
 
-            // FIX: Changed maxZoom to 22 so users can zoom in closer to inside plans
             map = L.map('map', { 
                 zoomControl: false,
                 minZoom: 18,                
@@ -178,7 +184,6 @@
                 maxBoundsViscosity: 1.0      
             }).setView([2.9276, 101.6418], 18);
             
-            // FIX: Added maxNativeZoom: 19 to stretch tiles and stop grey screen blanks
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 22,
                 maxNativeZoom: 19
@@ -224,7 +229,6 @@
             }
         }
 
-        // FIX: Enabled deep hardware access (GPS + WiFi) for high precision tracking
         function locateUser() { 
             map.locate({
                 setView: true, 
@@ -291,13 +295,11 @@
             }
         }
 
-        /* NEW FIX APPLIED HERE! */
         function showFacultyLevels(facultyName) {
             if (facultyImages[facultyName] && facultyImages[facultyName]['building']) {
                 setMapImageOverlay(facultyImages[facultyName]['building'], facultyImages[facultyName]['bounds']);
             } else {
                 setMapImageOverlay(null, null);
-                // The map will still zoom to the building coordinates!
                 if (facultyImages[facultyName] && facultyImages[facultyName]['bounds']) {
                     map.fitBounds(facultyImages[facultyName]['bounds']);
                 }
@@ -332,15 +334,49 @@
         /* --- CHATBOT BACKEND CONNECTION --- */
         async function sendToPython(message) {
             try {
-                const response = await fetch('/api/chat', {
+                let response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: message })
                 });
+
+                if (response.status === 404) {
+                    response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: message })
+                    });
+                }
+
+                if (!response.ok) throw new Error('Server error');
+
                 const data = await response.json();
-                return data.response;
+                return data.response || data.reply || '⚠️ No response content received.';
+
             } catch (error) {
+                console.error("Backend request failed:", error);
                 return '❌ Connection error to Flask server.';
+            }
+        }
+
+        /* --- TYPING INDICATOR CONTROLS --- */
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatMessages');
+            
+            // Create a fake bot message element
+            const div = document.createElement('div');
+            div.className = 'bot-msg typing-dots';
+            div.id = 'typingIndicator';
+            div.textContent = 'typing...';
+            
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
             }
         }
 
@@ -348,10 +384,17 @@
             const input = document.getElementById('userInput');
             const message = input.value.trim();
             if (!message) return;
+            
             input.value = '';
-            addMessage(message, true);
-            const reply = await sendToPython(message);
-            addMessage(reply, false);
+            addMessage(message, true); // Add user message bubble
+            
+            showTypingIndicator(); // Show the loading status
+            
+            const reply = await sendToPython(message); // Get data from backend
+            
+            removeTypingIndicator(); // Remove the loading status
+            
+            addMessage(reply, false); // Add real bot message bubble
         }
 
         function addMessage(text, isUser) {

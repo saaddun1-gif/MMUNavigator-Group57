@@ -4,12 +4,14 @@ from flask_cors import CORS
 import random
 import json
 from datetime import datetime, timedelta
+from difflib import get_close_matches
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key_here'
 CORS(app)
 
-# We need to tell the computer where the knowledge file is
+# Location of the AI knowledge file
 KNOWLEDGE_FILE = 'knowledge_base.json'
 
 # --- 1. Flask-Mail Configuration ---
@@ -29,7 +31,7 @@ ADMIN_DATA = {
     "email": "hazyqnorashrafhelmy@gmail.com"
 }
 
-# ========== FUNCTIONS FROM YOUR main.py ==========
+# ========== CORE FUNCTIONS ==========
 def load_knowledge_base(file_path: str) -> dict:
     with open(file_path, 'r', encoding='utf-8') as file:
         data: dict = json.load(file)
@@ -70,17 +72,36 @@ def calculate_keyword_match(user_keywords: set, question_keywords: set) -> float
     return score
 
 def find_best_match_by_keywords(user_question: str, knowledge_base: dict) -> tuple | None:
-    """Find best match using keyword extraction"""
+    """Find best match using keyword extraction with intent detection"""
+    user_question_lower = user_question.lower()
     user_keywords = extract_keywords(user_question)
     
     if not user_keywords:
         return None
     
+    # Check for question type FIRST (this solves incorrect matching)
+    is_what_question = any(phrase in user_question_lower for phrase in ['what is', 'what\'s', 'tell me about', 'meaning of', 'define'])
+    is_where_question = any(phrase in user_question_lower for phrase in ['where is', 'where\'s', 'location of', 'find', 'located'])
+    
     best_match = None
     best_score = 0
     best_question = None
     
+    print(f"\n🔍 DEBUG: User asked: '{user_question}'")
+    print(f"🔍 DEBUG: is_what_question = {is_what_question}")
+    print(f"🔍 DEBUG: is_where_question = {is_where_question}")
+    print(f"🔍 DEBUG: User keywords = {user_keywords}")
+    
+    # FIRST: Try to match by intent (STRICT filtering)
     for q in knowledge_base.get('questions', []):
+        if is_what_question and q.get('intent') != 'definition':
+            print(f"  📌 SKIPPING: '{q['question']}' (intent={q.get('intent')}) - not a definition")
+            continue
+        if is_where_question and q.get('intent') != 'location':
+            print(f"  📌 SKIPPING: '{q['question']}' (intent={q.get('intent')}) - not a location")
+            continue
+        
+        print(f"  ✅ CHECKING: '{q['question']}' (intent={q.get('intent')})")
         question_keywords = extract_keywords(q['question'])
         
         score = calculate_keyword_match(user_keywords, question_keywords)
@@ -96,22 +117,48 @@ def find_best_match_by_keywords(user_question: str, knowledge_base: dict) -> tup
             if keyword in q['question'].lower():
                 score += 0.1
         
+        print(f"      📊 Score: {score:.2f}")
+        
+        if score > best_score and score >= 0.2:  # Lower threshold since intent matches
+            best_score = score
+            best_match = q
+            best_question = q['question']
+            
+    if best_match:
+        print(f"🔍 Matched '{user_question}' with {best_score*100:.0f}% confidence → {best_question}")
+        return best_question, best_match['answer']
+    
+    # FALLBACK: If no intent match found, try matching generally
+    print(f"⚠️ No intent match found, trying fallback matching...")
+    for q in knowledge_base.get('questions', []):
+        if q.get('intent') in ['definition', 'location'] and not is_what_question and not is_where_question:
+            continue
+            
+        question_keywords = extract_keywords(q['question'])
+        score = calculate_keyword_match(user_keywords, question_keywords)
+        
+        if 'synonyms' in q:
+            for synonym in q['synonyms']:
+                synonym_keywords = extract_keywords(synonym)
+                synonym_score = calculate_keyword_match(user_keywords, synonym_keywords)
+                if synonym_score > score:
+                    score = synonym_score
+        
         if score > best_score and score >= 0.3:
             best_score = score
             best_match = q
             best_question = q['question']
     
     if best_match:
-        print(f"🔍 Matched with {best_score*100:.0f}% confidence")
+        print(f"🔍 (Fallback) Matched '{user_question}' with {best_score*100:.0f}% confidence → {best_question}")
         return best_question, best_match['answer']
     
     return None
 
-# ========== ROUTES ==========
+# ========== PAGE NAVIGATION ROUTES ==========
 
 @app.route('/')
 def index():
-    """Main page - test.html"""
     return render_template('test.html')
 
 @app.route('/public')
@@ -120,19 +167,17 @@ def public_view():
 
 @app.route('/guide')
 def guide():
-    """Second main page - guide.html"""
     return render_template('guide.html')
 
 @app.route('/about')
 def about():
-    """About page - empty for now"""
     return render_template('about.html')
 
 @app.route('/contact')
 def contact():
     return render_template('contact.html')
 
-# --- Admin Login System ---
+# ========== ADMIN LOGIN SECURITY SYSTEM ==========
 
 @app.route('/Admin_Login', methods=['GET', 'POST'])
 def login():
@@ -182,15 +227,14 @@ def admin():
 def admin_login():
     return render_template('admin_login.html')
 
-# ========== CHATBOT API ENDPOINTS ==========
+# ========== AI CHATBOT SYSTEM ENDPOINTS ==========
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    """Chat endpoint for server.py style"""
+    """Chat endpoint for standard message response formats"""
     try:
         data = request.json
         user_message = data.get('message', '')
-        
         print(f"📩 Received: {user_message}")
         
         kb = load_knowledge_base(KNOWLEDGE_FILE)
@@ -210,11 +254,10 @@ def chat():
 
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
-    """Chat endpoint for app.py style"""
+    """Chat endpoint for api data response formats"""
     try:
         data = request.json
         user_message = data.get('message', '')
-        
         print(f"📩 Received: {user_message}")
         
         kb = load_knowledge_base(KNOWLEDGE_FILE)
@@ -234,18 +277,65 @@ def api_chat():
 
 @app.route('/health', methods=['GET'])
 def health():
-    """Check if server is running"""
     return jsonify({'status': 'ok'})
+
+@app.route('/debug/match', methods=['POST'])
+def debug_match():
+    """Debug tracker to check calculations in real-time"""
+    try:
+        data = request.json
+        user_message = data.get('message', '')
+        
+        kb = load_knowledge_base(KNOWLEDGE_FILE)
+        user_keywords = extract_keywords(user_message)
+        user_question_lower = user_message.lower()
+        
+        is_what_question = any(phrase in user_question_lower for phrase in ['what is', 'what\'s', 'tell me about', 'meaning of', 'define'])
+        is_where_question = any(phrase in user_question_lower for phrase in ['where is', 'where\'s', 'location of', 'find', 'located'])
+        
+        results = []
+        for q in kb.get('questions', []):
+            question_keywords = extract_keywords(q['question'])
+            score = calculate_keyword_match(user_keywords, question_keywords)
+            
+            would_skip = False
+            skip_reason = None
+            if is_what_question and q.get('intent') == 'location':
+                would_skip = True
+                skip_reason = "not a definition question"
+            if is_where_question and q.get('intent') == 'definition':
+                would_skip = True
+                skip_reason = "not a location question"
+            
+            results.append({
+                'question': q['question'],
+                'score': score,
+                'intent': q.get('intent', 'unknown'),
+                'would_be_skipped': would_skip,
+                'skip_reason': skip_reason
+            })
+        
+        results.sort(key=lambda x: x['score'], reverse=True)
+        return jsonify({
+            'user_question': user_message,
+            'detected_what_question': is_what_question,
+            'detected_where_question': is_where_question,
+            'user_keywords': list(user_keywords),
+            'matches': results
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("🤖 MMU Navigator AI Chatbot Server (Combined)")
+    print("🤖 MMU Navigator AI Chatbot Server")
     print("=" * 50)
     print(f"📍 Main page: http://127.0.0.1:5000/")
     print(f"📍 Chat endpoint (/chat): http://127.0.0.1:5000/chat")
     print(f"📍 Chat endpoint (/api/chat): http://127.0.0.1:5000/api/chat")
+    print(f"📍 Debug checker: http://127.0.0.1:5000/debug/match")
     print(f"📍 Health check: http://127.0.0.1:5000/health")
-    print(f"📚 Using: {KNOWLEDGE_FILE}")
-    print("🟢 Press Ctrl+C to stop")
+    print(f"📚 Using database: {KNOWLEDGE_FILE}")
+    print("🟢 Press Ctrl+C to stop server")
     print("=" * 50)
     app.run(debug=True, host='127.0.0.1', port=5000)
