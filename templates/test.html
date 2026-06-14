@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMU Navigator - Final Version</title>
+    <title>MMU Navigator - User Version</title>
     
     <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -88,14 +88,15 @@
     <script>
         /* --- CORE DATA & MAP VARIABLES --- */
         let map, userMarker = null, targetPin = null, routingControl = null;
-        let currentImageOverlay = null; // Keeps track of the active blueprint picture layer
+        let currentImageOverlay = null; 
         
         /* --- MAP IMAGES BLUEPRINT SETTINGS --- */
         const facultyImages = {
             'FCI': {
                 'bounds': [[2.9270, 101.6410], [2.9282, 101.6424]], 
                 'building': "{{ url_for('static', filename='fci_building.png') }}", 
-                'Level 1': "{{ url_for('static', filename='fci_level1.png') }}",    
+                'Level G': "{{ url_for('static', filename='fci_levelg.png') }}",    
+                'Level 1': "{{ url_for('static', filename='fci_level1.png') }}",
                 'Level 2': "{{ url_for('static', filename='fci_level2.png') }}",
                 'Level 3': "{{ url_for('static', filename='fci_level3.png') }}",
                 'Level 4': "{{ url_for('static', filename='fci_level4.png') }}"
@@ -103,22 +104,61 @@
             'FCM': {
                 'bounds': [[2.9250, 101.6430], [2.9262, 101.6444]],
                 'building': "{{ url_for('static', filename='fcm_building.png') }}",
+                'Level LG': "{{ url_for('static', filename='fcm_levellg.png') }}",
+                'Level G': "{{ url_for('static', filename='fcm_levelg.png') }}",
                 'Level 1': "{{ url_for('static', filename='fcm_level1.png') }}",
                 'Level 2': "{{ url_for('static', filename='fcm_level2.png') }}"
+            },
+            'FOM': {
+                'bounds': [[2.9230, 101.6420], [2.9242, 101.6434]],
+                'building': "{{ url_for('static', filename='fom_building.png') }}",
+                'Level G': "{{ url_for('static', filename='fom_levelg.png') }}",
+                'Level 1': "{{ url_for('static', filename='fom_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fom_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='fom_level3.png') }}",
+                'Level 4': "{{ url_for('static', filename='fom_level4.png') }}"
+            },
+            'FAIE': {
+                'bounds': [[2.9240, 101.6400], [2.9252, 101.6414]],
+                'building': "{{ url_for('static', filename='faie_building.png') }}",
+                'Level G': "{{ url_for('static', filename='faie_levelg.png') }}",
+                'Level 1': "{{ url_for('static', filename='faie_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='faie_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='faie_level3.png') }}"
             }
         };
 
+        /* --- DATA DIRECTORY MODELS --- */
         const campusData = {
             'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
             'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
             'Faculty': {
                 'FCI': {
-                    'Level 1': ['Lab 1.1', 'Classroom A', 'Lobby', 'Admin'],
-                    'Level 2': ['Tutorial 2.1', 'Lab 2.2', 'Seminar 2'],
-                    'Level 3': ['Server Room', 'Dean Office'],
-                    'Level 4': ['FYP Lab', 'Staff Room']
+                    'Level G': ['CQAR0006', 'CQAR0005', 'CQAR0004', 'CQAR0003', 'CQAR0002'],
+                    'Level 1': ['CQAR1007', 'CQAR1006', 'CQAR1005', 'CQAR1004', 'CQAR1003', 'CQAR1002'],
+                    'Level 2': ['CQAR2006', 'CQAR2005', 'CQAR2004', 'CQAR2003', 'CQAR2002'],
+                    'Level 3': ['CQAR3007', 'CQAR3006', 'CQAR3005', 'CQAR3004', 'CQAR3003', 'CQAR3002'],
+                    'Level 4': ['CQAR4006', 'CQAR4005', 'CQAR4004', 'CQAR4003', 'CQAR4002']
                 },
-                'FCM': { 'Level 1': ['Lab A', 'Lab B'], 'Level 2': ['CR 1', 'CR 2'] }
+                'FCM': {
+                    'Level LG': ['CJAR0006', 'CJAR0005', 'CJAR0004', 'CJAR0003', 'CJAR0002', 'CJAR0001'],
+                    'Level G': ['CJAR1007', 'CJAR1006', 'CJAR1005', 'CJAR1004', 'CJAR1003', 'CJAR1002', 'CJAR1001'],
+                    'Level 1': ['CJAR2006', 'CJAR2005', 'CJAR2004', 'CJAR2003', 'CJAR2002', 'CJAR2001'],
+                    'Level 2': ['CJAR3007', 'CJAR3006', 'CJAR3005', 'CJAR3004', 'CJAR3003', 'CJAR3001']
+                },
+                'FOM': {
+                    'Level G': ['CLCR0006', 'CLCR0005', 'CLCR0004', 'CLCR0003', 'CLCR0002'],
+                    'Level 1': ['CLCR1007', 'CLCR1006', 'CLCR1005', 'CLCR1004', 'CLCR1003', 'CLCR1002'],
+                    'Level 2': ['CLCR2006', 'CLCR2005', 'CLCR2004', 'CLCR2003', 'CLCR2002'],
+                    'Level 3': ['CLCR3007', 'CLCR3006', 'CLCR3005', 'CLCR3004', 'CLCR3003', 'CLCR3002'],
+                    'Level 4': ['CLCR4006', 'CLCR4005', 'CLCR4004', 'CLCR4003', 'CLCR4002']
+                },
+                'FAIE': {
+                    'Level G': ['CLCR0006', 'CLCR0005', 'CLCR0004', 'CLCR0003', 'CLCR0002'],
+                    'Level 1': ['CLCR1007', 'CLCR1006', 'CLCR1005', 'CLCR1004', 'CLCR1003', 'CLCR1002'],
+                    'Level 2': ['CLCR2006', 'CLCR2005', 'CLCR2004', 'CLCR2003', 'CLCR2002'],
+                    'Level 3': ['CLCR3007', 'CLCR3006', 'CLCR3005', 'CLCR3004', 'CLCR3003', 'CLCR3002']
+                }
             }
         };
 
@@ -135,15 +175,20 @@
                 [2.9320, 101.6480]  
             );
 
+            // FIX: Changed maxZoom to 22 so users can zoom in closer to inside plans
             map = L.map('map', { 
                 zoomControl: false,
-                minZoom: 17,                 
-                maxZoom: 19,
+                minZoom: 16,                 
+                maxZoom: 22,
                 maxBounds: mmuBounds,        
                 maxBoundsViscosity: 1.0      
             }).setView([2.9276, 101.6418], 18);
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            // FIX: Added maxNativeZoom: 19 to stretch tiles and stop grey screen blanks
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 22,
+                maxNativeZoom: 19
+            }).addTo(map);
 
             routingControl = L.Routing.control({
                 waypoints: [],
@@ -168,7 +213,6 @@
             });
         }
 
-        // Helper function to update map image layers
         function setMapImageOverlay(imgUrl, bounds) {
             if (currentImageOverlay) {
                 map.removeLayer(currentImageOverlay);
@@ -186,9 +230,18 @@
             }
         }
 
-        function locateUser() { map.locate({setView: true, maxZoom: 18, watch: true}); }
+        // FIX: Enabled deep hardware access (GPS + WiFi) for high precision tracking
+        function locateUser() { 
+            map.locate({
+                setView: true, 
+                maxZoom: 20, 
+                watch: true,
+                enableHighAccuracy: true, 
+                timeout: 10000 
+            }); 
+        }
 
-        /* --- UI & SIDEBAR LOGIC --- */
+        /* --- UI & SIDEBAR VIEW STATE CONTROL --- */
         function toggleSidebar() {
             document.getElementById("mySidebar").classList.toggle("active");
             if (!document.getElementById("mySidebar").classList.contains("active")) {
@@ -207,9 +260,9 @@
             document.getElementById("chatSidebar").classList.add("active");
         }
 
-        /* --- CATEGORY NAVIGATION --- */
+        /* --- DYNAMIC DIRECTORY NAVIGATION INTERACTION --- */
         function loadMainCategories() {
-            setMapImageOverlay(null, null); // Wipe out any active blueprint map pictures when going back to home
+            setMapImageOverlay(null, null); 
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').style.display = 'none';
             document.getElementById('subHeaderTitle').style.display = 'block';
@@ -245,7 +298,6 @@
         }
 
         function showFacultyLevels(facultyName) {
-            // Load the overarching building blueprint layout picture
             if (facultyImages[facultyName] && facultyImages[facultyName]['building']) {
                 setMapImageOverlay(facultyImages[facultyName]['building'], facultyImages[facultyName]['bounds']);
             } else {
@@ -262,7 +314,6 @@
         }
 
         function showClasses(facultyName, levelName) {
-            // Swap out picture layout to floor specific blueprint map picture
             if (facultyImages[facultyName] && facultyImages[facultyName][levelName]) {
                 setMapImageOverlay(facultyImages[facultyName][levelName], facultyImages[facultyName]['bounds']);
             }
@@ -322,7 +373,7 @@
             handleUserInput();
         }
 
-        /* --- INTRO POPUP LOGIC --- */
+        /* --- INTRO DISPLAY CHECK LOGIC --- */
         function closeIntro() { document.getElementById('introPopup').style.display = 'none'; }
         function checkIntro() {
             if (sessionStorage.getItem('introShown')) closeIntro();
