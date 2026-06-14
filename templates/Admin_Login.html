@@ -25,6 +25,7 @@
                     <hr>
                     <label for="otp">Enter OTP:</label>
                     <input type="text" id="otp" placeholder="6-digit code">
+                    <span id="timer" style="color: red; font-weight: bold; margin-left: 10px;"></span>
                     <br><br>
                 </div>
                 <button type="submit" id="submitBtn">Login</button>
@@ -36,8 +37,54 @@
 <script>
     const loginForm = document.getElementById('loginForm');
     const otpSection = document.getElementById('otpSection');
+    const otpInput = document.getElementById('otp');
+    const submitBtn = document.getElementById('submitBtn');
     const message = document.getElementById('message');
+    const timerDisplay = document.getElementById('timer');
+    
     let isOtpStep = false;
+    let countdownInterval;
+
+    function startTimer(durationInSeconds) {
+        // Clear any existing timer instances
+        clearInterval(countdownInterval);
+        
+        let timeRemaining = durationInSeconds;
+
+        countdownInterval = setInterval(() => {
+            let minutes = Math.floor(timeRemaining / 60);
+            let seconds = timeRemaining % 60;
+
+            // Format numbers to always be 2 digits (e.g., 02:00)
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+
+            timerDisplay.innerText = `(${minutes}:${seconds})`;
+
+            if (timeRemaining <= 0) {
+                clearInterval(countdownInterval);
+                timerDisplay.innerText = "(Expired)";
+                otpInput.disabled = true;
+                submitBtn.disabled = true;
+                
+                message.style.color = 'red';
+                message.innerHTML = "OTP has expired. <a href='#' onclick='resetLoginForm()'>Click here to try again.</a>";
+            }
+
+            timeRemaining--;
+        }, 1000);
+    }
+
+    function resetLoginForm() {
+        clearInterval(countdownInterval);
+        isOtpStep = false;
+        otpSection.style.display = 'none';
+        otpInput.disabled = false;
+        otpInput.value = "";
+        submitBtn.disabled = false;
+        message.innerText = "";
+        timerDisplay.innerText = "";
+    }
 
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -48,7 +95,7 @@
 
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        const otp = document.getElementById('otp').value;
+        const otp = otpInput.value;
 
         try {
             if (!isOtpStep) {
@@ -66,6 +113,9 @@
                     isOtpStep = true;
                     message.style.color = 'green';
                     message.innerText = "OTP sent to your email!";
+                    
+                    // Start 2-minute countdown (120 seconds)
+                    startTimer(120); 
                 } else {
                     // Added || to provide a backup message
                     message.innerText = result.message || "Login failed."; 
