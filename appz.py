@@ -88,8 +88,5 @@ def admin():
 @app.route('/')
 def index(): # This function name MUST be 'index'
     return render_template('about.html')
-@app.route('/guide')
-def guide():
-    return render_template('guide.html')
 if __name__ == '__main__':
     app.run(debug=True)

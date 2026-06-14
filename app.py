@@ -3,7 +3,6 @@ from flask_mail import Mail, Message
 from flask_cors import CORS
 import random
 import json
-import os
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -30,33 +29,11 @@ ADMIN_DATA = {
     "email": "hazyqnorashrafhelmy@gmail.com"
 }
 
-# ========== KNOWLEDGE BASE UTILITIES ==========
+# ========== FUNCTIONS FROM YOUR main.py ==========
 def load_knowledge_base(file_path: str) -> dict:
-    """Safely loads the knowledge base JSON, creating an empty template if it doesn't exist."""
-    if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
-        default_kb = {
-            "questions": [
-                {
-                    "question": "Where is the library?",
-                    "synonyms": ["locate library", "find the library", "siti hasmah digital library"],
-                    "answer": "The Siti Hasmah Digital Library is located right in the center of campus, next to the Central Lecture Complex (CLC)."
-                },
-                {
-                    "question": "How to go to FCI?",
-                    "synonyms": ["where is fci", "faculty of computing and informatics"],
-                    "answer": "The Faculty of Computing and Informatics (FCI) is situated on the northwestern side of the campus loop, near the main lake."
-                }
-            ]
-        }
-        save_knowledge_base(file_path, default_kb)
-        return default_kb
-
-    try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            return json.load(file)
-    except json.JSONDecodeError:
-        # Fallback if file gets corrupted
-        return {"questions": []}
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data: dict = json.load(file)
+    return data
 
 def save_knowledge_base(file_path: str, data: dict):
     with open(file_path, 'w', encoding='utf-8') as file:
@@ -105,6 +82,7 @@ def find_best_match_by_keywords(user_question: str, knowledge_base: dict) -> tup
     
     for q in knowledge_base.get('questions', []):
         question_keywords = extract_keywords(q['question'])
+        
         score = calculate_keyword_match(user_keywords, question_keywords)
         
         if 'synonyms' in q:
@@ -129,37 +107,39 @@ def find_best_match_by_keywords(user_question: str, knowledge_base: dict) -> tup
     
     return None
 
-# ========== BASIC VIEWS ROUTES ==========
+# ========== ROUTES ==========
 
 @app.route('/')
-@app.route('/public')
 def index():
-    """Main page - renders map interface"""
+    """Main page - test.html"""
     return render_template('test.html')
+
+@app.route('/public')
+def public_view():
+    return render_template('test.html') 
 
 @app.route('/guide')
 def guide():
-    """Guide sub-page"""
+    """Second main page - guide.html"""
     return render_template('guide.html')
 
 @app.route('/about')
 def about():
+    """About page - empty for now"""
     return render_template('about.html')
 
 @app.route('/contact')
 def contact():
     return render_template('contact.html')
 
-# --- Admin System Routes ---
+# --- Admin Login System ---
 
 @app.route('/Admin_Login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        data = request.get_json() or {}
+        data = request.get_json()
         if data.get('username') == ADMIN_DATA['username'] and data.get('password') == ADMIN_DATA['password']:
             otp = str(random.randint(100000, 999999))
-            
-            # Save the code and compute expiry time (2 minutes into the future)
             session['otp'] = otp
             session['otp_expiry'] = (datetime.now() + timedelta(minutes=2)).timestamp()
             
@@ -167,7 +147,7 @@ def login():
                 msg = Message("Admin Login Verification", 
                               sender=app.config['MAIL_USERNAME'], 
                               recipients=[ADMIN_DATA['email']])
-                msg.body = f"Your validation code is: {otp}"
+                msg.body = f"Your code is: {otp}"
                 mail.send(msg)
                 return jsonify({"status": "otp_sent"})
             except Exception as e:
@@ -179,51 +159,36 @@ def login():
 
 @app.route('/verify-otp', methods=['POST'])
 def verify_otp():
-    data = request.get_json() or {}
+    data = request.get_json()
     user_otp = data.get('otp')
     current_time = datetime.now().timestamp()
     
-    # 1. Grab values safely out of session context
-    saved_otp = session.get('otp')
-    expiry_time = session.get('otp_expiry', 0)
+    if session.get('otp') and current_time < session.get('otp_expiry', 0):
+        if user_otp == session['otp']:
+            session['logged_in'] = True
+            session['role'] = 'admin'
+            session.pop('otp', None)
+            return jsonify({"status": "success", "redirect": url_for('admin')})
     
-    # 2. Server check: Has the OTP officially expired?
-    if current_time > expiry_time:
-        session.pop('otp', None)
-        session.pop('otp_expiry', None)
-        return jsonify({"status": "error", "message": "OTP has expired. Please log in again."}), 401
-        
-    # 3. Match the user's input with the saved OTP token
-    if saved_otp and user_otp == saved_otp:
-        session['logged_in'] = True
-        session['role'] = 'admin'
-        
-        # Cleanup temporary keys upon a successful verification loop
-        session.pop('otp', None)
-        session.pop('otp_expiry', None)
-        return jsonify({"status": "success", "redirect": url_for('admin')})
-    
-    return jsonify({"status": "error", "message": "Invalid OTP"}), 401
+    return jsonify({"status": "error", "message": "Invalid or expired OTP"}), 401
 
 @app.route('/admin')
 def admin():
-    if not session.get('logged_in') or session.get('role') != 'admin':
+    if not session.get('logged_in') or session.get('role') == 'guest':
         return redirect(url_for('login'))
     return render_template('admin.html')
 
 @app.route('/admin_login')
 def admin_login():
-    # Capitalized to match file 'Admin_Login.html'
-    return render_template('Admin_Login.html')
+    return render_template('admin_login.html')
 
-# ========== CHATBOT API ENDPOINTS (UNIFIED KEYS) ==========
+# ========== CHATBOT API ENDPOINTS ==========
 
 @app.route('/chat', methods=['POST'])
-@app.route('/api/chat', methods=['POST'])
-def chat_api_handler():
-    """Unified handler supporting both endpoint addresses safely"""
+def chat():
+    """Chat endpoint for server.py style"""
     try:
-        data = request.get_json() or {}
+        data = request.json
         user_message = data.get('message', '')
         
         print(f"📩 Received: {user_message}")
@@ -232,26 +197,55 @@ def chat_api_handler():
         match = find_best_match_by_keywords(user_message, kb)
         
         if match:
-            _, answer = match
-            response_payload = {'reply': answer, 'response': answer}
-            return jsonify(response_payload)
+            question, answer = match
+            print(f"✅ Matched: {question}")
+            return jsonify({'reply': answer})
         else:
-            fallback_text = "I don't know the answer to that question. Try asking where the library or FCI is!"
-            return jsonify({'reply': fallback_text, 'response': fallback_text})
+            print("❌ No match found")
+            return jsonify({'reply': "I don't know the answer to that question."})
             
     except Exception as e:
-        print(f"Error handling chat route: {e}")
-        return jsonify({'reply': f"Error: {str(e)}", 'response': f"Error: {str(e)}"}), 500
+        print(f"Error: {e}")
+        return jsonify({'reply': f"Error: {str(e)}"})
+
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    """Chat endpoint for app.py style"""
+    try:
+        data = request.json
+        user_message = data.get('message', '')
+        
+        print(f"📩 Received: {user_message}")
+        
+        kb = load_knowledge_base(KNOWLEDGE_FILE)
+        match = find_best_match_by_keywords(user_message, kb)
+        
+        if match:
+            question, answer = match
+            print(f"✅ Matched: {question}")
+            return jsonify({'response': answer})
+        else:
+            print("❌ No match found")
+            return jsonify({'response': "I don't know the answer to that question."})
+            
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'response': f"Error: {str(e)}"})
 
 @app.route('/health', methods=['GET'])
 def health():
+    """Check if server is running"""
     return jsonify({'status': 'ok'})
 
 if __name__ == '__main__':
     print("=" * 50)
-    print("🤖 MMU Navigator AI Chatbot Server (Combined & Patched)")
+    print("🤖 MMU Navigator AI Chatbot Server (Combined)")
     print("=" * 50)
-    print(f"📍 Application Root: http://127.0.0.1:5000/")
-    print(f"📍 Chat Gateway:     http://127.0.0.1:5000/api/chat")
+    print(f"📍 Main page: http://127.0.0.1:5000/")
+    print(f"📍 Chat endpoint (/chat): http://127.0.0.1:5000/chat")
+    print(f"📍 Chat endpoint (/api/chat): http://127.0.0.1:5000/api/chat")
+    print(f"📍 Health check: http://127.0.0.1:5000/health")
+    print(f"📚 Using: {KNOWLEDGE_FILE}")
+    print("🟢 Press Ctrl+C to stop")
     print("=" * 50)
     app.run(debug=True, host='127.0.0.1', port=5000)
