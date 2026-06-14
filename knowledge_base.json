@@ -1,13 +1,11 @@
 {
   "questions": [
-    {
-      "question": "Where is the library located?",
-      "answer": "The library is located in the middle of the campus."
-    },
+    
     {
         "question": "hello",
         "answer": "hello there",
-        "synonyms": ["hi", "hey", "greetings"]
+        "synonyms": ["hi", "hey", "greetings"],
+        "intent": "greeting"
     },
        {
           "question": "Where is the library located?",
@@ -22,30 +20,53 @@
          "synonyms": ["cafe", "food court", "dining hall", "mamak"]
        },
        {
+         "question": "What is FCI?",
+         "answer": "FCI is the Faculty of Computing and Informatics, which offers courses in computer science, cybersecurity, data science, game developer, and software engineering.",
+         "keywords": ["stand for", "meaning", "fci stand for", "fci meaning"],
+          "synonyms": ["what is fci stand for", "what is fci", "fci meaning", "fci definition"],
+          "intent": "definition"
+       },
+       {
          "question": "Where is FCI?",
          "answer": "FCI building is located near FOM building and DTC.",
-         "keywords": ["fci", "computing", "informatics", "computer science", "computer"],
-          "synonyms": ["computing faculty", "informatics faculty", "computer science faculty", "computer"]
+         "keywords": ["computing", "informatics", "computer science", "computer information", "fci"],
+          "synonyms": ["computing faculty", "informatics faculty", "computer science faculty", "computer information location"],
+          "intent": "location"
+        },
+        {
+         "question": "Where is FCI Student Study Lounge?",
+         "answer": "FCI Student Study Lounge is located on the ground floor of the FCI building.",
+         "keywords": ["study", "lounge", "student", "fci student study lounge"],
+          "synonyms": ["fci student study lounge", "fci study lounge", "computer science study lounge", "informatics study lounge"],
+          "intent": "location"
         },
         {
           "question": "Where is FOM?",
          "answer": "FOM building is located near FCI building and DTC.",
          "keywords": ["fom", "business", "management", "administration", "bisnes"],
-          "synonyms": ["business faculty", "management faculty"]
+          "synonyms": ["business faculty location", "management faculty location", "fom location"],
+          "intent": "location"
        },
        {
           "question": "Where is FAIE?",
-         "answer": "FAIE building is located near FCI building and FOM.",
+         "answer": "FAIE building is located infront of FCM building and beside STD building.",
          "keywords": ["faie", "engineer", "engineering", "ai", "artificial intelligence"],
-          "synonyms": [
-            "arts faculty",
-            "fine arts faculty",
-            "education faculty",
-            "where is faie located",
-            "what is faie",
-            "faie location",
-            "where can i find faie"
-          ]
-       }
+          "synonyms": ["foe faculty","where is foe", "faie faculty", "engineer faculty", "ai faculty", "artificial intelligence faculty", "foe","faie", "engineer", "engineering", "ai", "artificial intelligence"],
+          "intent": "location"
+       },
+        {
+            "question": "Where is FCM?",
+          "answer": "FCM building is located infront of FAIE building",
+          "keywords": ["fcm", "art", "fca", "fac", "animation", "design", "cafeteria"],
+            "synonyms": ["art faculty", "communication art faculty", "animation faculty"],
+            "intent": "location"
+        },
+        {
+            "question": "Where is DTC?",
+          "answer": "Dewan Tun Canselor is located near FCI building and FOM building.",
+          "keywords": ["dtc", "dewan", "dewan tun canselor", "canselor"],
+            "synonyms": ["dewan", "dewan tun canselor", "dtc"],
+            "intent": "location"
+        }
   ]
 }
