@@ -97,6 +97,45 @@
 
         jhashfgsdjhajhdasfdhasfgd
         let routingControl = null;    
+        let currentImageOverlay = null; // Stores the currently visible floor/building picture
+
+        /* --- IMAGES CONFIGURATION PLATFORM --- */
+        const facultyImages = {
+            'FCI': {
+                'bounds': [[2.927450, 101.641250], [2.928850, 101.642550]], 
+                'building': "{{ url_for('static', filename='fci_building.png') }}", 
+                'Level G': "{{ url_for('static', filename='fci_levelg.png') }}",    
+                'Level 1': "{{ url_for('static', filename='fci_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fci_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='fci_level3.png') }}",
+                'Level 4': "{{ url_for('static', filename='fci_level4.png') }}"
+            },
+            'FOM': {
+                'bounds': [[2.926250, 101.641750], [2.927650, 101.642950]], 
+                'building': "{{ url_for('static', filename='fom_building.png') }}",
+                'Level G': "{{ url_for('static', filename='fom_levelg.png') }}",
+                'Level 1': "{{ url_for('static', filename='fom_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fom_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='fom_level3.png') }}",
+                'Level 4': "{{ url_for('static', filename='fom_level4.png') }}"
+            },
+            'FCM': {
+                'bounds': [[2.924850, 101.642550], [2.926150, 101.644150]], 
+                'building': "{{ url_for('static', filename='fcm_building.png') }}",
+                'Level LG': "{{ url_for('static', filename='fcm_levellg.png') }}",
+                'Level G': "{{ url_for('static', filename='fcm_levelg.png') }}",
+                'Level 1': "{{ url_for('static', filename='fcm_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fcm_level2.png') }}"
+            },
+            'FAIE': {
+                'bounds': [[2.925450, 101.639150], [2.927150, 101.640650]], 
+                'building': "{{ url_for('static', filename='faie_building.png') }}",
+                'Level G': "{{ url_for('static', filename='faie_levelg.png') }}",
+                'Level 1': "{{ url_for('static', filename='faie_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='faie_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='faie_level3.png') }}"
+            }
+        };
 
         const campusData = {
             'Facility': [
@@ -123,26 +162,23 @@
 
         /* --- MAP & ROUTING LOGIC --- */
         function initMap() {
-            // 1. Draw the invisible box around MMU Cyberjaya
             const mmuBounds = L.latLngBounds(
-                [2.9220, 101.6370], // Bottom-Left corner (Penjuru Bawah-Kiri)
-                [2.9320, 101.6480]  // Top-Right corner (Penjuru Atas-Kanan)
+                [2.9220, 101.6370], 
+                [2.9320, 101.6480]  
             );
 
-            // 2. Setup the map with the locks turned on
             map = L.map('map', { 
                 zoomControl: false,
-                minZoom: 17,                 // Stops them from zooming out too far
+                minZoom: 17,                
                 maxZoom: 19,
-                maxBounds: mmuBounds,        // Locks the camera inside the MMU box
-                maxBoundsViscosity: 1.0      // Makes the map bounce back if they try to drag outside
+                maxBounds: mmuBounds,        
+                maxBoundsViscosity: 1.0      
             }).setView([2.9276, 101.6418], 18);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© Hazyq'
             }).addTo(map);
 
-            // Initialize routing (Keep existing functionality)
             routingControl = L.Routing.control({
                 waypoints: [],
                 router: L.Routing.osrmv1({
@@ -202,6 +238,18 @@
                 alert("Location access failed: " + e.message);
                 console.error(e);
             });
+        }
+
+        // Helper function to show/hide images directly pinned on top of the map layer
+        function setMapImageOverlay(imgUrl, bounds) {
+            if (currentImageOverlay) {
+                map.removeLayer(currentImageOverlay);
+                currentImageOverlay = null;
+            }
+            if (imgUrl && bounds) {
+                currentImageOverlay = L.imageOverlay(imgUrl, bounds, { opacity: 0.85 }).addTo(map);
+                map.fitBounds(bounds); // Automatically adjusts view camera directly to the building area
+            }
         }
 
         function setDestination(latlng, title = "Destination") {
@@ -266,6 +314,7 @@
 
         /* --- DATA MANAGEMENT (CRUD) --- */
         function loadMainCategories() {
+            setMapImageOverlay(null, null); // Clear the active picture view when returning to main list
             currentCategory = ''; currentFaculty = ''; currentLevel = '';
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').style.display = 'none';
@@ -347,6 +396,14 @@
 
         function showFacultyLevels(fac) {
             currentFaculty = fac;
+
+            // Trigger general building layout image display
+            if (facultyImages[fac] && facultyImages[fac]['building']) {
+                setMapImageOverlay(facultyImages[fac]['building'], facultyImages[fac]['bounds']);
+            } else {
+                setMapImageOverlay(null, null);
+            }
+
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerText = fac;
             document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
@@ -374,6 +431,12 @@
 
         function showClasses(fac, lvl) {
             currentLevel = lvl;
+
+            // Trigger change to floor-specific layout image display
+            if (facultyImages[fac] && facultyImages[fac][lvl]) {
+                setMapImageOverlay(facultyImages[fac][lvl], facultyImages[fac]['bounds']);
+            }
+
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerHTML = `${fac}<br><br>${lvl}`;
             document.getElementById('backBtn').onclick = () => showFacultyLevels(fac);
