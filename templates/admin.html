@@ -97,15 +97,41 @@
         let currentImageOverlay = null; // Stores the currently visible floor/building picture
 
         /* --- IMAGES CONFIGURATION PLATFORM --- */
-        // Change the filenames and bounds below to match your actual files and coordinates!
         const facultyImages = {
             'FCI': {
-                'bounds': [[2.9270, 101.6410], [2.9282, 101.6424]], // Top-Left and Bottom-Right map corners for the picture
-                'building': "{{ url_for('static', filename='fci_building.png') }}", // General building blueprint
-                'Level 1': "{{ url_for('static', filename='fci_level1.png') }}",    // Level 1 blueprint
-                'Level 2': "{{ url_for('static', filename='fci_level2.png') }}"     // Level 2 blueprint
+                'bounds': [[2.927450, 101.641250], [2.928850, 101.642550]], 
+                'building': "{{ url_for('static', filename='fci_building.png') }}", 
+                'Level G': "{{ url_for('static', filename='fci_levelg.png') }}",    
+                'Level 1': "{{ url_for('static', filename='fci_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fci_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='fci_level3.png') }}",
+                'Level 4': "{{ url_for('static', filename='fci_level4.png') }}"
+            },
+            'FOM': {
+                'bounds': [[2.926250, 101.641750], [2.927650, 101.642950]], 
+                'building': "{{ url_for('static', filename='fom_building.png') }}",
+                'Level G': "{{ url_for('static', filename='fom_levelg.png') }}",
+                'Level 1': "{{ url_for('static', filename='fom_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fom_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='fom_level3.png') }}",
+                'Level 4': "{{ url_for('static', filename='fom_level4.png') }}"
+            },
+            'FCM': {
+                'bounds': [[2.924850, 101.642550], [2.926150, 101.644150]], 
+                'building': "{{ url_for('static', filename='fcm_building.png') }}",
+                'Level LG': "{{ url_for('static', filename='fcm_levellg.png') }}",
+                'Level G': "{{ url_for('static', filename='fcm_levelg.png') }}",
+                'Level 1': "{{ url_for('static', filename='fcm_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fcm_level2.png') }}"
+            },
+            'FAIE': {
+                'bounds': [[2.925450, 101.639150], [2.927150, 101.640650]], 
+                'building': "{{ url_for('static', filename='faie_building.png') }}",
+                'Level G': "{{ url_for('static', filename='faie_levelg.png') }}",
+                'Level 1': "{{ url_for('static', filename='faie_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='faie_level2.png') }}",
+                'Level 3': "{{ url_for('static', filename='faie_level3.png') }}"
             }
-            // You can easily add alternative faculties here following the same structure layout
         };
 
         const campusData = {
@@ -140,7 +166,7 @@
 
             map = L.map('map', { 
                 zoomControl: false,
-                minZoom: 17,                 
+                minZoom: 17,                
                 maxZoom: 19,
                 maxBounds: mmuBounds,        
                 maxBoundsViscosity: 1.0      
