@@ -93,16 +93,16 @@
         /* --- MAP IMAGES BLUEPRINT SETTINGS --- */
         const facultyImages = {
             'FCI': {
-                'bounds': [[2.9270, 101.6410], [2.9282, 101.6424]], 
+                'bounds': [[2.9280, 101.6410], [2.9289, 101.6421]], 
                 'building': "{{ url_for('static', filename='fci_building.png') }}", 
-                'Level G': "{{ url_for('static', filename='fci_levelg.png') }}",    
-                'Level 1': "{{ url_for('static', filename='fci_level1.png') }}",
-                'Level 2': "{{ url_for('static', filename='fci_level2.png') }}",
-                'Level 3': "{{ url_for('static', filename='fci_level3.png') }}",
-                'Level 4': "{{ url_for('static', filename='fci_level4.png') }}"
+                'Level G': "{{ url_for('static', filename='FCIG.png') }}",    
+                'Level 1': "{{ url_for('static', filename='FCI1.png') }}",
+                'Level 2': "{{ url_for('static', filename='FCI2.png') }}",
+                'Level 3': "{{ url_for('static', filename='FCI3.png') }}",
+                'Level 4': "{{ url_for('static', filename='FCI4.png') }}"
             },
             'FCM': {
-                'bounds': [[2.9250, 101.6430], [2.9262, 101.6444]],
+                'bounds': [[2.9268, 101.6410], [2.9279, 101.6421]],
                 'building': "{{ url_for('static', filename='fcm_building.png') }}",
                 'Level LG': "{{ url_for('static', filename='fcm_levellg.png') }}",
                 'Level G': "{{ url_for('static', filename='fcm_levelg.png') }}",
@@ -110,7 +110,7 @@
                 'Level 2': "{{ url_for('static', filename='fcm_level2.png') }}"
             },
             'FOM': {
-                'bounds': [[2.9230, 101.6420], [2.9242, 101.6434]],
+                'bounds': [[2.9250, 101.6428], [2.9261, 101.6441]],
                 'building': "{{ url_for('static', filename='fom_building.png') }}",
                 'Level G': "{{ url_for('static', filename='fom_levelg.png') }}",
                 'Level 1': "{{ url_for('static', filename='fom_level1.png') }}",
@@ -119,7 +119,7 @@
                 'Level 4': "{{ url_for('static', filename='fom_level4.png') }}"
             },
             'FAIE': {
-                'bounds': [[2.9240, 101.6400], [2.9252, 101.6414]],
+                'bounds': [[2.9255, 101.6392], [2.9272, 101.6406]],
                 'building': "{{ url_for('static', filename='faie_building.png') }}",
                 'Level G': "{{ url_for('static', filename='faie_levelg.png') }}",
                 'Level 1': "{{ url_for('static', filename='faie_level1.png') }}",
@@ -178,7 +178,7 @@
             // FIX: Changed maxZoom to 22 so users can zoom in closer to inside plans
             map = L.map('map', { 
                 zoomControl: false,
-                minZoom: 16,                 
+                minZoom: 18,                 
                 maxZoom: 22,
                 maxBounds: mmuBounds,        
                 maxBoundsViscosity: 1.0      
