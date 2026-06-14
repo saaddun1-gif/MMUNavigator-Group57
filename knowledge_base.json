@@ -41,11 +41,25 @@
           "intent": "location"
         },
         {
+         "question": "What is FOM?",
+         "answer": "FOM is the Faculty of Management, which offers courses in business administration, management, and related fields.",
+         "keywords": ["stand for", "meaning", "fom stand for", "fom meaning"],
+          "synonyms": ["what is fom stand for", "what is fom", "fom meaning", "fom definition"],
+          "intent": "definition"
+        },
+        {
           "question": "Where is FOM?",
          "answer": "FOM building is located near FCI building and DTC.",
          "keywords": ["fom", "business", "management", "administration", "bisnes"],
           "synonyms": ["business faculty location", "management faculty location", "fom location"],
           "intent": "location"
+       },
+       {
+          "question": "What is FAIE?",
+          "answer": "FAIE is the Faculty of Artificial Intelligence and Engineering, which offers courses in artificial intelligence, engineering, and related fields. It also once name Faculty of Engineering but recently changed to Faculty of Artificial Intelligence and Engineering.",
+          "keywords": ["stand for", "meaning", "faie stand for", "faie meaning"],
+          "synonyms": ["what is faie stand for", "what is faie", "faie meaning", "faie definition"],
+          "intent": "definition"
        },
        {
           "question": "Where is FAIE?",
@@ -54,6 +68,13 @@
           "synonyms": ["foe faculty","where is foe", "faie faculty", "engineer faculty", "ai faculty", "artificial intelligence faculty", "foe","faie", "engineer", "engineering", "ai", "artificial intelligence"],
           "intent": "location"
        },
+       {
+          "question": "What is FCM?",
+          "answer": "FCM is the Faculty of Creative Multimedia. Other faculty like FAC, FCA, and FCM are all under the same faculty which is Faculty of Creative Multimedia. It offers courses in art, design, animation, communication, and related fields.",
+          "keywords": ["stand for", "meaning", "fcm stand for", "fcm meaning"],
+          "synonyms": ["what is fcm stand for", "what is fcm", "fcm meaning", "fcm definition"],
+          "intent": "definition"
+        },
         {
             "question": "Where is FCM?",
           "answer": "FCM building is located infront of FAIE building",
