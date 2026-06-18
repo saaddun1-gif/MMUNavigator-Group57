@@ -1,13 +1,11 @@
 {
   "questions": [
-    {
-      "question": "Where is the library located?",
-      "answer": "The library is located in the middle of the campus."
-    },
+    
     {
         "question": "hello",
         "answer": "hello there",
-        "synonyms": ["hi", "hey", "greetings"]
+        "synonyms": ["hi", "hey", "greetings"],
+        "intent": "greeting"
     },
        {
           "question": "Where is the library located?",
@@ -22,10 +20,74 @@
          "synonyms": ["cafe", "food court", "dining hall", "mamak"]
        },
        {
+         "question": "What is FCI?",
+         "answer": "FCI is the Faculty of Computing and Informatics, which offers courses in computer science, cybersecurity, data science, game developer, and software engineering.",
+         "keywords": ["stand for", "meaning", "fci stand for", "fci meaning"],
+          "synonyms": ["what is fci stand for", "what is fci", "fci meaning", "fci definition"],
+          "intent": "definition"
+       },
+       {
          "question": "Where is FCI?",
-         "answer": "FCI (Faculty of Computing and Informatics) is at idk",
-         "keywords": ["fci", "computing", "informatics", "computer science", "it faculty"],
-          "synonyms": ["computing faculty", "informatics faculty", "north wing"]
-       }
+         "answer": "FCI building is located near FOM building and DTC.",
+         "keywords": ["computing", "informatics", "computer science", "computer information", "fci"],
+          "synonyms": ["computing faculty", "informatics faculty", "computer science faculty", "computer information location"],
+          "intent": "location"
+        },
+        {
+         "question": "Where is FCI Student Study Lounge?",
+         "answer": "FCI Student Study Lounge is located on the ground floor of the FCI building.",
+         "keywords": ["study", "lounge", "student", "fci student study lounge"],
+          "synonyms": ["fci student study lounge", "fci study lounge", "computer science study lounge", "informatics study lounge"],
+          "intent": "location"
+        },
+        {
+         "question": "What is FOM?",
+         "answer": "FOM is the Faculty of Management, which offers courses in business administration, management, and related fields.",
+         "keywords": ["stand for", "meaning", "fom stand for", "fom meaning"],
+          "synonyms": ["what is fom stand for", "what is fom", "fom meaning", "fom definition"],
+          "intent": "definition"
+        },
+        {
+          "question": "Where is FOM?",
+         "answer": "FOM building is located near FCI building and DTC.",
+         "keywords": ["fom", "business", "management", "administration", "bisnes"],
+          "synonyms": ["business faculty location", "management faculty location", "fom location"],
+          "intent": "location"
+       },
+       {
+          "question": "What is FAIE?",
+          "answer": "FAIE is the Faculty of Artificial Intelligence and Engineering, which offers courses in artificial intelligence, engineering, and related fields. It also once name Faculty of Engineering but recently changed to Faculty of Artificial Intelligence and Engineering.",
+          "keywords": ["stand for", "meaning", "faie stand for", "faie meaning"],
+          "synonyms": ["what is faie stand for", "what is faie", "faie meaning", "faie definition"],
+          "intent": "definition"
+       },
+       {
+          "question": "Where is FAIE?",
+         "answer": "FAIE building is located infront of FCM building and beside STD building.",
+         "keywords": ["faie", "engineer", "engineering", "ai", "artificial intelligence"],
+          "synonyms": ["foe faculty","where is foe", "faie faculty", "engineer faculty", "ai faculty", "artificial intelligence faculty", "foe","faie", "engineer", "engineering", "ai", "artificial intelligence"],
+          "intent": "location"
+       },
+       {
+          "question": "What is FCM?",
+          "answer": "FCM is the Faculty of Creative Multimedia. Other faculty like FAC, FCA, and FCM are all under the same faculty which is Faculty of Creative Multimedia. It offers courses in art, design, animation, communication, and related fields.",
+          "keywords": ["stand for", "meaning", "fcm stand for", "fcm meaning"],
+          "synonyms": ["what is fcm stand for", "what is fcm", "fcm meaning", "fcm definition"],
+          "intent": "definition"
+        },
+        {
+            "question": "Where is FCM?",
+          "answer": "FCM building is located infront of FAIE building",
+          "keywords": ["fcm", "art", "fca", "fac", "animation", "design", "cafeteria"],
+            "synonyms": ["art faculty", "communication art faculty", "animation faculty"],
+            "intent": "location"
+        },
+        {
+            "question": "Where is DTC?",
+          "answer": "Dewan Tun Canselor is located near FCI building and FOM building.",
+          "keywords": ["dtc", "dewan", "dewan tun canselor", "canselor"],
+            "synonyms": ["dewan", "dewan tun canselor", "dtc"],
+            "intent": "location"
+        }
   ]
 }

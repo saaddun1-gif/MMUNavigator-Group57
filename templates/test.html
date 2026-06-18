@@ -12,7 +12,17 @@
     
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+<<<<<<< HEAD
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+=======
+
+    <style>
+        .typing-dots {
+            font-style: italic;
+            opacity: 0.7;
+        }
+    </style>
+>>>>>>> d90f5a5a025e54b1e2470cc8d1065b803a3b6a55
 </head>
 <body onload="initApp()">
 
@@ -98,7 +108,7 @@
         /* --- MAP IMAGES BLUEPRINT SETTINGS --- */
         const facultyImages = {
             'FCI': {
-                'bounds': [[2.929232, 101.640521], [2.928216, 101.641700]],  
+                'bounds': [[2.929194, 101.640532], [2.928089, 101.641683]],  
                 'Level G': "{{ url_for('static', filename='FCIG.png') }}",    
                 'Level 1': "{{ url_for('static', filename='FCI1.png') }}",
                 'Level 2': "{{ url_for('static', filename='FCI2.png') }}",
@@ -106,25 +116,25 @@
                 'Level 4': "{{ url_for('static', filename='FCI4.png') }}"
             },
             'FCM': {
-                'bounds': [[2.926850, 101.642121], [2.925657, 101.643329]],
-                'Level LG': "{{ url_for('static', filename='fcm_levellg.png') }}",
-                'Level G': "{{ url_for('static', filename='fcm_levelg.png') }}",
+                'bounds': [[2.926944, 101.642115], [2.925587, 101.643407]],
+                'Level LG': "{{ url_for('static', filename='FCMLG.png') }}",
+                'Level G': "{{ url_for('static', filename='FCMG.png') }}",
                 'Level 1': "{{ url_for('static', filename='fcm_level1.png') }}",
                 'Level 2': "{{ url_for('static', filename='fcm_level2.png') }}"
             },
             'FOM': {
-                'bounds': [[2.930160, 101.640487], [2.928780, 101.641675]],
+                'bounds': [[2.930186, 101.642019], [2.928824, 101.640582]],
                 'Level G': "{{ url_for('static', filename='FOMG.png') }}",
                 'Level 1': "{{ url_for('static', filename='FOM1.png') }}",
                 'Level 2': "{{ url_for('static', filename='FOM2.png') }}",
                 'Level 3': "{{ url_for('static', filename='FOM3.png') }}"
             },
             'FAIE': {
-                'bounds': [[2.9255, 101.6392], [2.9272, 101.6406]],
-                'Level G': "{{ url_for('static', filename='faie_levelg.png') }}",
-                'Level 1': "{{ url_for('static', filename='faie_level1.png') }}",
-                'Level 2': "{{ url_for('static', filename='faie_level2.png') }}",
-                'Level 3': "{{ url_for('static', filename='faie_level3.png') }}"
+                'bounds': [[2.926894, 101.640848], [2.925734, 101.641856]],
+                'Level LG': "{{ url_for('static', filename='FAIELG.png') }}",
+                'Level G': "{{ url_for('static', filename='faie_level1.png') }}",
+                'Level 1': "{{ url_for('static', filename='faie_level2.png') }}",
+                'Level 2': "{{ url_for('static', filename='faie_level3.png') }}"
             }
         };
 
@@ -266,6 +276,7 @@
                     ]
                 },
                 'FAIE': {
+<<<<<<< HEAD
                     'Level G': [
                         { name: 'CLCR0006', latlng: [2.92630, 101.63990] },
                         { name: 'CLCR0005', latlng: [2.92625, 101.63995] },
@@ -296,6 +307,12 @@
                         { name: 'CLCR3003', latlng: [2.92615, 101.64005] },
                         { name: 'CLCR3002', latlng: [2.92610, 101.64010] }
                     ]
+=======
+                    'Level LG': ['CLCR0006', 'CLCR0005', 'CLCR0004', 'CLCR0003', 'CLCR0002'],
+                    'Level G': ['CLCR1007', 'CLCR1006', 'CLCR1005', 'CLCR1004', 'CLCR1003', 'CLCR1002'],
+                    'Level 1': ['CLCR2006', 'CLCR2005', 'CLCR2004', 'CLCR2003', 'CLCR2002'],
+                    'Level 2': ['CLCR3007', 'CLCR3006', 'CLCR3005', 'CLCR3004', 'CLCR3003', 'CLCR3002']
+>>>>>>> d90f5a5a025e54b1e2470cc8d1065b803a3b6a55
                 }
             }
         };
@@ -595,15 +612,49 @@
         /* --- CHATBOT BACKEND CONNECTION --- */
         async function sendToPython(message) {
             try {
-                const response = await fetch('/api/chat', {
+                let response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: message })
                 });
+
+                if (response.status === 404) {
+                    response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: message })
+                    });
+                }
+
+                if (!response.ok) throw new Error('Server error');
+
                 const data = await response.json();
-                return data.response;
+                return data.response || data.reply || '⚠️ No response content received.';
+
             } catch (error) {
+                console.error("Backend request failed:", error);
                 return '❌ Connection error to Flask server.';
+            }
+        }
+
+        /* --- TYPING INDICATOR CONTROLS --- */
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatMessages');
+            
+            // Create a fake bot message element
+            const div = document.createElement('div');
+            div.className = 'bot-msg typing-dots';
+            div.id = 'typingIndicator';
+            div.textContent = 'typing...';
+            
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
             }
         }
 
@@ -611,10 +662,17 @@
             const input = document.getElementById('userInput');
             const message = input.value.trim();
             if (!message) return;
+            
             input.value = '';
-            addMessage(message, true);
-            const reply = await sendToPython(message);
-            addMessage(reply, false);
+            addMessage(message, true); // Add user message bubble
+            
+            showTypingIndicator(); // Show the loading status
+            
+            const reply = await sendToPython(message); // Get data from backend
+            
+            removeTypingIndicator(); // Remove the loading status
+            
+            addMessage(reply, false); // Add real bot message bubble
         }
 
         function addMessage(text, isUser) {
