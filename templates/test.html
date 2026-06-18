@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MMU Navigator - User Version</title>
     
+    <!-- CSS first, always before JS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
-    
+
+    <!-- JS: core Leaflet first, then plugins -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-<<<<<<< HEAD
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-=======
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <style>
         .typing-dots {
@@ -22,7 +22,6 @@
             opacity: 0.7;
         }
     </style>
->>>>>>> d90f5a5a025e54b1e2470cc8d1065b803a3b6a55
 </head>
 <body onload="initApp()">
 
@@ -90,7 +89,9 @@
             <input type="text" id="userInput" class="chat-input-field" placeholder="Ask me anything...">
         </div>
     </div>
-
+    <div class="chat-input-wrapper">
+    <input type="text" id="userInput" class="chat-input-field" placeholder="Ask me anything...">
+</div>
     <div class="search-container">
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
@@ -159,53 +160,54 @@
             'Faculty': {
                 'FCI': {
                     'Level G': [
-                        { name: 'CQAR0006', latlng: [2.928673, 101.641269] },
-                        { name: 'CQAR0005', latlng: [2.928713, 101.641195] },
-                        { name: 'CQAR0004', latlng: [2.928803, 101.641085] },
-                        { name: 'CQAR0003', latlng: [2.928956, 101.640905] },
-                        { name: 'CQAR0002', latlng: [2.929024, 101.640821] }
+                        { name: 'CQAR0006', latlng: [2.928557, 101.641282] },
+                        { name: 'CQAR0005', latlng: [2.928652, 101.641172] },
+                        { name: 'CQAR0004', latlng: [2.928743, 101.641075] },
+                        { name: 'CQAR0003', latlng: [2.928897, 101.640911] },
+                        { name: 'CQAR0002', latlng: [2.929024, 101.640821] },
+                        { name: 'FCI Student Lounge', latlng: [2.929050, 101.640711] }
                     ],
                     'Level 1': [
-                        { name: 'CQAR1007', latlng: [2.928639, 101.641309] },
-                        { name: 'CQAR1006', latlng: [2.928690, 101.641245] },
-                        { name: 'CQAR1005', latlng: [2.928719, 101.641215] },
+                        { name: 'CQAR1007', latlng: [2.928549, 101.641302] },
+                        { name: 'CQAR1006', latlng: [2.928581, 101.641238] },
+                        { name: 'CQAR1005', latlng: [2.928646, 101.641152] },
                         { name: 'CQAR1004', latlng: [2.928754, 101.641156] },
-                        { name: 'CQAR1003', latlng: [2.928790, 101.641107] },
-                        { name: 'CQAR1002', latlng: [2.928998, 101.640847] },
-                        { name: 'INNOV8 LAB', latlng: [2.929036, 101.640793] },
-                        { name: 'CQAR1001', latlng: [2.929096, 101.640731] }
+                        { name: 'CQAR1003', latlng: [2.928896, 101.640915] },
+                        { name: 'CQAR1002', latlng: [2.928932, 101.640827] },
+                        { name: 'INNOV8 LAB', latlng: [2.928964, 101.640779] },
+                        { name: 'CQAR1001', latlng: [2.929011, 101.640703] }
                     ],
                     'Level 2': [
-                        { name: 'CQAR2007', latlng: [2.928639, 101.641309] },
-                        { name: 'CQAR2006', latlng: [2.928719, 101.641215] },
-                        { name: 'CQAR2005', latlng: [2.928790, 101.641107] },
-                        { name: 'CQAR2004', latlng: [2.928947, 101.640917] },
-                        { name: 'CQAR2003', latlng: [2.929007, 101.640833] },
-                        { name: 'CQAR2002', latlng: [2.929092, 101.640720] },
-                        { name: 'CQCR2004', latlng: [2.928858, 101.641549] },
-                        { name: 'CQCR2003', latlng: [2.928783, 101.641548] },
-                        { name: 'CQCR2002', latlng: [2.928710, 101.641553] },
-                        { name: 'CQCR2001', latlng: [2.928616, 101.641537] }
+                        { name: 'CQAR2007', latlng: [2.928583, 101.641261] },
+                        { name: 'CQAR2006', latlng: [2.928642, 101.641175] },
+                        { name: 'CQAR2005', latlng: [2.928733, 101.641082] },
+                        { name: 'CQAR2004', latlng: [2.928872, 101.640912] },
+                        { name: 'CQAR2003', latlng: [2.928962, 101.640806] },
+                        { name: 'CQAR2002', latlng: [2.929055, 101.640716] },
+                        { name: 'CQCR2004', latlng: [2.928765, 101.641546] },
+                        { name: 'CQCR2003', latlng: [2.928699, 101.641525] },
+                        { name: 'CQCR2002', latlng: [2.928615, 101.641537] },
+                        { name: 'CQCR2001', latlng: [2.928521, 101.641534] }
                     ],
                     'Level 3': [
-                        { name: 'CQAR3007', latlng: [2.928639, 101.641309] },
-                        { name: 'CQAR3006', latlng: [2.928719, 101.641215] },
-                        { name: 'CQAR3005', latlng: [2.928790, 101.641107] },
-                        { name: 'CQAR3004', latlng: [2.928947, 101.640917] },
-                        { name: 'CQAR3003', latlng: [2.929007, 101.640833] },
-                        { name: 'CQAR3002', latlng: [2.929007, 101.640833] },
-                        { name: 'CQCR3004', latlng: [2.928858, 101.641549] },
-                        { name: 'CQCR3003', latlng: [2.928783, 101.641548] },
-                        { name: 'CQCR3002', latlng: [2.928710, 101.641553] },
-                        { name: 'CQCR3001', latlng: [2.928616, 101.641537] }
+                        { name: 'CQAR3007', latlng: [2.928583, 101.641261] },
+                        { name: 'CQAR3006', latlng: [2.928642, 101.641175] },
+                        { name: 'CQAR3005', latlng: [2.928733, 101.641082] },
+                        { name: 'CQAR3004', latlng: [2.928872, 101.640912] },
+                        { name: 'CQAR3003', latlng: [2.928962, 101.640806] },
+                        { name: 'CQAR3002', latlng: [2.929055, 101.640716] }, 
+                        { name: 'CQCR3004', latlng: [2.928765, 101.641546] },
+                        { name: 'CQCR3003', latlng: [2.928699, 101.641525] },
+                        { name: 'CQCR3002', latlng: [2.928615, 101.641537] },
+                        { name: 'CQCR3001', latlng: [2.928521, 101.641534] }
                     ],
                     'Level 4': [
-                        { name: 'CQAR4007', latlng: [2.928656, 101.641265] },
-                        { name: 'CQAR4006', latlng: [2.928656, 101.641265] },
-                        { name: 'CQAR4005', latlng: [2.928808, 101.641079] },
-                        { name: 'CQAR4004', latlng: [2.928942, 101.640928] },
+                        { name: 'CQAR4007', latlng: [2.928579, 101.641277] },
+                        { name: 'CQAR4006', latlng: [2.928648, 101.641175] },
+                        { name: 'CQAR4005', latlng: [2.928648, 101.641175] },
+                        { name: 'CQAR4004', latlng: [2.928892, 101.640913] },
                         { name: 'CQAR4003', latlng: [2.929021, 101.640814] },
-                        { name: 'AINSQAI LAB', latlng: [2.929100, 101.640736] }
+                        { name: 'AINSQAI LAB', latlng: [2.929051, 101.640712] }
                     ]
                 },
                 'FCM': {
@@ -285,45 +287,121 @@
         };
 
         function initApp() {
-            initMap();
-            loadMainCategories();
-            checkIntro();
-        }
+    console.log("App initializing...");
+    initMap(); 
+    checkIntro();
 
+    // Attach the listener ONLY after the page is ready
+    const inputField = document.getElementById('userInput');
+    if (inputField) {
+        inputField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                console.log("Enter key detected!"); // Check console for this
+                handleUserInput();
+            }
+        });
+        console.log("Enter key listener attached successfully.");
+    } else {
+        console.error("Could not find userInput field!");
+    }
+}
         /* --- MAP & ROUTING LOGIC --- */
-        function initMap() {
-            const mmuBounds = L.latLngBounds(
-                [2.9220, 101.6370], 
-                [2.9320, 101.6480]  
-            );
+      function initMap() {
+    const mmuBounds = L.latLngBounds(
+        [2.9220, 101.6370],
+        [2.9320, 101.6480]
+    );
 
-            map = L.map('map', { 
-                zoomControl: false,
-                minZoom: 18,                
-                maxZoom: 22,
-                maxBounds: mmuBounds,        
-                maxBoundsViscosity: 1.0      
-            }).setView([2.9276, 101.6418], 18);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 22,
-                maxNativeZoom: 19
+    map = L.map('map', {
+        zoomControl: false,
+        minZoom: 18,
+        maxZoom: 22,
+        maxBounds: mmuBounds,
+        maxBoundsViscosity: 1.0
+    }).setView([2.9276, 101.6418], 18);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 22,
+        maxNativeZoom: 19
+    }).addTo(map);
+
+    // Routing Setup
+    routingControl = L.Routing.control({
+        waypoints: [],
+        router: L.Routing.osrmv1({
+            serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+            profile: 'foot'
+        }),
+        show: false,
+        createMarker: function() { return null; },
+        lineOptions: {
+            styles: [{ color: 'red', opacity: 0.7, weight: 5, dashArray: '10, 10' }]
+        }
+    }).addTo(map);
+
+    // Drawing Setup
+    drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    const drawControl = new L.Control.Draw({
+        position: 'topleft',
+        draw: {
+            polyline: { shapeOptions: { color: 'red', weight: 4, opacity: 0.85 } },
+            polygon: true,
+            circle: false,
+            rectangle: false,
+            marker: true,
+            circlemarker: false
+        },
+        edit: { featureGroup: drawnItems }
+    });
+    map.addControl(drawControl);
+
+    // GPS Live Location
+    map.locate({ setView: false, watch: true, enableHighAccuracy: true });
+
+    map.on('locationfound', (e) => {
+        if (!userMarker) {
+            userMarker = L.circleMarker(e.latlng, {
+                radius: 10,
+                fillColor: "#3388ff",
+                fillOpacity: 1,        // ✅ makes dot visible
+                color: "#ffffff",
+                weight: 3,
+                opacity: 1
             }).addTo(map);
 
-            routingControl = L.Routing.control({
-                waypoints: [],
-                router: L.Routing.osrmv1({ serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1', profile: 'foot' }),
-                show: false,
-                createMarker: function() { return null; },
-                lineOptions: { styles: [{ color: 'red', opacity: 0.7, weight: 5, dashArray: '10, 10' }] }
-            }).addTo(map);
+            map.setView(e.latlng, 19); // centre on first GPS lock only
+        } else {
+            userMarker.setLatLng(e.latlng);
+        }
+        updateNavigationStatus();
+    });
 
-            routingControl.on('routesfound', function(e) {
-                const routes = e.routes;
-                if (routes && routes.length > 0) {
-                    map.fitBounds(L.latLngBounds(routes[0].coordinates), { padding: [50, 50] });
-                }
-            });
+    map.on('locationerror', (e) => {
+        console.error("GPS Error:", e.message);
+    });
+
+    // Click-to-Pin
+    map.on('click', (e) => {
+        if (targetPin) {
+            targetPin.setLatLng(e.latlng);
+        } else {
+            targetPin = L.marker(e.latlng, { draggable: true }).addTo(map);
+            targetPin.on('dragend', () => updateNavigationStatus());
+        }
+        targetPin.bindPopup("Target Location").openPopup();
+        updateNavigationStatus();
+    });
+}
+    map.on('locationerror', (e) => console.error("GPS Error:", e.message));
+
+// Ensure your navigation helper is defined so the map can talk to the route
+function updateNavigationStatus() {
+    if (routingControl && userMarker && targetPin) {
+        routingControl.setWaypoints([userMarker.getLatLng(), targetPin.getLatLng()]);
+    }
+}
 
             drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
@@ -387,7 +465,7 @@
                 targetPin.bindPopup("Calculating...").openPopup();
                 updateNavigationStatus();
             });
-        }
+        
         /* --- NEW: Function to handle dropping pins via sidebar choices --- */
         function pinLocation(lat, lng, name) {
             const latlng = L.latLng(lat, lng);
@@ -472,6 +550,34 @@
         function openChatMenu() {
             document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("chatSidebar").classList.add("active");
+        } // <-- FIX: Closed this function properly!
+
+        /* --- NEW: AI Chatbot Pinning Logic --- */
+        function pinLocationFromChat(latlng, floor, roomName) {
+            console.log(`Centering map onto ${roomName} (${floor}) at coordinates:`, latlng);
+
+            // Check format just in case the JSON sends an array vs object
+            const location = Array.isArray(latlng) ? L.latLng(latlng[0], latlng[1]) : L.latLng(latlng.lat, latlng.lng);
+
+            // FIX: Replaced `window.currentChatMarker` with the global `targetPin`.
+            // This ensures your GPS routing connects the user to the AI's requested location!
+            if (targetPin) {
+                targetPin.setLatLng(location);
+            } else {
+                targetPin = L.marker(location, { draggable: true }).addTo(map);
+                
+                // Track coordinates if the user drags the AI's pin
+                targetPin.on('dragend', (event) => {
+                    const currentPos = event.target.getLatLng();
+                    console.log(`📍 Shifted Coordinate (Drag End): [${currentPos.lat.toFixed(6)}, ${currentPos.lng.toFixed(6)}]`);
+                    updateNavigationStatus();
+                });
+            }
+
+            // Drop the pin, set the popup, and update the routing lines
+            targetPin.bindPopup(`<b>${roomName}</b><br>${floor}`).openPopup();
+            map.setView(location, 19); 
+            updateNavigationStatus(); 
         }
 
         /* --- DYNAMIC DIRECTORY NAVIGATION INTERACTION --- */
@@ -578,32 +684,36 @@
 
         /* --- CHATBOT BACKEND CONNECTION --- */
         async function sendToPython(message) {
-            try {
-                let response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message })
-                });
+    try {
+        let response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message })
+        });
 
-                if (response.status === 404) {
-                    response = await fetch('/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message: message })
-                    });
-                }
-
-                if (!response.ok) throw new Error('Server error');
-
-                const data = await response.json();
-                return data.response || data.reply || '⚠️ No response content received.';
-
-            } catch (error) {
-                console.error("Backend request failed:", error);
-                return '❌ Connection error to Flask server.';
-            }
+        if (response.status === 404) {
+            response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
         }
 
+        // Catch Server Crashes (500 errors) before parsing JSON
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Server error response payload:", errorText);
+            return `⚠️ Server Error (${response.status}). Check Flask console.`;
+        }
+
+        const data = await response.json();
+        return data.response || data.reply || '⚠️ No response content key matched.';
+
+    } catch (error) {
+        console.error("Backend request failed entirely:", error);
+        return '❌ Connection error to Flask server.';
+    }
+}
         /* --- TYPING INDICATOR CONTROLS --- */
         function showTypingIndicator() {
             const chatContainer = document.getElementById('chatMessages');
@@ -643,22 +753,91 @@
         }
 
         function addMessage(text, isUser) {
-            const chatContainer = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            div.className = isUser ? 'user-msg' : 'bot-msg';
-            div.textContent = text;
-            chatContainer.appendChild(div);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
+    const chatContainer = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = isUser ? 'user-msg' : 'bot-msg';
+    
+    let displayText = text;
 
-        document.getElementById('userInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleUserInput();
-        });
+    // Intercept bot messages that contain a map coordinate payload
+    if (!isUser && text.includes("TARGET_PIN:")) {
+        const parts = text.split("TARGET_PIN:");
+        displayText = parts[0].trim(); // Extract only the human-readable text
+        const jsonString = parts[1].trim(); // Extract the JSON data string
 
-        function fillChat(text) { 
-            document.getElementById('userInput').value = text;
-            handleUserInput();
+        try {
+            const pinData = JSON.parse(jsonString);
+            
+            // Trigger the map update using the parsed coordinates, floor, and room name
+            if (typeof pinLocationFromChat === "function") {
+                pinLocationFromChat(pinData.latlng, pinData.floor, pinData.name);
+            } else {
+                console.warn("pinLocationFromChat function is missing. Ensure it's defined in your script.");
+            }
+        } catch (error) {
+            console.error("Error parsing TARGET_PIN data:", error);
+            displayText = text; // Fallback to raw text if JSON parsing breaks
         }
+    }
+
+    div.textContent = displayText;
+    chatContainer.appendChild(div);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+document.getElementById('userInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') handleUserInput();
+});
+
+function getFloorImage(floor) {
+    const images = {
+        "Ground Floor": "static/FCI.png",
+        "Level 1": "static/FCI1.png",
+        "Level 2": "static/FCI2.png",
+        "Level 3": "static/FCI3."
+    };
+    return images[floor] || "static/images/default.jpg";
+}
+
+function pinLocationFromChat(latlng, floor, name) {
+    // 1. Clean up: Remove old AI marker if it exists
+    if (typeof aiMarker !== 'undefined' && aiMarker) {
+        map.removeLayer(aiMarker);
+    }
+
+    // 2. Setup the Marker
+    // Ensure latlng is handled as an object or array correctly
+    aiMarker = L.marker(latlng).addTo(map);
+
+    // 3. Update the global targetPin so routing knows where to go
+    targetPin = aiMarker; 
+
+    // 4. Build Popup Content with Image
+    const imagePath = getFloorImage(floor);
+    const popupContent = `
+        <div style="width: 150px; text-align: center;">
+            <h4 style="margin: 0 0 5px 0;">${name}</h4>
+            <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold;">${floor}</p>
+            <img src="${imagePath}" style="width: 100%; border-radius: 5px; border: 1px solid #ddd;" 
+                 onerror="this.onerror=null;this.src='static/images/default.jpg';">
+        </div>
+    `;
+
+    // 5. Bind and display
+    aiMarker.bindPopup(popupContent).openPopup();
+
+    // 6. Refresh the Route
+    if (typeof updateNavigationStatus === 'function') {
+        updateNavigationStatus();
+    }
+
+    // 7. Pan the map to the AI's selection
+    map.flyTo(latlng, 19);
+}
+function fillChat(text) { 
+    document.getElementById('userInput').value = text;
+    handleUserInput();
+}
 
         /* --- INTRO DISPLAY CHECK LOGIC --- */
         function closeIntro() { document.getElementById('introPopup').style.display = 'none'; }
