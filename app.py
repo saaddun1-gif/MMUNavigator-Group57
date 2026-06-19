@@ -231,7 +231,6 @@ def admin_login():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    """Chat endpoint for standard message response formats"""
     try:
         data = request.json
         user_message = data.get('message', '')
@@ -254,7 +253,6 @@ def chat():
 
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
-    """Chat endpoint for api data response formats"""
     try:
         data = request.json
         user_message = data.get('message', '')
@@ -281,7 +279,6 @@ def health():
 
 @app.route('/debug/match', methods=['POST'])
 def debug_match():
-    """Debug tracker to check calculations in real-time"""
     try:
         data = request.json
         user_message = data.get('message', '')
@@ -290,8 +287,8 @@ def debug_match():
         user_keywords = extract_keywords(user_message)
         user_question_lower = user_message.lower()
         
-        is_what_question = any(phrase in user_question_lower for phrase in ['what is', 'what\'s', 'tell me about', 'meaning of', 'define'])
-        is_where_question = any(phrase in user_question_lower for phrase in ['where is', 'where\'s', 'location of', 'find', 'located'])
+        is_what_question = any(phrase in user_question_lower for phrase in ['what is', "what's", 'tell me about', 'meaning of', 'define'])
+        is_where_question = any(phrase in user_question_lower for phrase in ['where is', "where's", 'location of', 'find', 'located'])
         
         results = []
         for q in kb.get('questions', []):
@@ -327,6 +324,7 @@ def debug_match():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
+    app.run(debug=True, host='127.0.0.1', port=5000)
     print("=" * 50)
     print("🤖 MMU Navigator AI Chatbot Server")
     print("=" * 50)
