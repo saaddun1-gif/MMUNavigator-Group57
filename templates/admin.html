@@ -12,6 +12,22 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+
+    <style>
+        .admin-route-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+            min-width: 200px;
+        }
+    </style>
 </head>
 <body onload="initApp()">
 
@@ -44,7 +60,7 @@
         </button>
         
         <div style="margin-top: auto;">
-            <button class="nav-btn" style="border-radius: 50%; overflow: hidden;">
+            <button class="nav-btn" style="border-radius: 50%; overflow: hidden;" onclick="confirmSwitch()">
                 <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
             </button>
         </div>
@@ -81,113 +97,260 @@
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
     
+    <div id="adminRouteControls" class="admin-route-panel" style="display: none;">
+        <p style="margin: 0 0 8px 0; font-weight: bold; color: #333; font-size: 14px;">Custom Route Creator</p>
+        <button class="admin-save-btn" onclick="saveManualRoute()" style="background-color: #28a745; margin-right: 5px; border: none; padding: 6px 12px; color: white; border-radius: 4px; cursor: pointer;">Save Path</button>
+        <button class="admin-save-btn" onclick="clearManualRoute()" style="background-color: #dc3545; border: none; padding: 6px 12px; color: white; border-radius: 4px; cursor: pointer;">Clear Traces</button>
+    </div>
+
     <div id="map"></div>
 
     <script>
+        /* --- APP STATE & DATA STRUCTS --- */
         let isEditMode = false; 
         let currentView = ''; 
         let currentCategory = ''; 
         let currentFaculty = '';
         let currentLevel = '';
         let map;
-        let userMarker = null; 
-        let targetPin = null; 
-        let routingControl = null; 
+        let userMarker = null;
+        let targetPin = null;          
+        let routingControl = null;    
 
-        let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
+        // Manual Route Tracing Array & Layer References
+        let manualRoutePoints = [];
+        let drawingPolyline = null;
+        let manualMarkers = [];
+        let savedRoutesLayer = null; // Container for locked, saved custom paths
+        let savedRoutesData = [];    // Local memory bank array for pinning math logic
 
+        // Structured Object Data Profile Setup
         const campusData = {
-            'Facility': ['Library', 'Surau', 'Gym', 'Cafe'],
-            'Hall': ['Exam Hall', 'MPH'],
+            'Facility': [
+                { name: 'Library', latlng: [2.927514, 101.641695] }, 
+                { name: 'Surau', latlng: [2.924351, 101.642975] }, 
+                { name: 'Gym', latlng: [2.927183, 101.643105] }, 
+                { name: 'Cafe', latlng: [2.925228, 101.642405] }
+            ],
+            'Hall': [
+                { name: 'Exam Hall', latlng: [2.92842, 101.64215] },
+                { name: 'MPH', latlng: [2.92764, 101.64255] }
+            ],
             'Faculty': {
                 'FCI': {
-                    'Level 1': ['CR 101', 'CR 102'],
-                    'Level 2': ['CR 201', 'Meeting Room']
+                    'Level 1': [
+                        { name: 'CR 101', latlng: [2.9275, 101.6416] },
+                        { name: 'CR 102', latlng: [2.9276, 101.6417] }
+                    ],
+                    'Level 2': [
+                        { name: 'CR 201', latlng: [2.929074230164286, 101.6407334804535] },
+                        { name: 'Meeting Room', latlng: [2.9291, 101.6408] }
+                    ]
                 }
             }
         };
+        let chatTemplates = ["Where is the Library?", "How to go to FCI?"];
 
         function initApp() { 
             initMap(); 
             loadMainCategories(); 
         }
 
+        /* --- MULTI-LEVEL FLOORPLAN CONFIGURATIONS --- */
+        let activeFloorOverlay = null; 
+        const fcmBounds = [
+            [2.9284, 101.6411], 
+            [2.9268, 101.6425]  
+        ];
+        const fcmImageURL = "{{ url_for('static', filename='Fcm inside map.jpg') }}";
+
+        /* --- LEAFLET MAP & ROUTING LOGIC --- */
         function initMap() {
-    // 1. Initialize the map
-    map = L.map('map', { zoomControl: false }).setView([2.927028, 101.642134], 17);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© Hazyq'
-    }).addTo(map);
+            // Geofenced Campus Constraints
+            const mmuBounds = L.latLngBounds(
+                [2.9220, 101.6370], 
+                [2.9320, 101.6480]  
+            );
 
-    // 2. Initialize Routing Control ONCE with 'foot' profile
-    routingControl = L.Routing.control({
-        waypoints: [],
-        router: L.Routing.osrmv1({
-            serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
-            profile: 'foot', // This forces use of the thin red walking paths
-            useHints: false
-        }),
-        routeWhileDragging: true,
-        show: false,
-        addWaypoints: false,
-        lineOptions: {
-            styles: [{ color: 'red', opacity: 0.8, weight: 5, dashArray: '10, 10' }] 
-        },
-        createMarker: function() { return null; }
-    }).addTo(map);
+            map = L.map('map', { 
+                zoomControl: false,
+                minZoom: 17,                 
+                maxZoom: 19,
+                maxBounds: mmuBounds,        
+                maxBoundsViscosity: 1.0      
+            }).setView([2.9276, 101.6418], 18);
 
-    // 3. Setup Route Found Logic
-    routingControl.on('routesfound', function(e) {
-        const routes = e.routes;
-        const summary = routes[0].summary;
-        const distanceText = summary.totalDistance > 1000 
-            ? (summary.totalDistance / 1000).toFixed(2) + "km" 
-            : Math.round(summary.totalDistance) + "m";
-        const timeMin = Math.round(summary.totalTime / 60);
-
-        const searchInput = document.querySelector('.search-bar');
-        if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
-    });
-
-    // 4. Map Click for Destination
-    map.on('click', function(e) {
-        if (targetPin) {
-            targetPin.setLatLng(e.latlng);
-        } else {
-            targetPin = L.marker(e.latlng, {draggable: true}).addTo(map);
-            targetPin.bindPopup("Destination").openPopup();
-            targetPin.on('drag', updateNavigationStatus);
-        }
-        updateNavigationStatus();
-    });
-
-    // 5. LIVE LOCATION LOGIC (Restore this part)
-    map.on('locationfound', (e) => {
-        const latlng = e.latlng;
-        if (!userMarker) {
-            userMarker = L.circleMarker(latlng, {
-                radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© Hazyq'
             }).addTo(map);
-        } else {
-            userMarker.setLatLng(latlng);
-        }
-        updateNavigationStatus();
-    });
 
-    map.on('locationerror', (e) => {
-        alert("Location access denied. Please ensure you are using HTTPS and allow permissions.");
-    });
+            // Initialize the locked layer group for finished custom routes
+            savedRoutesLayer = L.featureGroup().addTo(map);
+
+            // Manual Path Vector Layer Initialization
+            drawingPolyline = L.polyline([], {
+                color: '#28a745', 
+                weight: 4,
+                dashArray: '5, 5'
+            }).addTo(map);
+
+            // Base routing instance fallback anchor definition
+            const defaultOsrmRouter = L.Routing.osrmv1({
+                serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+                profile: 'foot',
+                useHints: false
+            });
+
+            // Live Walk Engine Initialization Setup with Wrapper Logic
+            routingControl = L.Routing.control({
+                waypoints: [],
+                show: false,
+                addWaypoints: false,
+                lineOptions: {
+                    styles: [{ color: 'red', opacity: 0.8, weight: 5, dashArray: '10, 10' }] 
+                },
+                createMarker: function() { return null; },
+                
+                router: {
+    route: function(waypoints, callback, context) {
+        let startPoint = waypoints[0].latlng;
+        let endPoint = waypoints[waypoints.length - 1].latlng;
+        
+        let matchedRoute = null;
+        let invertPath = false;
+
+        // 1. Check if the user's destination is near your custom campus shortcuts
+        for (let route of savedRoutesData) {
+            let pathPoints = route.points;
+            let pathStart = L.latLng(pathPoints[0]);
+            let pathEnd = L.latLng(pathPoints[pathPoints.length - 1]);
+
+            // Is the destination near the end or the start of this shortcut?
+            if (endPoint.distanceTo(pathEnd) < 150) {
+                matchedRoute = route;
+                invertPath = false; // User is walking from shortcut start -> end
+                break;
+            } else if (endPoint.distanceTo(pathStart) < 150) {
+                matchedRoute = route;
+                invertPath = true;  // User is walking from shortcut end -> start
+                break;
+            }
+        }
+
+        // 2. STITCHING ENGINE: If a shortcut matches, clear the perimeter detour detour
+        if (matchedRoute) {
+            let shortcutPoints = matchedRoute.points.map(p => L.latLng(p));
+            if (invertPath) shortcutPoints.reverse();
+
+            let shortcutEntrance = shortcutPoints[0];
+
+            // Route from far-away starting point to the internal walkway entrance gate
+            defaultOsrmRouter.route([L.routing.waypoint(startPoint), L.routing.waypoint(shortcutEntrance)], function(err, results) {
+                if (!err && results && results[0]) {
+                    // Stitch OSRM street coordinates directly with your custom walkway array
+                    let osrmCoords = results[0].coordinates;
+                    results[0].coordinates = osrmCoords.concat(shortcutPoints);
+                    
+                    // Update metadata summary so the time/distance estimates stay relatively accurate
+                    results[0].summary.totalDistance += endPoint.distanceTo(shortcutEntrance);
+                    
+                    // Return stitched route canvas back to Leaflet Map UI
+                    callback.call(context, null, results);
+                } else {
+                    // Fallback to default if the entrance calculation hits a snag
+                    defaultOsrmRouter.route(waypoints, callback, context);
+                }
+            }, context);
+            return; // Exit to prevent running the default router concurrently
+        }
+
+        // 3. Absolute fallback for routes nowhere near campus shortcut nodes
+        defaultOsrmRouter.route(waypoints, callback, context);
+    }
 }
+            }).addTo(map);
+
+            // UI Metric Sync Logic Integration
+            routingControl.on('routesfound', function(e) {
+                const summary = e.routes[0].summary;
+                const distanceText = summary.totalDistance > 1000 
+                    ? (summary.totalDistance / 1000).toFixed(2) + "km" 
+                    : Math.round(summary.totalDistance) + "m";
+                const timeMin = Math.round(summary.totalTime / 60);
+
+                const searchInput = document.querySelector('.search-bar');
+                if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
+
+                if (targetPin) {
+                    targetPin.setPopupContent(`<b>Destination</b><br>${distanceText}<br><small>${timeMin} min walk</small>`).openPopup();
+                }
+
+                const botMsg = document.querySelector('.bot-msg');
+                if (botMsg) {
+                    if (summary.totalDistance < 15) {
+                        botMsg.innerText = "You have arrived!";
+                        botMsg.style.color = "#28a745";
+                    } else {
+                        botMsg.innerText = "Following route: " + Math.round(summary.totalDistance) + "m left.";
+                        botMsg.style.color = "#000";
+                    }
+                }
+            });
+
+            // Map Context Click Handler Matrix Split
+            map.on('click', function(e) {
+                if (isEditMode) {
+                    // Manual Route Trace Path Editing Action Routine
+                    manualRoutePoints.push(e.latlng);
+                    drawingPolyline.setLatLngs(manualRoutePoints);
+                    
+                    let jointMarker = L.circleMarker(e.latlng, {
+                        radius: 4,
+                        fillColor: '#28a745',
+                        color: '#fff',
+                        weight: 1,
+                        fillOpacity: 1
+                    }).addTo(map);
+                    
+                    manualMarkers.push(jointMarker);
+                    console.log("Current Path Coordinates:", JSON.stringify(manualRoutePoints));
+                } else {
+                    // Standard Application Core Mode Location Target Selection Request
+                    setDestination(e.latlng);
+                }
+            });
+
+            // Realtime Device Location Found Feedback Handler
+            map.on('locationfound', (e) => {
+                const latlng = e.latlng;
+                if (!userMarker) {
+                    userMarker = L.circleMarker(latlng, { radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, fillOpacity: 0.8 }).addTo(map);
+                } else {
+                    userMarker.setLatLng(latlng);
+                }
+                updateNavigationStatus();
+            });
+
+            map.on('locationerror', function(e) {
+                alert("Location access failed: " + e.message);
+                console.error(e);
+            });
+        }
+
+        function setDestination(latlng, title = "Destination") {
+            if (targetPin) {
+                targetPin.setLatLng(latlng);
+            } else {
+                targetPin = L.marker(latlng, {draggable: true}).addTo(map);
+                targetPin.on('dragend', updateNavigationStatus);
+            }
+            targetPin.bindPopup(`<b>${title}</b><br>Calculating...`).openPopup();
+            updateNavigationStatus();
+        }
 
         function updateNavigationStatus() {
             if (userMarker && targetPin) {
-                const start = userMarker.getLatLng();
-                const end = targetPin.getLatLng();
-
-                routingControl.setWaypoints([
-                    L.latLng(start.lat, start.lng),
-                    L.latLng(end.lat, end.lng)
-                ]);
+                routingControl.setWaypoints([L.latLng(userMarker.getLatLng()), L.latLng(targetPin.getLatLng())]);
             }
         }
 
@@ -195,11 +358,56 @@
             map.locate({setView: true, maxZoom: 18, watch: true}); 
         }
 
-        /* --- UI & CRUD Logic --- */
+        /* --- ROUTE DRAWING ENGINE CORE FUNCTIONS --- */
+        function saveManualRoute() {
+            if (manualRoutePoints.length < 2) {
+                alert("Please tap out at least 2 connected points on the map first!");
+                return;
+            }
+
+            let pathName = prompt("Assign a name/label to this custom route:", "Custom Corridor " + (savedRoutesLayer.getLayers().length + 1));
+            if (!pathName) return;
+
+            // Save coordinate array deep copies to calculations cache
+            savedRoutesData.push([...manualRoutePoints]);
+
+            // Updated options to match the automatic routing line style
+            let permanentLine = L.polyline(manualRoutePoints, {
+                color: 'red',          
+                weight: 5,             
+                opacity: 0.8,          
+                dashArray: '10, 10'    
+            }).addTo(savedRoutesLayer);
+
+            permanentLine.bindPopup(`<b>${pathName}</b><br><small>Custom Admin Path Route</small>`);
+    
+            // Console display format to safely map to Flask database records
+            console.log(`Saved Route Profile JSON (${pathName}):`, JSON.stringify(permanentLine.toGeoJSON()));
+
+            // Instantly clear the canvas drawing deck for next pathing iteration
+            clearManualRoute();
+        }
+
+        function clearManualRoute() {
+            manualRoutePoints = [];
+            if (drawingPolyline) drawingPolyline.setLatLngs([]);
+            manualMarkers.forEach(m => map.removeLayer(m));
+            manualMarkers = [];
+        }
+
+        /* --- UI RENDER & VIEWPORT MANAGER LOGIC --- */
         function toggleEditMode() {
             isEditMode = !isEditMode;
-            const btn = document.getElementById('settingBtn');
-            isEditMode ? btn.classList.add('setting-on') : btn.classList.remove('setting-on');
+            document.getElementById('settingBtn').classList.toggle('setting-on', isEditMode);
+            
+            // Display or hide the floating route drawing dashboard frame
+            document.getElementById('adminRouteControls').style.display = isEditMode ? 'block' : 'none';
+            
+            // Clean active drawing trace caches on session closing toggles
+            if (!isEditMode) {
+                clearManualRoute();
+            }
+            
             refreshScreen();
         }
 
@@ -213,8 +421,8 @@
             }
         }
 
-        function toggleSidebar() {
-            document.getElementById("mySidebar").classList.toggle("active");
+        function toggleSidebar() { 
+            document.getElementById("mySidebar").classList.toggle("active"); 
             if (!document.getElementById("mySidebar").classList.contains("active")) {
                 document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             }
@@ -237,7 +445,31 @@
             if (isEditMode) renderAdminTemplateList();
         }
 
+        /* --- FLOOR PLAN OVERLAY CONTROL INTERFACE --- */
+        function handleFloorPlanView(fac, lvl) {
+            removeFloorOverlays();
+
+            if (fac === 'FCI' && lvl === 'Level 2') {
+                activeFloorOverlay = L.imageOverlay(fcmImageURL, fcmBounds, {
+                    opacity: 0.95,
+                    interactive: true
+                }).addTo(map);
+
+                map.fitBounds(fcmBounds);
+            }
+        }
+
+        function removeFloorOverlays() {
+            if (activeFloorOverlay) {
+                map.removeLayer(activeFloorOverlay);
+                activeFloorOverlay = null;
+            }
+        }
+
+        /* --- APP ARCHITECTURE PROGRAMMATIC DATA MANAGEMENT (CRUD) --- */
         function loadMainCategories() {
+            removeFloorOverlays(); 
+
             currentCategory = ''; currentFaculty = ''; currentLevel = '';
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').style.display = 'none';
@@ -248,9 +480,9 @@
                 body.innerHTML += `<button class="category-btn-wide" onclick="showSubCategory('${cat}')">${cat}</button>`;
             });
         }
-
+        
         function showSubCategory(category) {
-            currentCategory = category; currentFaculty = ''; currentLevel = '';
+            currentCategory = category;
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerText = category;
             document.getElementById('topHeaderBox').style.display = 'block';
@@ -258,41 +490,71 @@
             document.getElementById('backBtn').style.display = 'block';
             document.getElementById('backBtn').onclick = loadMainCategories;
             body.innerHTML = '';
+            
             const listContainer = document.createElement('div');
             listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+            
             const items = (category === 'Faculty') ? Object.keys(campusData[category]) : campusData[category];
+
             items.forEach((item, index) => {
                 const container = document.createElement('div');
                 container.className = 'item-container';
                 const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
-                container.innerHTML = `<div class="${btnClass}">${item}</div>`;
-                if (category === 'Faculty') container.onclick = () => showFacultyLevels(item);
+                
+                const itemName = (typeof item === 'object') ? item.name : item;
+                container.innerHTML = `<div class="${btnClass}">${itemName}</div>`;
+                
+                if (category === 'Faculty') {
+                    container.onclick = () => showFacultyLevels(itemName);
+                } else if (typeof item === 'object' && item.latlng) {
+                    container.onclick = () => {
+                        if (!userMarker) { locateUser(); }
+                        setDestination(item.latlng, itemName);
+                        map.setView(item.latlng, 18);
+                    };
+                }
+
                 if (isEditMode) {
                     const del = document.createElement('button');
                     del.className = 'delete-badge'; del.innerText = 'X';
-                    del.onclick = (e) => {
-                        e.stopPropagation();
-                        if (category === 'Faculty') delete campusData['Faculty'][item];
-                        else campusData[category].splice(index, 1);
-                        showSubCategory(category);
+                    del.onclick = (e) => { 
+                        e.stopPropagation(); 
+                        if (category === 'Faculty') delete campusData['Faculty'][itemName]; 
+                        else campusData[category].splice(index, 1); 
+                        showSubCategory(category); 
                     };
                     container.appendChild(del);
                 }
                 listContainer.appendChild(container);
             });
             body.appendChild(listContainer);
+            
             if (isEditMode) renderAddButton(body, () => {
                 const val = prompt(`New ${category}:`);
-                if (val) { if(category==='Faculty') campusData['Faculty'][val]={}; else campusData[category].push(val); showSubCategory(category); }
+                if (val) { 
+                    if(category==='Faculty') {
+                        campusData['Faculty'][val]={}; 
+                    } else {
+                        const lat = prompt("Enter Latitude (Optional):");
+                        const lng = prompt("Enter Longitude (Optional):");
+                        if(lat && lng) {
+                            campusData[category].push({ name: val, latlng: [parseFloat(lat), parseFloat(lng)] });
+                        } else {
+                            campusData[category].push({ name: val });
+                        }
+                    } 
+                    showSubCategory(category); 
+                }
             });
         }
 
         function showFacultyLevels(fac) {
-            currentFaculty = fac; currentLevel = '';
+            currentFaculty = fac;
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerText = fac;
             document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
             body.innerHTML = '';
+            
             const list = document.createElement('div');
             list.className = 'wide-list-container';
             Object.keys(campusData['Faculty'][fac]).forEach(lvl => {
@@ -300,6 +562,7 @@
                 container.className = 'item-container';
                 container.onclick = () => showClasses(fac, lvl);
                 container.innerHTML = `<div class="category-btn-wide">${lvl}</div>`;
+                
                 if (isEditMode) {
                     const del = document.createElement('button'); del.className = 'delete-badge'; del.innerText = 'X';
                     del.onclick = (e) => { e.stopPropagation(); delete campusData['Faculty'][fac][lvl]; showFacultyLevels(fac); };
@@ -308,6 +571,7 @@
                 list.appendChild(container);
             });
             body.appendChild(list);
+            
             if (isEditMode) renderAddButton(body, () => {
                 const val = prompt(`New Level for ${fac}:`);
                 if(val) { campusData['Faculty'][fac][val]=[]; showFacultyLevels(fac); }
@@ -318,25 +582,61 @@
             currentLevel = lvl;
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerHTML = `${fac}<br><br>${lvl}`;
-            document.getElementById('backBtn').onclick = () => showFacultyLevels(fac);
+            
+            document.getElementById('backBtn').onclick = () => {
+                removeFloorOverlays();
+                showFacultyLevels(fac);
+            };
+            
+            // Automatic Blueprint Visualization Hook
+            handleFloorPlanView(fac, lvl);
+
             body.innerHTML = '<p style="text-align:center; margin-bottom:10px;">List of classes</p>';
             const grid = document.createElement('div');
             grid.className = 'grid-container-2col';
+            
             campusData['Faculty'][fac][lvl].forEach((cls, i) => {
                 const container = document.createElement('div');
                 container.className = 'item-container';
-                container.innerHTML = `<div class="class-grid-btn">${cls}</div>`;
+                
+                const className = cls.name || cls;
+                container.innerHTML = `<div class="class-grid-btn">${className}</div>`;
+                
+                if (typeof cls === 'object' && cls.latlng) {
+                    container.onclick = () => {
+                        if (!userMarker) { locateUser(); }
+                        setDestination(cls.latlng, className);
+                        map.setView(cls.latlng, 19);
+                    };
+                }
+
                 if (isEditMode) {
-                    const del = document.createElement('button'); del.className = 'delete-badge'; del.innerText = 'X';
-                    del.onclick = (e) => { e.stopPropagation(); campusData['Faculty'][fac][lvl].splice(i, 1); showClasses(fac, lvl); };
+                    const del = document.createElement('button'); 
+                    del.className = 'delete-badge'; 
+                    del.innerText = 'X';
+                    del.onclick = (e) => { 
+                        e.stopPropagation(); 
+                        campusData['Faculty'][fac][lvl].splice(i, 1); 
+                        showClasses(fac, lvl); 
+                    };
                     container.appendChild(del);
                 }
                 grid.appendChild(container);
             });
             body.appendChild(grid);
+            
             if (isEditMode) renderAddButton(body, () => {
                 const val = prompt(`New Class for ${lvl}:`);
-                if(val) { campusData['Faculty'][fac][lvl].push(val); showClasses(fac, lvl); }
+                if (val) { 
+                    const lat = prompt("Enter Latitude (Optional):");
+                    const lng = prompt("Enter Longitude (Optional):");
+                    if (lat && lng) {
+                        campusData['Faculty'][fac][lvl].push({ name: val, latlng: [parseFloat(lat), parseFloat(lng)] });
+                    } else {
+                        campusData['Faculty'][fac][lvl].push({ name: val });
+                    }
+                    showClasses(fac, lvl); 
+                }
             });
         }
 
@@ -345,19 +645,27 @@
             b.onclick = onClick; parent.appendChild(b);
         }
 
+        /* --- BOT CHAT INTERACTION LOGIC --- */
         function addChatTemplate() {
             const val = document.getElementById('templateInput').value;
             if(val) { chatTemplates.push(val); document.getElementById('templateInput').value = ''; renderAdminTemplateList(); renderTemplatePreview(); }
         }
         function deleteChatTemplate(i) { chatTemplates.splice(i, 1); renderAdminTemplateList(); renderTemplatePreview(); }
+        function removeChatTemplates() { chatTemplates = []; renderAdminTemplateList(); renderTemplatePreview(); }
         function renderTemplatePreview() {
             const c = document.getElementById('templateDisplay'); c.innerHTML = '';
             chatTemplates.forEach(t => c.innerHTML += `<button class="chat-pill">${t}</button>`);
         }
         function renderAdminTemplateList() {
             const c = document.getElementById('adminTemplateList'); c.innerHTML = '';
-            chatTemplates.forEach((t, i) => c.innerHTML += `<div class="admin-template-row"><span>${t}</span><button onclick="deleteChatTemplate(${i})">X</button></div>`);
+            chatTemplates.forEach((t, i) => { c.innerHTML += `<div class="admin-template-row"><span>${t}</span><button onclick="deleteChatTemplate(${i})">X</button></div>`; });
+        }
+
+        /* --- AUTH / NAVIGATION ROUTE EXIT SWITCH --- */
+        function confirmSwitch() {
+            if (confirm("Are you sure you want to log out and go to Public View?")) {
+                window.location.href = "{{ url_for('index') }}"; 
+            }
         }
     </script>
 </body>
-</html>

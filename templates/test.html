@@ -3,27 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MMU Navigator - Public User</title>
-    
+    <title>MMU Navigator - User Version</title>
     
     <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
-    
-    <!-- Leaflet Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    
+    <script src="https://unpkg.com/geojson-path-finder@1.5.0/dist/geojson-path-finder.min.js"></script>
+
+    <style>
+        .typing-dots {
+            font-style: italic;
+            opacity: 0.7;
+        }
+    </style>
 </head>
 <body onload="initApp()">
 
-    <!-- Menu Toggle -->
+    <div id="introPopup" class="intro-overlay">
+        <div class="intro-modal">
+            <h1>🎓 Welcome to MMU Navigator</h1>
+            <p>Your complete campus navigation assistant!</p>
+            <ul>
+                <li>📍 Find any building, faculty, or facility</li>
+                <li>🗺️ Real-time map with GPS tracking</li>
+                <li>🤖 AI chatbot to answer your questions</li>
+                <li>📚 Browse categories for quick access</li>
+            </ul>
+            <button class="continue-btn" onclick="closeIntro()">Continue to Map →</button>
+        </div>
+    </div>
+
     <button class="menu-toggle-btn" onclick="toggleSidebar()">
-        <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
+         <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
     </button>
 
-    <!-- Top Right Controls -->
     <div class="top-right-container">
-        <a href="guide.html" class="control-btn">
+        <a href="{{ url_for('guide') }}" class="control-btn">
             <img src="{{ url_for('static', filename='question.png') }}" class="icon-img">
         </a>
         <button id="gpsBtn" class="control-btn" onclick="locateUser()">
@@ -31,7 +52,6 @@
         </button>
     </div>
 
-    <!-- Sidebar Menu -->
     <div class="sidebar" id="mySidebar">
         <button class="nav-btn" onclick="toggleSidebar()" style="background: #f0f0f0;">
             <img src="{{ url_for('static', filename='menu.png') }}" class="icon-img">
@@ -42,31 +62,27 @@
         <button class="nav-btn" onclick="openHomeMenu()">
             <img src="{{ url_for('static', filename='home.png') }}" class="icon-img">
         </button>
-        
-         <div style="margin-top: auto;">
-            <a href="{{ url_for('login') }}" class="nav-btn" style="border-radius: 50%; overflow: hidden; display: flex; justify-content: center; align-items: center; background: none; border: none;">
-             <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img" style="width: 100%; height: 100%; object-fit: cover;">
+        <div style="margin-top: auto;">
+            <a href="{{ url_for('login') }}" class="nav-btn" style="border-radius: 50%; overflow: hidden;">
+                <img src="{{ url_for('static', filename='admin.png') }}" class="profile-img">
             </a>
-         </div>
         </div>
     </div>
 
-    <!-- Home Menu (Folders) -->
     <div class="sub-sidebar" id="homeSidebar">
         <div id="topHeaderBox" class="header-box" style="display: none;"></div>
         <h1 id="subHeaderTitle">Categories</h1> 
-        <div id="categoryBody" class="category-body-content" style="width: 100%;"></div>
+        <div id="categoryBody" class="category-body-content"></div>
         <button id="backBtn" class="back-link" onclick="loadMainCategories()" style="display:none;">← Back</button>
     </div>
 
-    <!-- Chat Menu -->
     <div class="sub-sidebar" id="chatSidebar">
         <h1>AI Chat box</h1>
         <div class="chat-messages-container" id="chatMessages">
             <div class="bot-msg">Hello! How can I help you navigate MMU today?</div>
             <div class="template-preview-area">
                 <button class="chat-pill" onclick="fillChat('Where is the Library?')">Where is the Library?</button>
-                <button class="chat-pill" onclick="fillChat('How to go to FCI?')">How to go to FCI?</button>
+                 <button class="chat-pill" onclick="fillChat('How to go to FCI?')">How to go to FCI?</button>
             </div>
         </div>
         <div class="chat-input-wrapper">
@@ -74,7 +90,6 @@
         </div>
     </div>
 
-    <!-- Search Bar -->
     <div class="search-container">
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
@@ -82,139 +97,479 @@
     <div id="map"></div>
 
     <script>
-        let map;
-        let userMarker = null;
-        let targetPin = null; 
-        let routingControl = null;
+       /* --- CORE DATA & MAP VARIABLES --- */
+        let map, userMarker = null, targetPin = null, routingControl = null;
+        let currentImageOverlay = null; 
+        let fixedRoutePolyline = null; 
+        let drawnItems = null;
 
-        // Data for MMU Navigator
+        // NEW: Indoor Routing Instances
+        let indoorNetworkData = null;
+        let indoorPathFinder = null;
+        let indoorRoutePolyline = null;
+        let currentActiveFloor = null;
+
+        /* --- MAP IMAGES BLUEPRINT SETTINGS --- */
+        const facultyImages = {
+            'FCI': {
+                'bounds': [[2.929194, 101.640532], [2.928089, 101.641683]],  
+                'Level G': "{{ url_for('static', filename='FCIG.png') }}",    
+                'Level 1': "{{ url_for('static', filename='FCI1.png') }}",
+                'Level 2': "{{ url_for('static', filename='FCI2.png') }}",
+                'Level 3': "{{ url_for('static', filename='FCI3.png') }}",
+                'Level 4': "{{ url_for('static', filename='FCI4.png') }}"
+            },
+            'FCM': {
+                'bounds': [[2.926944, 101.642115], [2.925587, 101.643407]],
+                'Level LG': "{{ url_for('static', filename='FCMLG.png') }}",
+                'Level G': "{{ url_for('static', filename='FCMG.png') }}",
+                'Level 1': "{{ url_for('static', filename='fcm_level1.png') }}",
+                'Level 2': "{{ url_for('static', filename='fcm_level2.png') }}"
+            },
+            'FOM': {
+                'bounds': [[2.930186, 101.642019], [2.928824, 101.640582]],
+                'Level G': "{{ url_for('static', filename='FOMG.png') }}",
+                'Level 1': "{{ url_for('static', filename='FOM1.png') }}",
+                'Level 2': "{{ url_for('static', filename='FOM2.png') }}",
+                'Level 3': "{{ url_for('static', filename='FOM3.png') }}"
+            },
+            'FAIE': {
+                'bounds': [[2.926894, 101.640848], [2.925734, 101.641856]],
+                'Level LG': "{{ url_for('static', filename='FAIELG.png') }}",
+                'Level G': "{{ url_for('static', filename='faie_level1.png') }}",
+                'Level 1': "{{ url_for('static', filename='faie_level2.png') }}",
+                'Level 2': "{{ url_for('static', filename='faie_level3.png') }}"
+            }
+        };
+
+        /* --- DATA DIRECTORY MODELS --- */
         const campusData = {
-            'Facility': ['Library', 'Surau', 'Gym', 'Cafe', 'Bank', 'Clinic', 'Lab', 'Store'],
-            'Hall': ['Dewan Tun Canselor', 'Exam Hall', 'MPH', 'Grand Hall'],
+            'Facility': [
+                { name: 'Library', latlng: [2.927514, 101.641695] }, 
+                { name: 'Surau', latlng: [2.924351, 101.642975] }, 
+                { name: 'Gym', latlng: [2.927183, 101.643105] }, 
+                { name: 'Cafe', latlng: [2.925300, 101.642555] },
+                { name: 'ATM', latlng: [2.928002, 101.643156] },
+                { name: 'Starbees', latlng: [2.927888, 101.643107] },
+                { name: 'Lab', latlng: [2.928640, 101.641120] },
+                { name: '7 Elevel', latlng: [2.927531, 101.643027] }
+            ],
+            'Hall': [
+                { name: 'Dewan Tun Canselor', latlng: [2.92842, 101.64215] },
+                { name: 'Exam Hall', latlng: [2.928420, 101.642150] },
+                { name: 'MPH', latlng: [2.927640, 101.642550] },
+                { name: 'Grand Hall', latlng: [2.926100, 101.642200] }
+            ],
             'Faculty': {
                 'FCI': {
-                    'Level 1': ['CR 101', 'CR 102', 'Lab 1', 'Lab 2'],
-                    'Level 2': ['CR 201', 'CR 202', 'Meeting Room'],
-                    'Level 3': ['CR 301', 'Staff Room'],
-                    'Level 4': ['CR 401', 'CR 402']
+                    'Level G': [
+                        { name: 'CQAR0006', latlng: [2.928557, 101.641282] },
+                        { name: 'CQAR0005', latlng: [2.928652, 101.641172] },
+                        { name: 'CQAR0004', latlng: [2.928743, 101.641075] },
+                        { name: 'CQAR0003', latlng: [2.928897, 101.640911] },
+                        { name: 'CQAR0002', latlng: [2.929024, 101.640821] },
+                        { name: 'FCI Student Lounge', latlng: [2.929050, 101.640711] }
+                    ],
+                    'Level 1': [
+                        { name: 'CQAR1007', latlng: [2.928549, 101.641302] },
+                        { name: 'CQAR1006', latlng: [2.928581, 101.641238] },
+                        { name: 'CQAR1005', latlng: [2.928646, 101.641152] },
+                        { name: 'CQAR1004', latlng: [2.928754, 101.641156] },
+                        { name: 'CQAR1003', latlng: [2.928896, 101.640915] },
+                        { name: 'CQAR1002', latlng: [2.928932, 101.640827] },
+                        { name: 'INNOV8 LAB', latlng: [2.928964, 101.640779] },
+                        { name: 'CQAR1001', latlng: [2.929011, 101.640703] }
+                    ],
+                    'Level 2': [
+                        { name: 'CQAR2007', latlng: [2.928583, 101.641261] },
+                        { name: 'CQAR2006', latlng: [2.928642, 101.641175] },
+                        { name: 'CQAR2005', latlng: [2.928733, 101.641082] },
+                        { name: 'CQAR2004', latlng: [2.928872, 101.640912] },
+                        { name: 'CQAR2003', latlng: [2.928962, 101.640806] },
+                        { name: 'CQAR2002', latlng: [2.929055, 101.640716] },
+                        { name: 'CQCR2004', latlng: [2.928765, 101.641546] },
+                        { name: 'CQCR2003', latlng: [2.928699, 101.641525] },
+                        { name: 'CQCR2002', latlng: [2.928615, 101.641537] },
+                        { name: 'CQCR2001', latlng: [2.928521, 101.641534] }
+                    ],
+                    'Level 3': [
+                        { name: 'CQAR3007', latlng: [2.928583, 101.641261] },
+                        { name: 'CQAR3006', latlng: [2.928642, 101.641175] },
+                        { name: 'CQAR3005', latlng: [2.928733, 101.641082] },
+                        { name: 'CQAR3004', latlng: [2.928872, 101.640912] },
+                        { name: 'CQAR3003', latlng: [2.928962, 101.640806] },
+                        { name: 'CQAR3002', latlng: [2.929055, 101.640716] }, 
+                        { name: 'CQCR3004', latlng: [2.928765, 101.641546] },
+                        { name: 'CQCR3003', latlng: [2.928699, 101.641525] },
+                        { name: 'CQCR3002', latlng: [2.928615, 101.641537] },
+                        { name: 'CQCR3001', latlng: [2.928521, 101.641534] }
+                    ],
+                    'Level 4': [
+                        { name: 'CQAR4007', latlng: [2.928579, 101.641277] },
+                        { name: 'CQAR4006', latlng: [2.928648, 101.641175] },
+                        { name: 'CQAR4005', latlng: [2.928648, 101.641175] },
+                        { name: 'CQAR4004', latlng: [2.928892, 101.640913] },
+                        { name: 'CQAR4003', latlng: [2.929021, 101.640814] },
+                        { name: 'AINSQAI LAB', latlng: [2.929051, 101.640712] }
+                    ]
                 },
                 'FCM': {
-                    'Level 1': ['Lab A', 'Lab B'],
-                    'Level 2': ['CR 1', 'CR 2']
+                    'Level LG': [
+                        { name: 'CJAR0006', latlng: [2.9262, 101.6427] },
+                        { name: 'CJAR0005', latlng: [2.9262, 101.64275] },
+                        { name: 'CJAR0004', latlng: [2.92615, 101.6428] },
+                        { name: 'CJAR0003', latlng: [2.9261, 101.64285] },
+                        { name: 'CJAR0002', latlng: [2.92605, 101.6429] },
+                        { name: 'CJAR0001', latlng: [2.9260, 101.64295] }
+                    ],
+                    'Level G': [
+                        { name: 'CJAR1007', latlng: [2.9263, 101.64265] },
+                        { name: 'CJAR1006', latlng: [2.92625, 101.6427] },
+                        { name: 'CJAR1005', latlng: [2.9262, 101.64275] },
+                        { name: 'CJAR1004', latlng: [2.92615, 101.6428] },
+                        { name: 'CJAR1003', latlng: [2.9261, 101.64285] },
+                        { name: 'CJAR1002', latlng: [2.92605, 101.6429] },
+                        { name: 'CJAR1001', latlng: [2.9260, 101.64295] }
+                    ],
+                    'Level 1': [
+                        { name: 'CJAR2006', latlng: [2.92625, 101.6427] },
+                        { name: 'CJAR2005', latlng: [2.9262, 101.64275] },
+                        { name: 'CJAR2004', latlng: [2.92615, 101.6428] },
+                        { name: 'CJAR2003', latlng: [2.9261, 101.64285] },
+                        { name: 'CJAR2002', latlng: [2.92605, 101.6429] },
+                        { name: 'CJAR2001', latlng: [2.9260, 101.64295] }
+                    ],
+                    'Level 2': [
+                        { name: 'CJAR3007', latlng: [2.9263, 101.64265] },
+                        { name: 'CJAR3006', latlng: [2.92625, 101.6427] },
+                        { name: 'CJAR3005', latlng: [2.9262, 101.64275] },
+                        { name: 'CJAR3004', latlng: [2.92615, 101.6428] },
+                        { name: 'CJAR3003', latlng: [2.9261, 101.64285] },
+                        { name: 'CJAR3001', latlng: [2.9260, 101.64295] }
+                    ]
+                },
+                'FOM': {
+                    'Level G': [
+                        { name: 'CLCR0006', latlng: [2.9295, 101.6410] },
+                        { name: 'CLCR0005', latlng: [2.92945, 101.64105] },
+                        { name: 'CLCR0004', latlng: [2.9294, 101.6411] },
+                        { name: 'CLCR0003', latlng: [2.92935, 101.64115] },
+                        { name: 'CLCR0002', latlng: [2.9293, 101.6412] }
+                    ],
+                    'Level 1': [
+                        { name: 'CLCR1007', latlng: [2.92955, 101.64095] },
+                        { name: 'CLCR1006', latlng: [2.9295, 101.6410] },
+                        { name: 'CLCR1005', latlng: [2.92945, 101.64105] },
+                        { name: 'CLCR1004', latlng: [2.9294, 101.6411] },
+                        { name: 'CLCR1003', latlng: [2.92935, 101.64115] },
+                        { name: 'CLCR1002', latlng: [2.9293, 101.6412] }
+                    ],
+                    'Level 2': [
+                        { name: 'CLCR2006', latlng: [2.9295, 101.6410] },
+                        { name: 'CLCR2005', latlng: [2.92945, 101.64105] },
+                        { name: 'CLCR2004', latlng: [2.9294, 101.6411] },
+                        { name: 'CLCR2003', latlng: [2.92935, 101.64115] },
+                        { name: 'CLCR2002', latlng: [2.9293, 101.6412] }
+                    ],
+                    'Level 3': [
+                        { name: 'CLCR3007', latlng: [2.92955, 101.64095] },
+                        { name: 'CLCR3006', latlng: [2.9295, 101.6410] },
+                        { name: 'CLCR3005', latlng: [2.92945, 101.64105] },
+                        { name: 'CLCR3004', latlng: [2.9294, 101.6411] },
+                        { name: 'CLCR3003', latlng: [2.92935, 101.64115] },
+                        { name: 'CLCR3002', latlng: [2.9293, 101.6412] }
+                    ]
                 },
                 'FAIE': {
-                    'Level 1': ['Lab A', 'Lab B'],
-                    'Level 2': ['CR 1', 'CR 2']
-                },
-                'FCA': {
-                    'Level 1': ['Lab A', 'Lab B'],
-                    'Level 2': ['CR 1', 'CR 2']
+                    'Level LG': ['CLCR0006', 'CLCR0005', 'CLCR0004', 'CLCR0003', 'CLCR0002'],
+                    'Level G': ['CLCR1007', 'CLCR1006', 'CLCR1005', 'CLCR1004', 'CLCR1003', 'CLCR1002'],
+                    'Level 1': ['CLCR2006', 'CLCR2005', 'CLCR2004', 'CLCR2003', 'CLCR2002'],
+                    'Level 2': ['CLCR3007', 'CLCR3006', 'CLCR3005', 'CLCR3004', 'CLCR3003', 'CLCR3002']
                 }
             }
         };
 
         function initApp() {
-            initMap();
-            loadMainCategories();
+            console.log("App initializing...");
+            initMap(); 
+            checkIntro();
+
+            // NEW: Load your exported indoor GeoJSON grid layout safely
+            fetch("{{ url_for('static', filename='fci-network.geojson') }}")
+                .then(response => response.json())
+                .then(data => {
+                    indoorNetworkData = data;
+                    console.log("Indoor grid network blueprint ready.");
+                }).catch(err => console.warn("Indoor network data could not find fci-network.geojson yet.", err));
+
+            // Attach the listener ONLY after the page is ready
+            const inputField = document.getElementById('userInput');
+            if (inputField) {
+                inputField.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        console.log("Enter key detected!"); 
+                        handleUserInput();
+                    }
+                });
+                console.log("Enter key listener attached successfully.");
+            } else {
+                console.error("Could not find userInput field!");
+            }
         }
 
-        /* --- GPS & MAP LOGIC --- */
-function initApp() {
-        initMap();
-        loadMainCategories();
-    }
+        /* --- MAP & ROUTING LOGIC --- */
+        function initMap() {
+            const mmuBounds = L.latLngBounds(
+                [2.9220, 101.6370],
+                [2.9320, 101.6480]
+            );
+            map = L.map('map', {
+                zoomControl: false,
+                minZoom: 18,
+                maxZoom: 22,
+                maxBounds: mmuBounds,
+                maxBoundsViscosity: 1.0
+            }).setView([2.9276, 101.6418], 18);
 
-    function initMap() {
-        // Initialize Map
-        map = L.map('map', { zoomControl: false }).setView([2.9276, 101.6418], 18);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 22,
+                maxNativeZoom: 19
+            }).addTo(map);
 
-        // 1. Initialize Routing Control with Walking Profile
-        routingControl = L.Routing.control({
-            waypoints: [],
-            router: L.Routing.osrmv1({
-                serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
-                profile: 'foot',
-                useHints: false
-            }),
-            routeWhileDragging: false,
-            show: false,
-            addWaypoints: false,
-            lineOptions: {
-                styles: [{ color: 'red', opacity: 0.7, weight: 5, dashArray: '10, 10' }] 
-            },
-            createMarker: function() { return null; }
-        }).addTo(map);
+            // Routing Setup
+            routingControl = L.Routing.control({
+                waypoints: [],
+                router: L.Routing.osrmv1({
+                    serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+                    profile: 'foot'
+                }),
+                show: false,
+                createMarker: function() { return null; },
+                lineOptions: {
+                    styles: [{ color: 'red', opacity: 0.7, weight: 5, dashArray: '10, 10' }]
+                }
+            }).addTo(map);
 
-        // 2. LIVE LOCATION LOGIC
-        map.on('locationfound', function(e) {
-            const latlng = e.latlng;
-            if (!userMarker) {
-                userMarker = L.circleMarker(latlng, {
-                    radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
-                }).addTo(map);
+            // Drawing Setup
+            drawnItems = new L.FeatureGroup();
+            map.addLayer(drawnItems);
+
+            const drawControl = new L.Control.Draw({
+                position: 'topleft',
+                draw: {
+                    polyline: { shapeOptions: { color: 'red', weight: 4, opacity: 0.85 } },
+                    polygon: true,
+                    circle: false,
+                    rectangle: false,
+                    marker: true,
+                    circlemarker: false
+                },
+                edit: { featureGroup: drawnItems }
+            });
+            map.addControl(drawControl);
+
+            // GPS Live Location
+            map.locate({ setView: false, watch: true, enableHighAccuracy: true });
+            map.on('locationfound', (e) => {
+                if (!userMarker) {
+                    userMarker = L.circleMarker(e.latlng, {
+                        radius: 10,
+                        fillColor: "#3388ff",
+                        fillOpacity: 1,        
+                        color: "#ffffff",
+                        weight: 3,
+                        opacity: 1
+                    }).addTo(map);
+
+                    map.setView(e.latlng, 19); 
+                } else {
+                    userMarker.setLatLng(e.latlng);
+                }
+                updateNavigationStatus();
+            });
+
+            map.on('locationerror', (e) => {
+                console.error("GPS Error:", e.message);
+            });
+
+            // Click-to-Pin
+            map.on('click', (e) => {
+                if (map.editTools && map.editTools.drawing()) return; 
+                console.log(`📌 Pinned Coordinate: [${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}]`);
+
+                if (targetPin) {
+                    targetPin.setLatLng(e.latlng);
+                } else {
+                    targetPin = L.marker(e.latlng, { draggable: true }).addTo(map);
+                    targetPin.on('dragend', (event) => {
+                        const currentPos = event.target.getLatLng();
+                        console.log(`📍 Shifted Coordinate (Drag End): [${currentPos.lat.toFixed(6)}, ${currentPos.lng.toFixed(6)}]`);
+                        updateNavigationStatus();
+                    });
+                }
+                targetPin.bindPopup("Target Location").openPopup();
+                updateNavigationStatus();
+            });
+
+            map.on(L.Draw.Event.CREATED, function (e) {
+                const layer = e.layer;
+                drawnItems.addLayer(layer);
+                
+                if (e.layerType === 'polyline') {
+                    const coords = layer.getLatLngs().map(latlng => [latlng.lat, latlng.lng]);
+                    console.log("---- COPY THESE COORDINATES FOR YOUR FIX ARRAY ----");
+                    console.log(JSON.stringify(coords));
+                    console.log("--------------------------------------------------");
+                }
+            });
+        }
+
+        // NEW: Function to load and instantiate paths for selected floor segment
+        function switchFloorNetwork(floorName) {
+            if (!indoorNetworkData) return;
+            currentActiveFloor = floorName;
+
+            // Get only line paths for this floor
+            let floorFeatures = indoorNetworkData.features.filter(feature => {
+                return feature.geometry.type === "LineString" && feature.properties.level === floorName;
+            });
+
+            if (floorFeatures.length > 0) {
+                indoorPathFinder = new GeoJSONPathFinder({
+                    type: "FeatureCollection",
+                    features: floorFeatures
+                });
+                console.log(`Engine loaded pathfinding data grids for: ${floorName}`);
             } else {
-                userMarker.setLatLng(latlng);
+                indoorPathFinder = null;
             }
-            
-            // CRITICAL: This line calculates distance the moment your location is found
-            updateNavigationStatus(); 
-        });
+        }
 
-        // 3. PINNING LOGIC
-        map.on('click', function(e) {
+        // UPDATED: Smoothly toggle paths tracking between outdoor OSRM and indoor GeoJSON
+        function updateNavigationStatus() {
+            if (!userMarker || !targetPin) return;
+
+            // Condition checking: Use local custom grid if on active floor mapping
+            if (currentActiveFloor && indoorPathFinder) {
+                // Clear out standard outdoor path tracing lines
+                if (routingControl) routingControl.setWaypoints([]);
+
+                let startPoint = { type: 'Feature', geometry: { type: 'Point', coordinates: [userMarker.getLatLng().lng, userMarker.getLatLng().lat] } };
+                let endPoint = { type: 'Feature', geometry: { type: 'Point', coordinates: [targetPin.getLatLng().lng, targetPin.getLatLng().lat] } };
+
+                let result = indoorPathFinder.findPath(startPoint, endPoint);
+
+                if (indoorRoutePolyline) map.removeLayer(indoorRoutePolyline);
+
+                if (result && result.path) {
+                    let leafletCoords = result.path.map(coord => [coord[1], coord[0]]);
+                    indoorRoutePolyline = L.polyline(leafletCoords, {
+                        color: '#0078ff',
+                        weight: 5,
+                        dashArray: '6, 10',
+                        lineJoin: 'round'
+                    }).addTo(map);
+                } else {
+                    console.log("Indoor target pinpoint is too far from traced lines layer.");
+                }
+            } else {
+                // Clear local indoor routing path layers safely
+                if (indoorRoutePolyline) {
+                    map.removeLayer(indoorRoutePolyline);
+                    indoorRoutePolyline = null;
+                }
+                // Call basic street routing standard fallback execution
+                if (routingControl) {
+                    routingControl.setWaypoints([userMarker.getLatLng(), targetPin.getLatLng()]);
+                }
+            }
+        }
+
+        /* --- NEW: Function to handle dropping pins via sidebar choices --- */
+        function pinLocation(lat, lng, name) {
+            const latlng = L.latLng(lat, lng);
+            console.log(`📌 Directory Selected: ${name} [${lat.toFixed(6)}, ${lng.toFixed(6)}]`);
+
             if (targetPin) {
-                targetPin.setLatLng(e.latlng);
+                targetPin.setLatLng(latlng);
             } else {
-                targetPin = L.marker(e.latlng, { draggable: true }).addTo(map);
-                targetPin.on('dragend', updateNavigationStatus);
+                targetPin = L.marker(latlng, { draggable: true }).addTo(map);
+                targetPin.on('dragend', (event) => {
+                    const currentPos = event.target.getLatLng();
+                    console.log(`📍 Shifted Coordinate (Drag End): [${currentPos.lat.toFixed(6)}, ${currentPos.lng.toFixed(6)}]`);
+                    updateNavigationStatus();
+                });
             }
-            targetPin.bindPopup("Calculating...").openPopup();
+            targetPin.bindPopup(`<b>${name}</b><br>Calculating...`).openPopup();
+            map.setView(latlng, 19); 
             updateNavigationStatus();
-        });
-
-        // 4. DISTANCE DISPLAY LOGIC
-        routingControl.on('routesfound', function(e) {
-            const routes = e.routes;
-            const summary = routes[0].summary;
-            
-            const distanceText = summary.totalDistance > 1000 
-                ? (summary.totalDistance / 1000).toFixed(2) + "km" 
-                : Math.round(summary.totalDistance) + "m";
-            const timeMin = Math.round(summary.totalTime / 60);
-
-            // Update search bar
-            const searchInput = document.querySelector('.search-bar');
-            if (searchInput) searchInput.placeholder = `${distanceText} (${timeMin} min walk)`;
-
-            // Update pin popup
-            if (targetPin) {
-                targetPin.setPopupContent(`
-                    <div style="text-align: center;">
-                        <strong>Destination</strong><br>
-                        <b style="color: red;">${distanceText}</b><br>
-                        <small>${timeMin} min walk</small>
-                    </div>
-                `).openPopup();
-            }
-        });
-    }
-
-    function updateNavigationStatus() {
-        if (userMarker && targetPin) {
-            routingControl.setWaypoints([
-                L.latLng(userMarker.getLatLng()),
-                L.latLng(targetPin.getLatLng())
-            ]);
         }
-    }
+        function calculateRoute(start, end, activePopup) {
+    // If an active marker popup was passed, use it; otherwise fallback to global
+    const currentPopup = activePopup || popup;
+    currentPopup.setContent("Calculating...");
 
-    function locateUser() {
-        map.locate({setView: true, maxZoom: 18, watch: true}); 
-    }
-        
+    const url = `/api/route?start_lon=${start.lng}&start_lat=${start.lat}&end_lon=${end.lng}&end_lat=${end.lat}`;
 
-        /* --- NAVIGATION LOGIC --- */
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error(`Server status ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === "success") {
+                if (window.currentRouteLine) {
+                    map.removeLayer(window.currentRouteLine);
+                }
+                window.currentRouteLine = L.polyline(data.coordinates, {color: 'blue'}).addTo(map);
+                currentPopup.setContent("Route loaded!");
+            }
+        })
+        .catch(error => {
+            console.error("Routing Error:", error);
+            currentPopup.setContent("Route unavailable: Isolated nodes.");
+        });
+}
+
+        function setMapImageOverlay(imgUrl, bounds) {
+            if (currentImageOverlay) {
+                map.removeLayer(currentImageOverlay);
+                currentImageOverlay = null;
+            }
+            if (imgUrl && bounds) {
+                currentImageOverlay = L.imageOverlay(imgUrl, bounds, { opacity: 0.85 }).addTo(map);
+                map.fitBounds(bounds);
+            }
+        }
+
+        function locateUser() { 
+            map.locate({
+                setView: true, 
+                maxZoom: 20, 
+                watch: true,
+                enableHighAccuracy: true, 
+                timeout: 10000 
+            });
+        }
+
+        function drawFixedRoute() {
+            if (routingControl) routingControl.setWaypoints([]);
+            if (targetPin) { map.removeLayer(targetPin); targetPin = null; }
+            if (fixedRoutePolyline) map.removeLayer(fixedRoutePolyline);
+            const routeCoords = [
+                [2.9282, 101.64192], 
+                [2.9282, 101.64142], 
+                [2.9289, 101.64090]  
+            ];
+            fixedRoutePolyline = L.polyline(routeCoords, {
+                color: 'red',
+                weight: 5,
+                opacity: 0.95
+            }).addTo(map);
+            map.fitBounds(fixedRoutePolyline.getBounds(), { padding: [50, 50] });
+        }
+
+        /* --- UI & SIDEBAR VIEW STATE CONTROL --- */
         function toggleSidebar() {
             document.getElementById("mySidebar").classList.toggle("active");
             if (!document.getElementById("mySidebar").classList.contains("active")) {
@@ -231,17 +586,19 @@ function initApp() {
         function openChatMenu() {
             document.querySelectorAll('.sub-sidebar').forEach(s => s.classList.remove('active'));
             document.getElementById("chatSidebar").classList.add("active");
-        }
+        } 
 
-        /* --- HOME CONTENT LOGIC --- */
+        /* --- DYNAMIC DIRECTORY NAVIGATION INTERACTION --- */
         function loadMainCategories() {
+            setMapImageOverlay(null, null);
+            currentActiveFloor = null; // Reset inside state mapping
+            if (indoorRoutePolyline) { map.removeLayer(indoorRoutePolyline); indoorRoutePolyline = null; }
+
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').style.display = 'none';
-            document.getElementById('subHeaderTitle').innerText = "Categories";
             document.getElementById('subHeaderTitle').style.display = 'block';
             document.getElementById('backBtn').style.display = 'none';
             body.innerHTML = '';
-
             ['Facility', 'Faculty', 'Hall'].forEach(cat => {
                 body.innerHTML += `<button class="category-btn-wide" onclick="showSubCategory('${cat}')">${cat}</button>`;
             });
@@ -255,48 +612,213 @@ function initApp() {
             document.getElementById('backBtn').style.display = 'block';
             document.getElementById('backBtn').onclick = loadMainCategories;
             body.innerHTML = '';
-
             if (category === 'Faculty') {
                 Object.keys(campusData['Faculty']).forEach(fac => {
-                    body.innerHTML += `<button class="category-btn-wide" onclick="showFacultyLevels('${fac}')">${fac}</button>`;
+                    const btn = document.createElement('button');
+                    btn.className = 'category-btn-wide';
+                    btn.innerText = fac;
+                    btn.onclick = () => showFacultyLevels(fac);
+                    body.appendChild(btn);
                 });
             } else {
-                const listContainer = document.createElement('div');
-                listContainer.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+                const container = document.createElement('div');
+                container.className = (category === 'Facility') ? 'grid-container-2col' : 'wide-list-container';
+                
                 campusData[category].forEach(item => {
                     const btnClass = (category === 'Facility') ? 'facility-grid-btn' : 'category-btn-wide';
-                    listContainer.innerHTML += `<div class="${btnClass}">${item}</div>`;
+                    const btn = document.createElement('button'); 
+                    btn.className = btnClass;
+                    btn.innerText = item.name;
+                    btn.onclick = () => pinLocation(item.latlng[0], item.latlng[1], item.name); 
+                    container.appendChild(btn);
                 });
-                body.appendChild(listContainer);
+                body.appendChild(container);
             }
         }
 
         function showFacultyLevels(facultyName) {
+            setMapImageOverlay(null, null);
+            currentActiveFloor = null; // Clear active node calculations
+            if (indoorRoutePolyline) { map.removeLayer(indoorRoutePolyline); indoorRoutePolyline = null; }
+
+            if (facultyImages[facultyName] && facultyImages[facultyName]['bounds']) {
+                map.fitBounds(facultyImages[facultyName]['bounds']);
+            }
+
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerText = facultyName;
             document.getElementById('backBtn').onclick = () => showSubCategory('Faculty');
             body.innerHTML = '';
-
             Object.keys(campusData['Faculty'][facultyName]).forEach(level => {
-                body.innerHTML += `<button class="category-btn-wide" onclick="showClasses('${facultyName}', '${level}')">${level}</button>`;
+                const btn = document.createElement('button');
+                btn.className = 'category-btn-wide';
+                btn.innerText = level;
+                btn.onclick = () => showClasses(facultyName, level);
+                body.appendChild(btn);
             });
         }
 
         function showClasses(facultyName, levelName) {
+            if (facultyImages[facultyName] && facultyImages[facultyName][levelName]) {
+                setMapImageOverlay(facultyImages[facultyName][levelName], facultyImages[facultyName]['bounds']);
+            }
+
+            // NEW: Point target calculations to chosen floor map rules
+            switchFloorNetwork(levelName);
+
             const body = document.getElementById('categoryBody');
             document.getElementById('topHeaderBox').innerHTML = `${facultyName}<br><br>${levelName}`;
             document.getElementById('backBtn').onclick = () => showFacultyLevels(facultyName);
             body.innerHTML = '<p style="text-align:center; margin-bottom:10px;">List of classes</p>';
-
+            
             const grid = document.createElement('div');
             grid.className = 'grid-container-2col';
             campusData['Faculty'][facultyName][levelName].forEach(cls => {
-                grid.innerHTML += `<div class="class-grid-btn">${cls}</div>`;
+                const btn = document.createElement('button'); 
+                btn.className = 'class-grid-btn';
+                btn.innerText = cls.name;
+                btn.onclick = () => pinLocation(cls.latlng[0], cls.latlng[1], cls.name);
+                grid.appendChild(btn);
             });
             body.appendChild(grid);
+            updateNavigationStatus();
         }
 
-        function fillChat(text) { document.getElementById('userInput').value = text; }
+        /* --- CHATBOT BACKEND CONNECTION --- */
+        async function sendToPython(message) {
+            try {
+                let response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                if (response.status === 404) {
+                    response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: message })
+                    });
+                }
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("Server error response payload:", errorText);
+                    return `⚠️ Server Error (${response.status}). Check Flask console.`;
+                }
+                const data = await response.json();
+                return data.response || data.reply || '⚠️ No response content key matched.';
+            } catch (error) {
+                console.error("Backend request failed entirely:", error);
+                return '❌ Connection error to Flask server.';
+            }
+        }
+
+        /* --- TYPING INDICATOR CONTROLS --- */
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'bot-msg typing-dots';
+            div.id = 'typingIndicator';
+            div.textContent = 'typing...';
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        async function handleUserInput() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            input.value = '';
+            addMessage(message, true);
+            showTypingIndicator();
+            const reply = await sendToPython(message);
+            removeTypingIndicator();
+            addMessage(reply, false);
+        }
+
+        function addMessage(text, isUser) {
+            const chatContainer = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = isUser ? 'user-msg' : 'bot-msg';
+            
+            let displayText = text;
+            if (!isUser && text.includes("TARGET_PIN:")) {
+                const parts = text.split("TARGET_PIN:");
+                displayText = parts[0].trim(); 
+                const jsonString = parts[1].trim();
+
+                try {
+                    const pinData = JSON.parse(jsonString);
+                    if (typeof pinLocationFromChat === "function") {
+                        pinLocationFromChat(pinData.latlng, pinData.floor, pinData.name);
+                    }
+                } catch (error) {
+                    console.error("Error parsing TARGET_PIN data:", error);
+                    displayText = text; 
+                }
+            }
+
+            div.textContent = displayText;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function getFloorImage(floor) {
+            const images = {
+                "Ground Floor": "static/FCI.png",
+                "Level G": "static/FCIG.png",
+                "Level 1": "static/FCI1.png",
+                "Level 2": "static/FCI2.png",
+                "Level 3": "static/FCI3.png",
+                "Level 4": "static/FCI4.png"
+            };
+            return images[floor] || "static/images/default.jpg";
+        }
+
+        // AI chatbot marker integration
+        let aiMarker = null;
+        function pinLocationFromChat(latlng, floor, name) {
+            if (aiMarker) {
+                map.removeLayer(aiMarker);
+            }
+
+            // NEW: Set the target active floor layout graph
+            switchFloorNetwork(floor);
+
+            const location = Array.isArray(latlng) ? L.latLng(latlng[0], latlng[1]) : L.latLng(latlng.lat, latlng.lng);
+            aiMarker = L.marker(location).addTo(map);
+            targetPin = aiMarker;
+
+            const imagePath = getFloorImage(floor);
+            const popupContent = `
+                <div style="width: 150px; text-align: center;">
+                    <h4 style="margin: 0 0 5px 0;">${name}</h4>
+                    <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold;">${floor}</p>
+                    <img src="${imagePath}" style="width: 100%; border-radius: 5px; border: 1px solid #ddd;"
+                         onerror="this.onerror=null;this.src='static/images/default.jpg';">
+                </div>
+            `;
+            aiMarker.bindPopup(popupContent).openPopup();
+            map.flyTo(location, 19);
+            updateNavigationStatus();
+        }
+
+        function fillChat(text) { 
+            document.getElementById('userInput').value = text;
+            handleUserInput();
+        }
+
+        /* --- INTRO DISPLAY CHECK LOGIC --- */
+        function closeIntro() { document.getElementById('introPopup').style.display = 'none'; }
+        function checkIntro() {
+            if (sessionStorage.getItem('introShown')) closeIntro();
+            else sessionStorage.setItem('introShown', 'true');
+        }
     </script>
 </body>
 </html>
