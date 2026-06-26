@@ -12,6 +12,22 @@
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+
+    <style>
+        .admin-route-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: center;
+            min-width: 200px;
+        }
+    </style>
 </head>
 <body onload="initApp()">
 
@@ -81,6 +97,12 @@
         <input type="text" class="search-bar" placeholder="Search MMU locations...">
     </div>
     
+    <div id="adminRouteControls" class="admin-route-panel" style="display: none;">
+        <p style="margin: 0 0 8px 0; font-weight: bold; color: #333; font-size: 14px;">Custom Route Creator</p>
+        <button class="admin-save-btn" onclick="saveManualRoute()" style="background-color: #28a745; margin-right: 5px; border: none; padding: 6px 12px; color: white; border-radius: 4px; cursor: pointer;">Save Path</button>
+        <button class="admin-save-btn" onclick="clearManualRoute()" style="background-color: #dc3545; border: none; padding: 6px 12px; color: white; border-radius: 4px; cursor: pointer;">Clear Traces</button>
+    </div>
+
     <div id="map"></div>
 
     <script>
@@ -99,6 +121,8 @@
         let manualRoutePoints = [];
         let drawingPolyline = null;
         let manualMarkers = [];
+        let savedRoutesLayer = null; // Container for locked, saved custom paths
+        let savedRoutesData = [];    // Local memory bank array for pinning math logic
 
         // Structured Object Data Profile Setup
         const campusData = {
@@ -160,6 +184,9 @@
                 attribution: '© Hazyq'
             }).addTo(map);
 
+            // Initialize the locked layer group for finished custom routes
+            savedRoutesLayer = L.featureGroup().addTo(map);
+
             // Manual Path Vector Layer Initialization
             drawingPolyline = L.polyline([], {
                 color: '#28a745', 
@@ -167,20 +194,80 @@
                 dashArray: '5, 5'
             }).addTo(map);
 
-            // Live Walk Engine Initialization Setup
+            // Base routing instance fallback anchor definition
+            const defaultOsrmRouter = L.Routing.osrmv1({
+                serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
+                profile: 'foot',
+                useHints: false
+            });
+
+            // Live Walk Engine Initialization Setup with Wrapper Logic
             routingControl = L.Routing.control({
                 waypoints: [],
-                router: L.Routing.osrmv1({
-                    serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1',
-                    profile: 'foot',
-                    useHints: false
-                }),
                 show: false,
                 addWaypoints: false,
                 lineOptions: {
                     styles: [{ color: 'red', opacity: 0.8, weight: 5, dashArray: '10, 10' }] 
                 },
-                createMarker: function() { return null; }
+                createMarker: function() { return null; },
+                
+                router: {
+    route: function(waypoints, callback, context) {
+        let startPoint = waypoints[0].latlng;
+        let endPoint = waypoints[waypoints.length - 1].latlng;
+        
+        let matchedRoute = null;
+        let invertPath = false;
+
+        // 1. Check if the user's destination is near your custom campus shortcuts
+        for (let route of savedRoutesData) {
+            let pathPoints = route.points;
+            let pathStart = L.latLng(pathPoints[0]);
+            let pathEnd = L.latLng(pathPoints[pathPoints.length - 1]);
+
+            // Is the destination near the end or the start of this shortcut?
+            if (endPoint.distanceTo(pathEnd) < 150) {
+                matchedRoute = route;
+                invertPath = false; // User is walking from shortcut start -> end
+                break;
+            } else if (endPoint.distanceTo(pathStart) < 150) {
+                matchedRoute = route;
+                invertPath = true;  // User is walking from shortcut end -> start
+                break;
+            }
+        }
+
+        // 2. STITCHING ENGINE: If a shortcut matches, clear the perimeter detour detour
+        if (matchedRoute) {
+            let shortcutPoints = matchedRoute.points.map(p => L.latLng(p));
+            if (invertPath) shortcutPoints.reverse();
+
+            let shortcutEntrance = shortcutPoints[0];
+
+            // Route from far-away starting point to the internal walkway entrance gate
+            defaultOsrmRouter.route([L.routing.waypoint(startPoint), L.routing.waypoint(shortcutEntrance)], function(err, results) {
+                if (!err && results && results[0]) {
+                    // Stitch OSRM street coordinates directly with your custom walkway array
+                    let osrmCoords = results[0].coordinates;
+                    results[0].coordinates = osrmCoords.concat(shortcutPoints);
+                    
+                    // Update metadata summary so the time/distance estimates stay relatively accurate
+                    results[0].summary.totalDistance += endPoint.distanceTo(shortcutEntrance);
+                    
+                    // Return stitched route canvas back to Leaflet Map UI
+                    callback.call(context, null, results);
+                } else {
+                    // Fallback to default if the entrance calculation hits a snag
+                    defaultOsrmRouter.route(waypoints, callback, context);
+                }
+            }, context);
+            return; // Exit to prevent running the default router concurrently
+        }
+
+        // 3. Absolute fallback for routes nowhere near campus shortcut nodes
+        defaultOsrmRouter.route(waypoints, callback, context);
+    }
+}
             }).addTo(map);
 
             // UI Metric Sync Logic Integration
@@ -271,17 +358,54 @@
             map.locate({setView: true, maxZoom: 18, watch: true}); 
         }
 
+        /* --- ROUTE DRAWING ENGINE CORE FUNCTIONS --- */
+        function saveManualRoute() {
+            if (manualRoutePoints.length < 2) {
+                alert("Please tap out at least 2 connected points on the map first!");
+                return;
+            }
+
+            let pathName = prompt("Assign a name/label to this custom route:", "Custom Corridor " + (savedRoutesLayer.getLayers().length + 1));
+            if (!pathName) return;
+
+            // Save coordinate array deep copies to calculations cache
+            savedRoutesData.push([...manualRoutePoints]);
+
+            // Updated options to match the automatic routing line style
+            let permanentLine = L.polyline(manualRoutePoints, {
+                color: 'red',          
+                weight: 5,             
+                opacity: 0.8,          
+                dashArray: '10, 10'    
+            }).addTo(savedRoutesLayer);
+
+            permanentLine.bindPopup(`<b>${pathName}</b><br><small>Custom Admin Path Route</small>`);
+    
+            // Console display format to safely map to Flask database records
+            console.log(`Saved Route Profile JSON (${pathName}):`, JSON.stringify(permanentLine.toGeoJSON()));
+
+            // Instantly clear the canvas drawing deck for next pathing iteration
+            clearManualRoute();
+        }
+
+        function clearManualRoute() {
+            manualRoutePoints = [];
+            if (drawingPolyline) drawingPolyline.setLatLngs([]);
+            manualMarkers.forEach(m => map.removeLayer(m));
+            manualMarkers = [];
+        }
+
         /* --- UI RENDER & VIEWPORT MANAGER LOGIC --- */
         function toggleEditMode() {
             isEditMode = !isEditMode;
             document.getElementById('settingBtn').classList.toggle('setting-on', isEditMode);
             
-            // Clean Tracing Cache Layers on Mode Disabling Toggles
+            // Display or hide the floating route drawing dashboard frame
+            document.getElementById('adminRouteControls').style.display = isEditMode ? 'block' : 'none';
+            
+            // Clean active drawing trace caches on session closing toggles
             if (!isEditMode) {
-                manualRoutePoints = [];
-                if (drawingPolyline) drawingPolyline.setLatLngs([]);
-                manualMarkers.forEach(m => map.removeLayer(m));
-                manualMarkers = [];
+                clearManualRoute();
             }
             
             refreshScreen();
@@ -527,6 +651,7 @@
             if(val) { chatTemplates.push(val); document.getElementById('templateInput').value = ''; renderAdminTemplateList(); renderTemplatePreview(); }
         }
         function deleteChatTemplate(i) { chatTemplates.splice(i, 1); renderAdminTemplateList(); renderTemplatePreview(); }
+        function removeChatTemplates() { chatTemplates = []; renderAdminTemplateList(); renderTemplatePreview(); }
         function renderTemplatePreview() {
             const c = document.getElementById('templateDisplay'); c.innerHTML = '';
             chatTemplates.forEach(t => c.innerHTML += `<button class="chat-pill">${t}</button>`);
@@ -544,4 +669,3 @@
         }
     </script>
 </body>
-</html>

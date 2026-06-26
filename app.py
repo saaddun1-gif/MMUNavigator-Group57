@@ -4,23 +4,29 @@ from flask_cors import CORS
 import random
 import json
 from datetime import datetime, timedelta
-from difflib import get_close_matches
 import os
+
+# Try to import networkx for indoor/outdoor path routing
+try:
+    import networkx as nx
+except ImportError:
+    nx = None
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key_here'
 CORS(app)
 
-# Location of the AI knowledge file
+# Location of data files
 KNOWLEDGE_FILE = 'knowledge_base.json'
+MAP_DATA_FILE = 'fci-network.geojson'
 
 # --- 1. Flask-Mail Configuration ---
 app.config.update(
     MAIL_SERVER='smtp.gmail.com',
     MAIL_PORT=587,
     MAIL_USE_TLS=True,
-    MAIL_USERNAME='hazyqnorashrafhelmy@gmail.com', 
-    MAIL_PASSWORD='xdjnyhwfyqndcakk' 
+    MAIL_USERNAME='AdminMap44@gmail.com', 
+    MAIL_PASSWORD='sidhnrqcdzpdmggm' 
 )
 mail = Mail(app)
 
@@ -28,10 +34,10 @@ mail = Mail(app)
 ADMIN_DATA = {
     "username": "XxsaadgamingpromaxxX",
     "password": "ismailbinmail",
-    "email": "hazyqnorashrafhelmy@gmail.com"
+    "email": "AdminMap44@gmail.com"
 }
 
-# ========== CORE FUNCTIONS ==========
+# ========== CORE AI CHATBOT FUNCTIONS ==========
 def load_knowledge_base(file_path: str) -> dict:
     with open(file_path, 'r', encoding='utf-8') as file:
         data: dict = json.load(file)
@@ -79,31 +85,22 @@ def find_best_match_by_keywords(user_question: str, knowledge_base: dict) -> tup
     if not user_keywords:
         return None
     
-    # Check for question type FIRST (this solves incorrect matching)
-    is_what_question = any(phrase in user_question_lower for phrase in ['what is', 'what\'s', 'tell me about', 'meaning of', 'define'])
-    is_where_question = any(phrase in user_question_lower for phrase in ['where is', 'where\'s', 'location of', 'find', 'located'])
+    is_what_question = any(phrase in user_question_lower for phrase in ['what is', "what's", 'tell me about', 'meaning of', 'define'])
+    is_where_question = any(phrase in user_question_lower for phrase in ['where is', "where's", 'location of', 'find', 'located'])
     
     best_match = None
     best_score = 0
     best_question = None
     
     print(f"\n🔍 DEBUG: User asked: '{user_question}'")
-    print(f"🔍 DEBUG: is_what_question = {is_what_question}")
-    print(f"🔍 DEBUG: is_where_question = {is_where_question}")
-    print(f"🔍 DEBUG: User keywords = {user_keywords}")
     
-    # FIRST: Try to match by intent (STRICT filtering)
     for q in knowledge_base.get('questions', []):
         if is_what_question and q.get('intent') != 'definition':
-            print(f"  📌 SKIPPING: '{q['question']}' (intent={q.get('intent')}) - not a definition")
             continue
         if is_where_question and q.get('intent') != 'location':
-            print(f"  📌 SKIPPING: '{q['question']}' (intent={q.get('intent')}) - not a location")
             continue
         
-        print(f"  ✅ CHECKING: '{q['question']}' (intent={q.get('intent')})")
         question_keywords = extract_keywords(q['question'])
-        
         score = calculate_keyword_match(user_keywords, question_keywords)
         
         if 'synonyms' in q:
@@ -117,9 +114,7 @@ def find_best_match_by_keywords(user_question: str, knowledge_base: dict) -> tup
             if keyword in q['question'].lower():
                 score += 0.1
         
-        print(f"      📊 Score: {score:.2f}")
-        
-        if score > best_score and score >= 0.2:  # Lower threshold since intent matches
+        if score > best_score and score >= 0.2:
             best_score = score
             best_match = q
             best_question = q['question']
@@ -128,7 +123,6 @@ def find_best_match_by_keywords(user_question: str, knowledge_base: dict) -> tup
         print(f"🔍 Matched '{user_question}' with {best_score*100:.0f}% confidence → {best_question}")
         return best_question, best_match['answer']
     
-    # FALLBACK: If no intent match found, try matching generally
     print(f"⚠️ No intent match found, trying fallback matching...")
     for q in knowledge_base.get('questions', []):
         if q.get('intent') in ['definition', 'location'] and not is_what_question and not is_where_question:
@@ -155,6 +149,204 @@ def find_best_match_by_keywords(user_question: str, knowledge_base: dict) -> tup
     
     return None
 
+
+# ========== MAP PATHFINDING UTILITIES ==========
+def build_spatial_network():
+    """Parses LineStrings and Points from fci-network.geojson and constructs 
+    a multi-level cross-connected routing graph mapping floor planes."""
+    G = nx.Graph() if nx else None
+    if not G or not os.path.exists(MAP_DATA_FILE):
+        return G
+
+    try:
+        with open(MAP_DATA_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        # Discover all explicit unique floor levels defined among indoor points
+        levels = set()
+        room_nodes = []
+        
+        for feature in data.get('features', []):
+            geometry = feature.get('geometry', {})
+            properties = feature.get('properties', {})
+            if geometry and geometry.get('type') == 'Point':
+                coords = geometry.get('coordinates', [])
+                if len(coords) >= 2:
+                    lon, lat = float(coords[0]), float(coords[1])
+                    lvl = properties.get('level', 'Level G')
+                    levels.add(lvl)
+                    if 'name' in properties:
+                        room_nodes.append({
+                            'name': properties['name'],
+                            'coords': (lon, lat),
+                            'level': lvl
+                        })
+        
+        if not levels:
+            levels = {'Level G', 'Level 1', 'Level 2', 'Level 3', 'Level 4'}
+            
+        # Organize levels sequentially to enable proper staircase/elevator vertical transitions
+        levels_ordered = ['Level G', 'Level 1', 'Level 2', 'Level 3', 'Level 4']
+        levels_ordered = [lvl for lvl in levels_ordered if lvl in levels]
+        if not levels_ordered:
+            levels_ordered = sorted(list(levels))
+
+        # 1. Build the path corridor infrastructure independently for each floor
+        for feature in data.get('features', []):
+            geometry = feature.get('geometry', {})
+            if geometry and geometry.get('type') == 'LineString':
+                coords = geometry.get('coordinates', [])
+                
+                # Clone layout pathways for each indoor building floor level
+                for lvl in levels_ordered:
+                    for i in range(len(coords) - 1):
+                        node_a = (float(coords[i][0]), float(coords[i][1]), lvl)
+                        node_b = (float(coords[i+1][0]), float(coords[i+1][1]), lvl)
+                        distance = ((node_a[0] - node_b[0])**2 + (node_a[1] - node_b[1])**2)**0.5
+                        G.add_edge(node_a, node_b, weight=distance)
+
+        # 2. Attach room vertices onto their respective level's corridor structures
+        for room in room_nodes:
+            lon, lat = room['coords']
+            lvl = room['level']
+            room_node = (lon, lat, lvl)
+            
+            closest_corr = None
+            min_dist = float('inf')
+            for node in G.nodes():
+                if node[2] == lvl and node != room_node:
+                    dist = ((node[0] - lon)**2 + (node[1] - lat)**2)**0.5
+                    if dist < min_dist:
+                        min_dist = dist
+                        closest_corr = node
+            
+            if closest_corr:
+                G.add_edge(room_node, closest_corr, weight=min_dist)
+
+        # 3. Securely bridge floating corridor layout gaps (missing vertex snaps) per level
+        TOLERANCE = 0.0001  # Matches up to ~11 meters maximum gap distance
+        nodes_by_level = {}
+        for node in G.nodes():
+            lvl = node[2]
+            if lvl not in nodes_by_level:
+                nodes_by_level[lvl] = []
+            nodes_by_level[lvl].append(node)
+            
+        for lvl, nodes in nodes_by_level.items():
+            for i, node_1 in enumerate(nodes):
+                for node_2 in nodes[i+1:]:
+                    dist = ((node_1[0] - node_2[0])**2 + (node_1[1] - node_2[1])**2)**0.5
+                    if dist <= TOLERANCE and not G.has_edge(node_1, node_2):
+                        G.add_edge(node_1, node_2, weight=dist)
+
+        # 4. Synthesize vertical structural linkages (Elevators/Stairs) between consecutive levels
+        for idx in range(len(levels_ordered) - 1):
+            lvl_current = levels_ordered[idx]
+            lvl_next = levels_ordered[idx+1]
+            
+            nodes_curr = nodes_by_level.get(lvl_current, [])
+            nodes_next = nodes_by_level.get(lvl_next, [])
+            
+            for n_curr in nodes_curr:
+                for n_next in nodes_next:
+                    # Look for overlapping structural nodes matching vertically (within ~1 meter buffer)
+                    dist_2d = ((n_curr[0] - n_next[0])**2 + (n_curr[1] - n_next[1])**2)**0.5
+                    if dist_2d < 0.00001:
+                        VERTICAL_TRAVEL_PENALTY = 0.0001
+                        G.add_edge(n_curr, n_next, weight=VERTICAL_TRAVEL_PENALTY)
+                        
+    except Exception as e:
+        print(f"⚠️ Error initializing tracking map network: {e}")
+    return G
+
+def snap_to_closest_path_node(graph, target_coord, target_level=None):
+    """Finds the absolute closest network path point, filtering by floor level preference if provided"""
+    target_lon, target_lat = float(target_coord[0]), float(target_coord[1])
+    closest_node = None
+    shortest_distance = float('inf')
+    
+    for node in graph.nodes():
+        if target_level and node[2] != target_level:
+            continue
+        distance = ((node[0] - target_lon)**2 + (node[1] - target_lat)**2)**0.5
+        if distance < shortest_distance:
+            shortest_distance = distance
+            closest_node = node
+            
+    # Fallback to absolute closest 2D node if no nodes match the target level filter
+    if not closest_node and target_level:
+        for node in graph.nodes():
+            distance = ((node[0] - target_lon)**2 + (node[1] - target_lat)**2)**0.5
+            if distance < shortest_distance:
+                shortest_distance = distance
+                closest_node = node
+                
+    return closest_node
+
+
+# ========== CAMPUS MAP CORE ENDPOINTS ==========
+
+@app.route('/api/map-data', methods=['GET'])
+def get_map_data():
+    """Serves raw GeoJSON layers directly to the Leaflet script"""
+    if not os.path.exists(MAP_DATA_FILE):
+        return jsonify({"status": "error", "message": f"{MAP_DATA_FILE} file missing on server"}), 404
+        
+    try:
+        with open(MAP_DATA_FILE, 'r', encoding='utf-8') as f:
+            geojson_content = json.load(f)
+        return jsonify(geojson_content)
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/route', methods=['GET'])
+def calculate_campus_route():
+    """Calculates tracking path arrays across indoor rooms and outer campus roads, aware of floor levels"""
+    if not nx:
+        return jsonify({"status": "error", "message": "NetworkX library not installed on host environment"}), 500
+
+    start_lon = request.args.get('start_lon')
+    start_lat = request.args.get('start_lat')
+    end_lon = request.args.get('end_lon')
+    end_lat = request.args.get('end_lat')
+    
+    # Optional level attributes to accurately anchor starting/ending positions indoors
+    start_level = request.args.get('start_level')
+    end_level = request.args.get('end_level')
+
+    if not all([start_lon, start_lat, end_lon, end_lat]):
+        return jsonify({"status": "error", "message": "Missing coordinate parameters"}), 400
+
+    try:
+        raw_start = (float(start_lon), float(start_lat))
+        raw_end = (float(end_lon), float(end_lat))
+        
+        G = build_spatial_network()
+        if len(G.nodes) == 0:
+            return jsonify({"status": "error", "message": f"Map path network from {MAP_DATA_FILE} is empty or corrupt"}), 500
+
+        snapped_start = snap_to_closest_path_node(G, raw_start, start_level)
+        snapped_end = snap_to_closest_path_node(G, raw_end, end_level)
+
+        if not snapped_start or not snapped_end:
+            return jsonify({"status": "error", "message": "Unable to map coordinates onto network paths"}), 404
+
+        computed_node_path = nx.shortest_path(G, source=snapped_start, target=snapped_end, weight='weight')
+        
+        # Formats path back to frontend with level metadata appended: [lat, lon, level]
+        leaflet_ready_path = [[node[1], node[0], node[2]] for node in computed_node_path]
+
+        return jsonify({
+            "status": "success",
+            "coordinates": leaflet_ready_path
+        })
+
+    except nx.NetworkXNoPath:
+        return jsonify({"status": "error", "message": "Paths between indoor/outdoor sections are isolated"}), 404
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 # ========== PAGE NAVIGATION ROUTES ==========
 
 @app.route('/')
@@ -176,6 +368,7 @@ def about():
 @app.route('/contact')
 def contact():
     return render_template('contact.html')
+
 
 # ========== ADMIN LOGIN SECURITY SYSTEM ==========
 
@@ -226,6 +419,7 @@ def admin():
 @app.route('/admin_login')
 def admin_login():
     return render_template('admin_login.html')
+
 
 # ========== AI CHATBOT SYSTEM ENDPOINTS ==========
 
@@ -323,17 +517,17 @@ def debug_match():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=5000)
     print("=" * 50)
-    print("🤖 MMU Navigator AI Chatbot Server")
+    print("🤖 MMU Navigator - Server Initialization Engine")
     print("=" * 50)
-    print(f"📍 Main page: http://127.0.0.1:5000/")
-    print(f"📍 Chat endpoint (/chat): http://127.0.0.1:5000/chat")
-    print(f"📍 Chat endpoint (/api/chat): http://127.0.0.1:5000/api/chat")
-    print(f"📍 Debug checker: http://127.0.0.1:5000/debug/match")
-    print(f"📍 Health check: http://127.0.0.1:5000/health")
-    print(f"📚 Using database: {KNOWLEDGE_FILE}")
-    print("🟢 Press Ctrl+C to stop server")
+    print(f"📍 Main Application Base: http://127.0.0.1:5000/")
+    print(f"🗺️ Map Layer Data Feed:  http://127.0.0.1:5000/api/map-data")
+    print(f"🛣️ Routing/Tracking Engine: http://127.0.0.1:5000/api/route")
+    print(f"💬 Chat Engine Interface:  http://127.0.0.1:5000/chat")
+    print(f"📚 Using Active Database:  {KNOWLEDGE_FILE}")
+    print("🟢 Press Ctrl+C to safely close connection")
     print("=" * 50)
+    
     app.run(debug=True, host='127.0.0.1', port=5000)
