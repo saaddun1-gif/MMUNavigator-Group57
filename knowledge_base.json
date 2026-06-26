@@ -1,0 +1,418 @@
+{
+  "questions": [
+    {
+      "question": "Where is the Library?",
+      "intent": "location",
+      "keywords": ["library", "lib", "books", "study", "reading", "perpustakaan"],
+      "synonyms": ["library location", "where can I find library", "library building", "perpustakaan mmu"],
+      "answer": "The library is located in the middle of the campus. TARGET_PIN:{\"name\":\"Library\",\"floor\":\"Ground Floor\",\"latlng\":[2.927514,101.641695]}"
+    },
+    {
+      "question": "Where is the Surau?",
+      "intent": "location",
+      "keywords": ["surau", "prayer", "solat", "musolla", "mosque"],
+      "synonyms": ["where is surau", "prayer room location", "surau campus", "place to pray"],
+      "answer": "The Surau is located near the STD Building and Hostel HB3. TARGET_PIN:{\"name\":\"Surau\",\"floor\":\"Ground Floor\",\"latlng\":[2.924351,101.642975]}"
+    },
+    {
+      "question": "Where is the Gym?",
+      "intent": "location",
+      "keywords": ["gym", "fitness", "workout", "gymnasium", "exercise"],
+      "synonyms": ["where is gym", "fitness center location", "gym room", "mmu gym"],
+      "answer": "The Gym is located beside Starbees. TARGET_PIN:{\"name\":\"Gym\",\"floor\":\"Ground Floor\",\"latlng\":[2.927183,101.643105]}"
+    },
+    {
+      "question": "Where is the Cafe?",
+      "intent": "location",
+      "keywords": ["cafe", "cafeteria", "food", "eat", "canteen", "makan"],
+      "synonyms": ["food court location", "where to eat", "canteen campus", "cafeteria location"],
+      "answer": "The Deen Cafe is located near the central campus plaza area. TARGET_PIN:{\"name\":\"Cafe\",\"floor\":\"Ground Floor\",\"latlng\":[2.925300,101.642555]}"
+    },
+    {
+      "question": "Where is the ATM?",
+      "intent": "location",
+      "keywords": ["atm", "bank", "cash", "money", "duit", "mechine"],
+      "synonyms": ["where is atm", "cash machine location", "atm bank", "mechine duit"],
+      "answer": "The ATM is located inside Starbees. TARGET_PIN:{\"name\":\"ATM\",\"floor\":\"Ground Floor\",\"latlng\":[2.928002,101.643156]}"
+    },
+    {
+      "question": "Where is Starbees?",
+      "intent": "location",
+      "keywords": ["starbees", "coffee", "cafe", "starbucks", "drink"],
+      "synonyms": ["starbees location", "where is starbees", "coffee shop", "starbee"],
+      "answer": "Starbees is located below CNMX, beside the gym. TARGET_PIN:{\"name\":\"Starbees\",\"floor\":\"Ground Floor\",\"latlng\":[2.927888,101.643107]}"
+    },
+    {
+      "question": "Where is the Lab?",
+      "intent": "location",
+      "keywords": ["lab", "computer", "makmal", "pc", "labs"],
+      "synonyms": ["where is computer lab", "lab location", "main lab"],
+      "answer": "The Lab is located inside the academic block area. TARGET_PIN:{\"name\":\"Lab\",\"floor\":\"Level G\",\"latlng\":[2.928640,101.641120]}"
+    },
+    {
+      "question": "Where is 7 Eleven?",
+      "intent": "location",
+      "keywords": ["7 elevel", "7-eleven", "7e", "convenience store", "sevel"],
+      "synonyms": ["where is 7 eleven", "7e location", "convenience store campus", "7eleven"],
+      "answer": "7 Elevel is located right near the commercial campus hub. TARGET_PIN:{\"name\":\"7 Elevel\",\"floor\":\"Ground Floor\",\"latlng\":[2.927531,101.643027]}"
+    },
+    {
+      "question": "Where is DTC?",
+      "intent": "location",
+      "keywords": ["dtc", "dewan", "dewan tun canselor", "canselor"],
+      "synonyms": ["dewan tun canselor location", "main hall", "where is dtc", "convocation hall"],
+      "answer": "Dewan Tun Canselor is located near the FCI building and FOM building. TARGET_PIN:{\"name\":\"Dewan Tun Canselor\",\"floor\":\"Ground Floor\",\"latlng\":[2.928420,101.642150]}"
+    },
+    {
+      "question": "Where is the Exam Hall?",
+      "intent": "location",
+      "keywords": ["exam hall", "examination", "peperiksaan", "test", "quizzes"],
+      "synonyms": ["where is exam hall", "examination hall location", "dewan peperiksaan", "exam center"],
+      "answer": "The Exam Hall is located within the main Dewan Tun Canselor complex. TARGET_PIN:{\"name\":\"Exam Hall\",\"floor\":\"Ground Floor\",\"latlng\":[2.928420,101.642150]}"
+    },
+    {
+      "question": "Where is MPH?",
+      "intent": "location",
+      "keywords": ["mph", "multipurpose", "multi-purpose hall", "dewan"],
+      "synonyms": ["where is mph", "multipurpose hall location", "mph building", "dewan mph"],
+      "answer": "The Multi-Purpose Hall (MPH) is located adjacent to the sports center setup. TARGET_PIN:{\"name\":\"MPH\",\"floor\":\"Ground Floor\",\"latlng\":[2.927640,101.642550]}"
+    },
+    {
+      "question": "Where is the Grand Hall?",
+      "intent": "location",
+      "keywords": ["grand hall", "big dewan", "dewan besar", "grand"],
+      "synonyms": ["where is grand hall", "grand hall location", "big hall campus"],
+      "answer": "The Grand Hall is located near the administration block wing. TARGET_PIN:{\"name\":\"Grand Hall\",\"floor\":\"Ground Floor\",\"latlng\":[2.926100,101.642200]}"
+    },
+    
+    {
+        "question": "hello",
+        "answer": "Hello! Thank you for using MMU Navigator. How can I assist you today?",
+        "synonyms": ["hi", "hey", "greetings"],
+        "intent": "greeting"
+    },
+       {
+          "question": "Where is the library located?",
+         "answer": "The library is located in the middle of the campus.",
+          "keywords": ["library", "lib", "books", "study", "reading"],
+         "synonyms": ["library location", "where can I find library", "library building"]
+      },
+      {
+         "question": "Where is the cafeteria?",
+         "answer": "Starbees is located below CNMX, beside gym.",
+         "keywords": ["cafeteria", "canteen", "food", "eat", "dining", "lunch", "breakfast"],
+         "synonyms": ["cafe", "food court", "dining hall", "mamak"]
+       },
+       {
+         "question": "What is FCI?",
+         "answer": "FCI is the Faculty of Computing and Informatics, which offers courses in computer science, cybersecurity, data science, game developer, and software engineering.",
+         "keywords": ["stand for", "meaning", "fci stand for", "fci meaning"],
+          "synonyms": ["what is fci stand for", "what is fci", "fci meaning", "fci definition"],
+          "intent": "definition"
+       },
+       {
+         "question": "Where is FCI?",
+         "answer": "FCI building is located near FOM building and DTC.",
+         "keywords": ["computing", "informatics", "computer science", "computer information", "fci"],
+          "synonyms": ["computing faculty", "informatics faculty", "computer science faculty", "computer information location"],
+          "intent": "location"
+        },
+        {
+         "question": "Where is FCI Student Study Lounge?",
+         "answer": "FCI Student Study Lounge is located on the ground floor of the FCI building.",
+         "keywords": ["study", "lounge", "student", "fci student study lounge"],
+          "synonyms": ["fci student study lounge", "fci study lounge", "computer science study lounge", "informatics study lounge"],
+          "intent": "location"
+        },
+        {
+         "question": "What is FOM?",
+         "answer": "FOM is the Faculty of Management, which offers courses in business administration, management, and related fields.",
+         "keywords": ["stand for", "meaning", "fom stand for", "fom meaning"],
+          "synonyms": ["what is fom stand for", "what is fom", "fom meaning", "fom definition"],
+          "intent": "definition"
+        },
+        {
+          "question": "Where is FOM?",
+         "answer": "FOM building is located near FCI building and DTC.",
+         "keywords": ["fom", "business", "management", "administration", "bisnes"],
+          "synonyms": ["business faculty location", "management faculty location", "fom location"],
+          "intent": "location"
+       },
+       {
+          "question": "What is FAIE?",
+          "answer": "FAIE is the Faculty of Artificial Intelligence and Engineering, which offers courses in artificial intelligence, engineering, and related fields. It also once name Faculty of Engineering but recently changed to Faculty of Artificial Intelligence and Engineering.",
+          "keywords": ["stand for", "meaning", "faie stand for", "faie meaning"],
+          "synonyms": ["what is faie stand for", "what is faie", "faie meaning", "faie definition"],
+          "intent": "definition"
+       },
+       {
+          "question": "Where is FAIE?",
+         "answer": "FAIE building is located infront of FCM building and beside STD building.",
+         "keywords": ["faie", "engineer", "engineering", "ai", "artificial intelligence"],
+          "synonyms": ["foe faculty","where is foe", "faie faculty", "engineer faculty", "ai faculty", "artificial intelligence faculty", "foe","faie", "engineer", "engineering", "ai", "artificial intelligence"],
+          "intent": "location"
+       },
+       {
+          "question": "What is FCM?",
+          "answer": "FCM is the Faculty of Creative Multimedia. Other faculty like FAC, FCA, and FCM are all under the same faculty which is Faculty of Creative Multimedia. It offers courses in art, design, animation, communication, and related fields.",
+          "keywords": ["stand for", "meaning", "fcm stand for", "fcm meaning"],
+          "synonyms": ["what is fcm stand for", "what is fcm", "fcm meaning", "fcm definition"],
+          "intent": "definition"
+        },
+        {
+            "question": "Where is FCM?",
+          "answer": "FCM building is located infront of FAIE building",
+          "keywords": ["fcm", "art", "fca", "fac", "animation", "design", "cafeteria"],
+            "synonyms": ["art faculty", "communication art faculty", "animation faculty"],
+            "intent": "location"
+        },
+        {
+            "question": "Where is DTC?",
+          "answer": "Dewan Tun Canselor is located near FCI building and FOM building.",
+          "keywords": ["dtc", "dewan", "dewan tun canselor", "canselor"],
+            "synonyms": ["dewan", "dewan tun canselor", "dtc"],
+            "intent": "location"
+        } ,
+        {
+
+        "question": "Where is CQAR0006?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR0006", "locate CQAR0006", "CQAR0006 room"],
+      "answer": "CQAR0006 is located at FCI on Level G. TARGET_PIN:{\"name\":\"CQAR0006\",\"floor\":\"Level G\",\"latlng\":[2.928557,101.641282]}"
+    },
+    {
+      "question": "Where is CQAR0005?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR0005", "locate CQAR0005", "CQAR0005 room"],
+      "answer": "CQAR0005 is located at FCI on Level G. TARGET_PIN:{\"name\":\"CQAR0005\",\"floor\":\"Level G\",\"latlng\":[2.928652,101.641172]}"
+    },
+    {
+      "question": "Where is CQAR0004?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR0004", "locate CQAR0004", "CQAR0004 room"],
+      "answer": "CQAR0004 is located at FCI on Level G. TARGET_PIN:{\"name\":\"CQAR0004\",\"floor\":\"Level G\",\"latlng\":[2.928743,101.641075]}"
+    },
+    {
+      "question": "Where is CQAR0003?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR0003", "locate CQAR0003", "CQAR0003 room"],
+      "answer": "CQAR0003 is located at FCI on Level G. TARGET_PIN:{\"name\":\"CQAR0003\",\"floor\":\"Level G\",\"latlng\":[2.928897,101.640911]}"
+    },
+    {
+      "question": "Where is CQAR0002?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR0002", "locate CQAR0002", "CQAR0002 room"],
+      "answer": "CQAR0002 is located at FCI on Level G. TARGET_PIN:{\"name\":\"CQAR0002\",\"floor\":\"Level G\",\"latlng\":[2.929024,101.640821]}"
+    },
+    {
+      "question": "Where is FCI Student Lounge?",
+      "intent": "location",
+      "synonyms": ["how to go to student lounge", "locate student lounge fci", "fci lounge"],
+      "answer": "The FCI Student Lounge is located on Level G. TARGET_PIN:{\"name\":\"FCI Student Lounge\",\"floor\":\"Level G\",\"latlng\":[2.929050,101.640711]}"
+    },
+    {
+      "question": "Where is CQAR1007?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR1007", "locate CQAR1007", "CQAR1007 room"],
+      "answer": "CQAR1007 is located at FCI on Level 1. TARGET_PIN:{\"name\":\"CQAR1007\",\"floor\":\"Level 1\",\"latlng\":[2.928549,101.641302]}"
+    },
+    {
+      "question": "Where is CQAR1006?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR1006", "locate CQAR1006", "CQAR1006 room"],
+      "answer": "CQAR1006 is located at FCI on Level 1. TARGET_PIN:{\"name\":\"CQAR1006\",\"floor\":\"Level 1\",\"latlng\":[2.928581,101.641238]}"
+    },
+    {
+      "question": "Where is CQAR1005?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR1005", "locate CQAR1005", "CQAR1005 room"],
+      "answer": "CQAR1005 is located at FCI on Level 1. TARGET_PIN:{\"name\":\"CQAR1005\",\"floor\":\"Level 1\",\"latlng\":[2.928646,101.641152]}"
+    },
+    {
+      "question": "Where is CQAR1004?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR1004", "locate CQAR1004", "CQAR1004 room"],
+      "answer": "CQAR1004 is located at FCI on Level 1. TARGET_PIN:{\"name\":\"CQAR1004\",\"floor\":\"Level 1\",\"latlng\":[2.928754,101.641156]}"
+    },
+    {
+      "question": "Where is CQAR1003?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR1003", "locate CQAR1003", "CQAR1003 room"],
+      "answer": "CQAR1003 is located at FCI on Level 1. TARGET_PIN:{\"name\":\"CQAR1003\",\"floor\":\"Level 1\",\"latlng\":[2.928896,101.640915]}"
+    },
+    {
+      "question": "Where is CQAR1002?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR1002", "locate CQAR1002", "CQAR1002 room"],
+      "answer": "CQAR1002 is located at FCI on Level 1. TARGET_PIN:{\"name\":\"CQAR1002\",\"floor\":\"Level 1\",\"latlng\":[2.928932,101.640827]}"
+    },
+    {
+      "question": "Where is INNOV8 LAB?",
+      "intent": "location",
+      "synonyms": ["how to go to innov8 lab", "locate innov8 lab", "innov8"],
+      "answer": "The INNOV8 LAB is located at FCI on Level 1. TARGET_PIN:{\"name\":\"INNOV8 LAB\",\"floor\":\"Level 1\",\"latlng\":[2.928964,101.640779]}"
+    },
+    {
+      "question": "Where is CQAR1001?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR1001", "locate CQAR1001", "CQAR1001 room"],
+      "answer": "CQAR1001 is located at FCI on Level 1. TARGET_PIN:{\"name\":\"CQAR1001\",\"floor\":\"Level 1\",\"latlng\":[2.929011,101.640703]}"
+    },
+    {
+      "question": "Where is CQAR2007?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR2007", "locate CQAR2007", "CQAR2007 room"],
+      "answer": "CQAR2007 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQAR2007\",\"floor\":\"Level 2\",\"latlng\":[2.928583,101.641261]}"
+    },
+    {
+      "question": "Where is CQAR2006?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR2006", "locate CQAR2006", "CQAR2006 room"],
+      "answer": "CQAR2006 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQAR2006\",\"floor\":\"Level 2\",\"latlng\":[2.928642,101.641175]}"
+    },
+    {
+      "question": "Where is CQAR2005?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR2005", "locate CQAR2005", "CQAR2005 room"],
+      "answer": "CQAR2005 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQAR2005\",\"floor\":\"Level 2\",\"latlng\":[2.928733,101.641082]}"
+    },
+    {
+      "question": "Where is CQAR2004?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR2004", "locate CQAR2004", "CQAR2004 room"],
+      "answer": "CQAR2004 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQAR2004\",\"floor\":\"Level 2\",\"latlng\":[2.928872,101.640912]}"
+    },
+    {
+      "question": "Where is CQAR2003?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR2003", "locate CQAR2003", "CQAR2003 room"],
+      "answer": "CQAR2003 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQAR2003\",\"floor\":\"Level 2\",\"latlng\":[2.928962,101.640806]}"
+    },
+    {
+      "question": "Where is CQAR2002?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR2002", "locate CQAR2002", "CQAR2002 room"],
+      "answer": "CQAR2002 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQAR2002\",\"floor\":\"Level 2\",\"latlng\":[2.929055,101.640716]}"
+    },
+    {
+      "question": "Where is CQCR2004?",
+      "intent": "location",
+      "synonyms": ["how to go to CQCR2004", "locate CQCR2004", "CQCR2004 room"],
+      "answer": "CQCR2004 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQCR2004\",\"floor\":\"Level 2\",\"latlng\":[2.928765,101.641546]}"
+    },
+    {
+      "question": "Where is CQCR2003?",
+      "intent": "location",
+      "synonyms": ["how to go to CQCR2003", "locate CQCR2003", "CQCR2003 room"],
+      "answer": "CQCR2003 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQCR2003\",\"floor\":\"Level 2\",\"latlng\":[2.928699,101.641525]}"
+    },
+    {
+      "question": "Where is CQCR2002?",
+      "intent": "location",
+      "synonyms": ["how to go to CQCR2002", "locate CQCR2002", "CQCR2002 room"],
+      "answer": "CQCR2002 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQCR2002\",\"floor\":\"Level 2\",\"latlng\":[2.928615,101.641537]}"
+    },
+    {
+      "question": "Where is CQCR2001?",
+      "intent": "location",
+      "synonyms": ["how to go to CQCR2001", "locate CQCR2001", "CQCR2001 room"],
+      "answer": "CQCR2001 is located at FCI on Level 2. TARGET_PIN:{\"name\":\"CQCR2001\",\"floor\":\"Level 2\",\"latlng\":[2.928521,101.641534]}"
+    },
+    {
+      "question": "Where is CQAR3007?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR3007", "locate CQAR3007", "CQAR3007 room"],
+      "answer": "CQAR3007 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQAR3007\",\"floor\":\"Level 3\",\"latlng\":[2.928583,101.641261]}"
+    },
+    {
+      "question": "Where is CQAR3006?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR3006", "locate CQAR3006", "CQAR3006 room"],
+      "answer": "CQAR3006 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQAR3006\",\"floor\":\"Level 3\",\"latlng\":[2.928642,101.641175]}"
+    },
+    {
+      "question": "Where is CQAR3005?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR3005", "locate CQAR3005", "CQAR3005 room"],
+      "answer": "CQAR3005 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQAR3005\",\"floor\":\"Level 3\",\"latlng\":[2.928733,101.641082]}"
+    },
+    {
+      "question": "Where is CQAR3004?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR3004", "locate CQAR3004", "CQAR3004 room"],
+      "answer": "CQAR3004 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQAR3004\",\"floor\":\"Level 3\",\"latlng\":[2.928872,101.640912]}"
+    },
+    {
+      "question": "Where is CQAR3003?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR3003", "locate CQAR3003", "CQAR3003 room"],
+      "answer": "CQAR3003 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQAR3003\",\"floor\":\"Level 3\",\"latlng\":[2.928962,101.640806]}"
+    },
+    {
+      "question": "Where is CQAR3002?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR3002", "locate CQAR3002", "CQAR3002 room"],
+      "answer": "CQAR3002 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQAR3002\",\"floor\":\"Level 3\",\"latlng\":[2.929055,101.640716]}"
+    },
+    {
+      "question": "Where is CQCR3004?",
+      "intent": "location",
+      "synonyms": ["how to go to CQCR3004", "locate CQCR3004", "CQCR3004 room"],
+      "answer": "CQCR3004 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQCR3004\",\"floor\":\"Level 3\",\"latlng\":[2.928765,101.641546]}"
+    },
+    {
+      "question": "Where is CQCR3003?",
+      "intent": "location",
+      "synonyms": ["how to go to CQCR3003", "locate CQCR3003", "CQCR3003 room"],
+      "answer": "CQCR3003 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQCR3003\",\"floor\":\"Level 3\",\"latlng\":[2.928699,101.641525]}"
+    },
+    {
+      "question": "Where is CQCR3002?",
+      "intent": "location",
+      "synonyms": ["how to go to CQCR3002", "locate CQCR3002", "CQCR3002 room"],
+      "answer": "CQCR3002 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQCR3002\",\"floor\":\"Level 3\",\"latlng\":[2.928615,101.641537]}"
+    },
+    {
+      "question": "Where is CQCR3001?",
+      "intent": "location",
+      "synonyms": ["how to go to CQCR3001", "locate CQCR3001", "CQCR3001 room"],
+      "answer": "CQCR3001 is located at FCI on Level 3. TARGET_PIN:{\"name\":\"CQCR3001\",\"floor\":\"Level 3\",\"latlng\":[2.928521,101.641534]}"
+    },
+    {
+      "question": "Where is CQAR4007?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR4007", "locate CQAR4007", "CQAR4007 room"],
+      "answer": "CQAR4007 is located at FCI on Level 4. TARGET_PIN:{\"name\":\"CQAR4007\",\"floor\":\"Level 4\",\"latlng\":[2.928579,101.641277]}"
+    },
+    {
+      "question": "Where is CQAR4006?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR4006", "locate CQAR4006", "CQAR4006 room"],
+      "answer": "CQAR4006 is located at FCI on Level 4. TARGET_PIN:{\"name\":\"CQAR4006\",\"floor\":\"Level 4\",\"latlng\":[2.928648,101.641175]}"
+    },
+    {
+      "question": "Where is CQAR4005?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR4005", "locate CQAR4005", "CQAR4005 room"],
+      "answer": "CQAR4005 is located at FCI on Level 4. TARGET_PIN:{\"name\":\"CQAR4005\",\"floor\":\"Level 4\",\"latlng\":[2.928648,101.641175]}"
+    },
+    {
+      "question": "Where is CQAR4004?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR4004", "locate CQAR4004", "CQAR4004 room"],
+      "answer": "CQAR4004 is located at FCI on Level 4. TARGET_PIN:{\"name\":\"CQAR4004\",\"floor\":\"Level 4\",\"latlng\":[2.928892,101.640913]}"
+    },
+    {
+      "question": "Where is CQAR4003?",
+      "intent": "location",
+      "synonyms": ["how to go to CQAR4003", "locate CQAR4003", "CQAR4003 room"],
+      "answer": "CQAR4003 is located at FCI on Level 4. TARGET_PIN:{\"name\":\"CQAR4003\",\"floor\":\"Level 4\",\"latlng\":[2.929021,101.640814]}"
+    },
+    {
+      "question": "Where is AINSQAI LAB?",
+      "intent": "location",
+      "synonyms": ["how to go to ainsqai lab", "locate ainsqai", "ainsqai lab"],
+      "answer": "The AINSQAI LAB is located at FCI on Level 4. TARGET_PIN:{\"name\":\"AINSQAI LAB\",\"floor\":\"Level 4\",\"latlng\":[2.929051,101.640712]}"
+    }
+  ]
+}
