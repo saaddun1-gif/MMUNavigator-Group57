@@ -12,7 +12,7 @@
       "intent": "location",
       "keywords": ["surau", "prayer", "solat", "musolla", "mosque"],
       "synonyms": ["where is surau", "prayer room location", "surau campus", "place to pray"],
-      "answer": "The Surau is located near the central student residential zone. TARGET_PIN:{\"name\":\"Surau\",\"floor\":\"Ground Floor\",\"latlng\":[2.924351,101.642975]}"
+      "answer": "The Surau is located near the STD Building and Hostel HB3. TARGET_PIN:{\"name\":\"Surau\",\"floor\":\"Ground Floor\",\"latlng\":[2.924351,101.642975]}"
     },
     {
       "question": "Where is the Gym?",
@@ -26,14 +26,14 @@
       "intent": "location",
       "keywords": ["cafe", "cafeteria", "food", "eat", "canteen", "makan"],
       "synonyms": ["food court location", "where to eat", "canteen campus", "cafeteria location"],
-      "answer": "The Cafe is located near the central campus plaza area. TARGET_PIN:{\"name\":\"Cafe\",\"floor\":\"Ground Floor\",\"latlng\":[2.925300,101.642555]}"
+      "answer": "The Deen Cafe is located near the central campus plaza area. TARGET_PIN:{\"name\":\"Cafe\",\"floor\":\"Ground Floor\",\"latlng\":[2.925300,101.642555]}"
     },
     {
       "question": "Where is the ATM?",
       "intent": "location",
       "keywords": ["atm", "bank", "cash", "money", "duit", "mechine"],
       "synonyms": ["where is atm", "cash machine location", "atm bank", "mechine duit"],
-      "answer": "The ATM is located near the convenience stores block. TARGET_PIN:{\"name\":\"ATM\",\"floor\":\"Ground Floor\",\"latlng\":[2.928002,101.643156]}"
+      "answer": "The ATM is located inside Starbees. TARGET_PIN:{\"name\":\"ATM\",\"floor\":\"Ground Floor\",\"latlng\":[2.928002,101.643156]}"
     },
     {
       "question": "Where is Starbees?",
@@ -50,7 +50,7 @@
       "answer": "The Lab is located inside the academic block area. TARGET_PIN:{\"name\":\"Lab\",\"floor\":\"Level G\",\"latlng\":[2.928640,101.641120]}"
     },
     {
-      "question": "Where is 7 Elevel?",
+      "question": "Where is 7 Eleven?",
       "intent": "location",
       "keywords": ["7 elevel", "7-eleven", "7e", "convenience store", "sevel"],
       "synonyms": ["where is 7 eleven", "7e location", "convenience store campus", "7eleven"],
@@ -87,7 +87,7 @@
     
     {
         "question": "hello",
-        "answer": "hello there",
+        "answer": "Hello! Thank you for using MMU Navigator. How can I assist you today?",
         "synonyms": ["hi", "hey", "greetings"],
         "intent": "greeting"
     },
